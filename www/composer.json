@@ -1,0 +1,8 @@
+{
+    "autoload": {
+        "classmap": ["application/core"]
+    },
+    "require": {
+        "zircote/swagger-php": "*"
+    }
+}
