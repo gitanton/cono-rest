@@ -14,40 +14,26 @@
 | path to your installation.
 |
 */
-$config['base_url'] = 'https://www.joinblush.com/app';
-$config['signin_url'] = 'https://www.joinblush.com/app/login';
+$config['base_url'] = 'http://conojoapp.scmreview.com/rest/';
 
-$config['site_title'] = 'Blush';
-$config['site_home'] = 'dashboard';
-$config['admin_home'] = 'admin/dashboard';
+$config['site_title'] = 'Conojo';
 
 $config['max_file_upload_size'] = 20480;
 $config['upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/assets/uploads/';
 $config['upload_types'] = 'jpg|png|gif';
 
-$config['contact_email'] = 'info@joinblush.com';
+$config['contact_email'] = 'info@conojo.com';
 
 $config['notifications_account'] = 'info';
-$config['notifications_email'] = 'info@joinblush.com';
-$config['notifications_user'] = 'kali@joinblush.com';
-$config['notifications_password'] = 'joinblush!';
-$config['smtp_host'] = 'ssl://smtp.googlemail.com';
-$config['smtp_port'] = '465';
+$config['notifications_email'] = 'info@conojo.com';
+$config['notifications_user'] = 'kali@conojo.com';
 
-$config['stripe_public_key'] = 'pk_live_uJHFuzobnc41DbbDBiekPRbr';
-$config['stripe_private_key'] = 'sk_live_tmeIrKcEGzK1WBKJP26pKENv';
-
-$config['loggly_tag'] = 'mmv';
+$config['loggly_tag'] = 'conojo';
 $config['loggly_token'] = 'c51b721e-e3bb-4ea8-8210-68b59046fcc0';
 
 if (IS_TEST) {
-
-    $config['stripe_public_key'] = 'pk_test_1RDlFmSQG3Mvf3q8GgfmvCiL';
-    $config['stripe_private_key'] = 'sk_test_tNbkzCvs0og0cdEgOJbW4NCN';
-
-    $config['domain_url'] = 'http://jobs.scmreview.com/';
-    $config['base_url'] = 'http://jobs.scmreview.com';
-    $config['signin_url'] = 'http://jobs.scmreview.com/login';
+    $config['domain_url'] = 'http://conojoapp.scmreview.com/rest';
+    $config['base_url'] = 'http://conojoapp.scmreview.com/rest';
 }
 /*
 |--------------------------------------------------------------------------

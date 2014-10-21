@@ -55,7 +55,7 @@ $db['default']['database'] = '';
 $db['default']['dbdriver'] = 'mysqli';
 $db['default']['dbprefix'] = '';
 $db['default']['pconnect'] = TRUE;
-$db['default']['db_debug'] = TRUE;
+$db['default']['db_debug'] = FALSE;
 $db['default']['cache_on'] = FALSE;
 $db['default']['cachedir'] = '';
 $db['default']['char_set'] = 'utf8';
@@ -65,10 +65,11 @@ $db['default']['autoinit'] = TRUE;
 $db['default']['stricton'] = FALSE;
 
 if (IS_TEST) {
-    $db['default']['hostname'] = '';
-    $db['default']['username'] = '';
-    $db['default']['password'] = '';
-    $db['default']['database'] = '';
+    $db['default']['hostname'] = 'schimp1.ctge10i8cpn4.us-east-1.rds.amazonaws.com';
+    $db['default']['username'] = 'schimp';
+    $db['default']['password'] = '15eJHs!LRs^s';
+    $db['default']['database'] = 'conojoapp';
+    $db['default']['db_debug'] = TRUE;
 }
 
 /* End of file database.php */

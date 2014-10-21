@@ -9,13 +9,6 @@ class Main extends User_Controller
     }
 
     public function index() {
-
-
-        if ($this->get_user_id()) {
-            redirect($this->config->item('site_home'));
-        } else {
-            redirect($this->config->item('signin_url'));
-        }
     }
 
 }
