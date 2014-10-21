@@ -1,3 +1,10 @@
+Satisfy Any
+Header set Access-Control-Allow-Origin "*"
+#Header set Access-Control-Allow-Origin "http://localhost:9000"
+Header set Access-Control-Allow-Methods: "GET,POST,OPTIONS,DELETE,PUT"
+Header set Access-Control-Allow-Credentials: "true"
+Header set Access-Control-Allow-Headers: "X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method"
+
 RewriteEngine on
 
 RewriteCond $1 !^(index\.php|assets|cache|application/cache|robots\.txt)
