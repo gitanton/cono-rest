@@ -95,14 +95,19 @@ function get_user_json($user_id = 0)
     if (!$user) {
         return '{}';
     } else {
-        unset($user->id);
-        unset($user->password);
-        unset($user->salt);
-        unset($user->user_type_id);
-        unset($user->created);
-        unset($user->deleted);
+        $user = clean_user($user);
         return json_encode($user);
     }
+}
+
+function clean_user($user) {
+    unset($user->id);
+    unset($user->password);
+    unset($user->salt);
+    unset($user->user_type_id);
+    unset($user->created);
+    unset($user->deleted);
+    return $user;
 }
 
 function get_user_name($user_id = 0)

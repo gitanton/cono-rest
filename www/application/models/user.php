@@ -6,11 +6,7 @@ class User extends MY_Model
         'firstname' => 'string',
         'lastname' => 'string',
         'username' => 'username',
-        'password' => 'password',
-        'user_type_id' => 'int',
-        'email' => 'email',
-        'phone' => 'phone',
-        'timezone' => 'string'
+        'email' => 'email'
     );
 
     function get_scope()
@@ -98,28 +94,11 @@ class User extends MY_Model
     function from_post()
     {
 
-        $data = array('firstname' => trim($this->input->post('firstname', TRUE)),
-            'lastname'  => trim($this->input->post('lastname', TRUE)),
-            'email'     => trim($this->input->post('email', TRUE)),
-            'phone'     => phone_format(trim($this->input->post('phone', TRUE)))
+        $data = array('firstname' => trim($this->post('firstname', TRUE)),
+            'lastname'  => trim($this->post('lastname', TRUE)),
+            'email'     => trim($this->post('email', TRUE)),
         );
         return $data;
-    }
-
-    function register() {
-
-        $salt = $this->create_salt();
-        $password = $this->input->post('password');
-        $password = sha1($password.$salt);
-
-        $data = array(
-            'username' => $this->input->post('username'),
-            'email' => $this->input->post('email'),
-            'password' => $password,
-            'salt' => $salt
-        );
-
-        return $this->add($data);
     }
 
     function change_password($id = 0, $password)
