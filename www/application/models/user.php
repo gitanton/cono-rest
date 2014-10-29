@@ -3,8 +3,7 @@ class User extends MY_Model
 {
 
     protected static $fields = array(
-        'firstname' => 'string',
-        'lastname' => 'string',
+        'fullname' => 'string',
         'username' => 'username',
         'email' => 'email'
     );
@@ -16,7 +15,7 @@ class User extends MY_Model
 
     function column_map($col)
     {
-        $column_map = array('lastname', 'firstname', 'username', 'created', 'last_login', 'plan_id', 'trial_end');
+        $column_map = array('fullname', 'username', 'created', 'last_login', 'plan_id', 'trial_end');
         return $column_map[intval($col)];
     }
 
@@ -62,9 +61,17 @@ class User extends MY_Model
     function get_name($user_id)
     {
         $this->db->where(array("id" => $user_id));
-        $this->db->select('firstname, lastname');
+        $this->db->select('fullname');
         $query = $this->db->get($this->get_scope());
         return $query->row();
+    }
+
+    function get_for_project($project_id = 0) {
+        $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
+        $this->db->join('project_user', 'project_user.user_id = user.id');
+        $this->db->where('project_user.project_id', $project_id);
+        $query = $this->db->get($this->get_scope());
+        return $query->result();
     }
 
     function login($username, $password)
@@ -72,14 +79,14 @@ class User extends MY_Model
         $query = $this->db->get_where($this->get_scope(), array("username" => $username, 'deleted' => 0));
         $user = $query->row();
 
-        if($user) {
-            $password = sha1($password.$user->salt);
+        if ($user) {
+            $password = sha1($password . $user->salt);
 
-            if($user->password!=$password) {
+            if ($user->password != $password) {
                 unset($user);
             }
 
-            if(isset($user) && $user) {
+            if (isset($user) && $user) {
                 return $this->after_load($user);
             }
         }
@@ -94,9 +101,9 @@ class User extends MY_Model
     function from_post()
     {
 
-        $data = array('firstname' => trim($this->post('firstname', TRUE)),
-            'lastname'  => trim($this->post('lastname', TRUE)),
-            'email'     => trim($this->post('email', TRUE)),
+        $data = array(
+            'fullname' => trim($this->post('fullname', TRUE)),
+            'email' => trim($this->post('email', TRUE)),
         );
         return $data;
     }
@@ -106,7 +113,7 @@ class User extends MY_Model
         if (intval($id)) {
 
             $salt = $this->create_salt();
-            $password = sha1($password.$salt);
+            $password = sha1($password . $salt);
 
             /** Update Community **/
             $data = array('password' => $password, 'salt' => $salt);
@@ -119,7 +126,7 @@ class User extends MY_Model
     {
         $clear_password = random_string('alnum', 8);
         $salt = $this->create_salt();
-        $password = sha1($clear_password.$salt);
+        $password = sha1($clear_password . $salt);
 
         /** Update Community **/
         $data = array('password' => $password, 'salt' => $salt);
@@ -133,11 +140,12 @@ class User extends MY_Model
      * Update the password and created the salt
      * @param $data - data going into the add()
      */
-    public function update_add_data($data) {
+    public function update_add_data($data)
+    {
 
-        if(!isset($data['salt']) || !$data['salt']) {
+        if (!isset($data['salt']) || !$data['salt']) {
             $salt = $this->create_salt();
-            $password = sha1($data['password'].$salt);
+            $password = sha1($data['password'] . $salt);
             $data['password'] = $password;
             $data['salt'] = $salt;
         }
@@ -148,10 +156,11 @@ class User extends MY_Model
      * Update the password and created the salt
      * @param $data - data going into the add()
      */
-    public function update_update_data($data) {
-        if(isset($data['password'])) {
+    public function update_update_data($data)
+    {
+        if (isset($data['password'])) {
             $salt = $this->create_salt();
-            $password = sha1($data['password'].$salt);
+            $password = sha1($data['password'] . $salt);
             $data['password'] = $password;
             $data['salt'] = $salt;
         }
@@ -187,16 +196,8 @@ class User extends MY_Model
         $query_params = array();
 
         if ($filter) {
-            $parts = explode(' ', $filter);
-            if (sizeof($parts) > 1) {
-                $where .= ' AND (u.firstname like ? AND u.lastname like ?)';
-                array_unshift($query_params, $parts[1] . '%');
-                array_unshift($query_params, $parts[0] . '%');
-            } else {
-                $where .= ' AND (u.lastname like ? OR u.firstname like ?)';
-                array_unshift($query_params, $filter . '%');
-                array_unshift($query_params, $filter . '%');
-            }
+            $where .= ' AND (u.fullname like ?)';
+            array_unshift($query_params, $filter . '%');
         }
 
         if ($user_type_id > 0) {
@@ -214,7 +215,7 @@ class User extends MY_Model
     function get_list($limit = 999, $offset = 0, $ordering = '', $filter = '', $user_type_id = 0)
     {
         if (!$ordering) {
-            $ordering = array('sort' => 'lastname', 'dir' => 'ASC');
+            $ordering = array('sort' => 'fullname', 'dir' => 'ASC');
         } else {
             $ordering['sort'] = $this->column_map($ordering['sort']);
         }
@@ -225,17 +226,10 @@ class User extends MY_Model
 
         $where = ' WHERE u.deleted = 0';
         $from = ' from ' . $this->get_scope() . ' u';
+
         if ($filter) {
-            $parts = explode(' ', $filter);
-            if (sizeof($parts) > 1) {
-                $where .= ' AND (u.firstname like ? AND u.lastname like ?)';
-                array_unshift($query_params, $parts[1] . '%');
-                array_unshift($query_params, $parts[0] . '%');
-            } else {
-                $where .= ' AND (u.lastname like ? OR u.firstname like ?)';
-                array_unshift($query_params, $filter . '%');
-                array_unshift($query_params, $filter . '%');
-            }
+            $where .= ' AND (u.fullname like ?)';
+            array_unshift($query_params, $filter . '%');
         }
 
         if ($user_type_id > 0) {
@@ -251,29 +245,6 @@ class User extends MY_Model
         $query = $this->db->query($sql, $query_params);
         //echo $this->db->last_query();
         return $query->result();
-    }
-
-    function edit_from_get($id)
-    {
-        $data = array('firstname' => trim($this->input->get('firstname', TRUE)), 'lastname' => trim($this->input->get('lastname', TRUE)), 'email' => trim($this->input->get('email', TRUE)), 'phone' => trim($this->input->get('phone', TRUE)), 'notify_deal' => intval($this->input->get('notify_deal')), 'notify_task' => intval($this->input->get('notify_task')), 'notify_comment' => intval($this->input->get('notify_comment')), 'notify_file' => intval($this->input->get('notify_file')), 'notify_join' => intval($this->input->get('notify_new_user')),);
-        $this->db->where(array('id' => $id));
-        $this->db->update($this->get_scope(), $data);
-    }
-
-    function blank()
-    {
-        $user = new stdClass;
-        $user->id = 0;
-        $user->user_type_id = 1;
-        $user->deleted = 0;
-        $user->inactive = 0;
-        $user->email = '';
-        $user->username = '';
-        $user->firstname = '';
-        $user->lastname = '';
-        $user->password = random_string('alnum', 8);
-        $user->phone = '';
-        return $user;
     }
 
 }

@@ -3,10 +3,10 @@ use Swagger\Annotations as SWG;
 
 /**
  *
- * @SWG\Model(id="User",required="uuid,username")
- * @SWG\Property(name="uuid",type="string",description="The unique ID of the User")
- * @SWG\Property(name="firstname",type="string",description="The first name of the User")
- * @SWG\Property(name="lastname",type="string",description="The last name of the User")
+ * @SWG\Model(id="User",required="id,uuid,username")
+ * @SWG\Property(name="id",type="integer",description="The unique ID of the User (for private use in referencing other objects)")
+ * @SWG\Property(name="uuid",type="string",description="The unique ID of the User (for public use)")
+ * @SWG\Property(name="fullname",type="string",description="The full name of the User")
  * @SWG\Property(name="email",type="string",description="The email address of the User")
  * @SWG\Property(name="username",type="string",description="The username of the User")
  * @SWG\Property(name="last_login",type="string",format="date",description="The date/time of the last login of the user")
@@ -49,43 +49,36 @@ class Users extends REST_Controller
      *
      * @SWG\Api(
      *   path="/",
-     *   description="API for adding a user",
+     *   description="API for user actions",
      * @SWG\Operation(
      *    method="POST",
      *    type="User",
      *    summary="Registers a new user",
      * @SWG\Parameter(
-     *     name="firstname",
-     *     description="First Name of the user",
-     *     paramType="body",
-     *     required=true,
-     *     type="string"
-     *     ),
-     * @SWG\Parameter(
-     *     name="lastname",
-     *     description="Last Name of the user",
-     *     paramType="body",
+     *     name="fullname",
+     *     description="Name of the user",
+     *     paramType="form",
      *     required=true,
      *     type="string"
      *     ),
      * @SWG\Parameter(
      *     name="email",
      *     description="Email address of the user",
-     *     paramType="body",
+     *     paramType="form",
      *     required=true,
      *     type="string"
      *     ),
      * @SWG\Parameter(
      *     name="username",
      *     description="Username of the user (Should be at least five characters long)",
-     *     paramType="body",
+     *     paramType="form",
      *     required=true,
      *     type="string"
      *     ),
      * @SWG\Parameter(
      *     name="password",
      *     description="Password of the user (Should be at least six characters long)",
-     *     paramType="body",
+     *     paramType="form",
      *     required=true,
      *     type="string"
      *     )
@@ -96,8 +89,7 @@ class Users extends REST_Controller
     {
         /* Validate add */
         $this->load->library('form_validation');
-        $this->form_validation->set_rules('firstname', 'First Name', 'trim|alpha|xss_clean');
-        $this->form_validation->set_rules('lastname', 'Last Name', 'trim|alpha|xss_clean');
+        $this->form_validation->set_rules('fullname', 'Full Name', 'trim|required|xss_clean');
         $this->form_validation->set_rules('username', 'Username', 'trim|required|min_length[5]|xss_clean|is_unique[user.username]');
         $this->form_validation->set_rules('password', 'Password', 'trim|required|min_length[6]|xss_clean');
         $this->form_validation->set_rules('email', 'Email', 'trim|xss_clean|valid_email|required');
@@ -106,8 +98,7 @@ class Users extends REST_Controller
             json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
         } else {
             $data = array(
-                'firstname' => $this->post('firstname', TRUE),
-                'lastname' => $this->post('lastname', TRUE),
+                'fullname' => $this->post('fullname', TRUE),
                 'username' => $this->post('username', TRUE),
                 'email' => $this->post('email', TRUE),
                 'password' => $this->post('password', TRUE)
@@ -118,13 +109,64 @@ class Users extends REST_Controller
         }
     }
 
+    /**
+     *
+     * @SWG\Api(
+     *   path="/login",
+     *   description="API for user actions",
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="User",
+     *    summary="Logs in a user",
+     * @SWG\Parameter(
+     *     name="username",
+     *     description="Username of the user (Should be at least five characters long)",
+     *     paramType="form",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="password",
+     *     description="Password of the user (Should be at least six characters long)",
+     *     paramType="form",
+     *     required=true,
+     *     type="string"
+     *     )
+     *   )
+     * )
+     */
+    public function login_post() {
+
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('username', 'Username', 'trim|required|min_length[5]|xss_clean');
+        $this->form_validation->set_rules('password', 'Password', 'trim|required|min_length[6]|xss_clean');
+
+        if ($this->form_validation->run() == FALSE) {
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
+            exit;
+        } else {
+            $username = $this->post('username', TRUE);
+            $password = $this->post('password', TRUE);
+            $user = $this->User->login($username, $password);
+            if ($user && $user->id) {
+                $this->session->set_userdata('user_id', $user->id);
+                log_message('info', 'Login - User ID: ' . $user->id . ', Username: ' . $user->username);
+
+                $this->User->record_login($user->id);
+                $user = $this->decorate_object($user);
+                $this->response($user);
+                exit;
+            }
+        }
+        json_error('The username/password you have entered are invalid.');
+    }
 
 
     /**
      *
      * @SWG\Api(
      *   path="/user/{uuid}",
-     *   description="API for adding a user",
+     *   description="API for user actions",
      * @SWG\Operation(
      *    method="PUT",
      *    type="User",
@@ -149,7 +191,7 @@ class Users extends REST_Controller
      * @SWG\Operation(
      *    method="GET",
      *    type="User",
-     *    summary="Returns a user that matches the given id",
+     *    summary="Returns a user that matches the given uuid",
      *   @SWG\Parameter(
      *     name="uuid",
      *     description="The unique ID of the user",
@@ -162,17 +204,13 @@ class Users extends REST_Controller
      */
     public function user_put($uuid='')
     {
-        echo $this->put('firstname');
-        exit;
         /* Validate update - have to copy the fields from put to $_POST for validation */
-        $_POST['firstname'] = $this->put('firstname');
-        $_POST['lastname'] = $this->put('lastname');
+        $_POST['fullname'] = $this->put('fullname');
         $_POST['username'] = $this->put('username');
         $_POST['email'] = $this->put('email');
 
         $this->load->library('form_validation');
-        $this->form_validation->set_rules('firstname', 'First Name', 'trim|alpha|xss_clean');
-        $this->form_validation->set_rules('lastname', 'Last Name', 'trim|alpha|xss_clean');
+        $this->form_validation->set_rules('fullname', 'Full Name', 'trim|required|xss_clean');
         $this->form_validation->set_rules('username', 'Username', 'trim|min_length[5]|xss_clean|is_unique[user.username]');
         $this->form_validation->set_rules('password', 'Password', 'trim|min_length[6]|xss_clean');
         $this->form_validation->set_rules('email', 'Email', 'trim|xss_clean|valid_email');
@@ -181,11 +219,14 @@ class Users extends REST_Controller
             json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
         } else {
             $data = $this->get_put_fields($this->User->get_fields());
-            array_print($data);
             $this->User->update_by_uuid($uuid, $data);
         }
     }
 
+    /**
+     * Returns a single user referenced by their uuid
+     * @param string $uuid
+     */
     public function user_get($uuid = '')
     {
         if (!$uuid) {
