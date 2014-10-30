@@ -133,6 +133,19 @@ class Projects extends REST_Controller
      *     required=true,
      *     type="string"
      *     )
+     *   ),
+     *
+     *  @SWG\Operation(
+     *    method="DELETE",
+     *    type="Response",
+     *    summary="Deletes a project with the specified UUID",
+     *   @SWG\Parameter(
+     *     name="uuid",
+     *     description="The unique ID of the project",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     )
      *   )
      * )
      */
@@ -169,7 +182,37 @@ class Projects extends REST_Controller
             json_error('There is no project with that id');
             exit;
         } else {
+            /* Validate that the user is on the project */
+            if(!$this->User->is_on_project($project->id, get_user_id())) {
+                json_error('You are not authorized to view this project.');
+                exit;
+            }
             $this->response($this->decorate_object($project));
+        }
+    }
+
+    /**
+     * Returns a single user referenced by their uuid
+     * @param string $uuid
+     */
+    public function project_delete($uuid = '')
+    {
+        if (!$uuid) {
+            json_error('uuid is required');
+            exit;
+        }
+        $project = $this->Project->load_by_uuid($uuid);
+        if (!$project) {
+            json_error('There is no project with that id');
+            exit;
+        } else {
+            /* Validate that the user is on the project */
+            if(!$this->User->is_on_project($project->id, get_user_id())) {
+                json_error('You are not authorized to delete this project.');
+                exit;
+            }
+            $this->Project->delete($project->id);
+            json_success("Project deleted successfully.");
         }
     }
 

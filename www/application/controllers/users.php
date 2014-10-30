@@ -2,6 +2,10 @@
 use Swagger\Annotations as SWG;
 
 /**
+ * @SWG\Model(id="Response")
+ * @SWG\Property(name="status",type="string",description="Either success or error")
+ * @SWG\Property(name="message",type="string",description="The success/error message related to the response")
+ * @SWG\Property(name="data",type="object",description="Miscellaneous data associated with the message or error")
  *
  * @SWG\Model(id="User",required="id,uuid,username")
  * @SWG\Property(name="id",type="integer",description="The unique ID of the User (for private use in referencing other objects)")

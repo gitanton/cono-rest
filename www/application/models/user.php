@@ -74,6 +74,21 @@ class User extends MY_Model
         return $query->result();
     }
 
+    function is_on_project($project_id = 0, $user_id = 0) {
+        if($project_id > 0 && $user_id > 0) {
+            $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
+            $this->db->join('project_user', 'project_user.user_id = user.id');
+            $this->db->where('project_user.project_id', $project_id);
+            $this->db->where('project_user.user_id', $user_id);
+            $query = $this->db->get($this->get_scope());
+            $row = $query->row();
+            if($row) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function login($username, $password)
     {
         $query = $this->db->get_where($this->get_scope(), array("username" => $username, 'deleted' => 0));
