@@ -91,8 +91,8 @@ class Projects extends REST_Controller
                 'type_id' => intval($this->post('type_id', TRUE))
             );
 
-            $user = $this->decorate_object($this->Project->load($this->Project->add($data)));
-            $this->response($user);
+            $project = $this->decorate_object($this->Project->load($this->Project->add($data)));
+            $this->response($project);
         }
     }
 
@@ -156,14 +156,15 @@ class Projects extends REST_Controller
         $_POST['type_id'] = $this->put('type_id');
 
         $this->load->library('form_validation');
-        $this->form_validation->set_rules('name', 'Project Name', 'trim|required|xss_clean');
-        $this->form_validation->set_rules('type_id', 'Type ID', 'trim|required|integer|xss_clean|callback_validate_project_type');
+        $this->form_validation->set_rules('name', 'Project Name', 'trim|xss_clean');
+        $this->form_validation->set_rules('type_id', 'Type ID', 'trim|integer|xss_clean|callback_validate_project_type');
 
         if ($this->form_validation->run() == FALSE) {
             json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
         } else {
             $data = $this->get_put_fields($this->Project->get_fields());
             $this->Project->update_by_uuid($uuid, $data);
+            $this->project_get($uuid);
         }
     }
 
