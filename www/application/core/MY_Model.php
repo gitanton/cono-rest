@@ -165,7 +165,7 @@ class MY_Model extends CI_Model
         return "id";
     }
 
-    function add($data)
+    function add($data = array())
     {
         $data = array_merge($data, $this->add_data());
 

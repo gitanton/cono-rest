@@ -1215,7 +1215,7 @@ abstract class REST_Controller extends CI_Controller
     }
 
     protected function validate_admin() {
-        $user_id = $this->session->userdata('admin_user_id');
+        $user_id = $this->session->userdata(SESS_ADMIN_USER_ID);
         if(!intval($user_id)) {
             http_response_code(403);
             exit;
@@ -1223,7 +1223,7 @@ abstract class REST_Controller extends CI_Controller
     }
 
     protected function validate_user() {
-        $user_id = $this->session->userdata('user_id');
+        $user_id = $this->session->userdata(SESS_USER_ID);
         if(!intval($user_id)) {
             http_response_code(403);
             exit;

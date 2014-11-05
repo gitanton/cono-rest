@@ -46,8 +46,8 @@ class Projects extends REST_Controller
      */
     public function index_get()
     {
-        $users = $this->Project->get_for_user(get_user_id());
-        $this->response($this->decorate_objects($users));
+        $projects = $this->Project->get_for_user(get_user_id());
+        $this->response($this->decorate_objects($projects));
     }
 
     /**
@@ -193,7 +193,7 @@ class Projects extends REST_Controller
     }
 
     /**
-     * Returns a single user referenced by their uuid
+     * Deletes a project by its uuid
      * @param string $uuid
      */
     public function project_delete($uuid = '')
@@ -215,6 +215,14 @@ class Projects extends REST_Controller
             $this->Project->delete($project->id);
             json_success("Project deleted successfully.");
         }
+    }
+
+    /**
+     * Duplicates an existing project along with the list of users that is assigned to that project
+     * @param string $uuid
+     */
+    public function project_duplicate($uuid = '') {
+
     }
 
     public function validate_project_type($type_id=0)

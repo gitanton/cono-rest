@@ -57,7 +57,14 @@ class Users extends REST_Controller
      * @SWG\Operation(
      *    method="POST",
      *    type="User",
-     *    summary="Registers a new user",
+     *    summary="Registers a new user.  If the post includes an invite id, it will try to validate that invite id against a team invitation and add them to the team.  Otherwise, it will create a new team for that user",
+     * @SWG\Parameter(
+     *     name="invite_id",
+     *     description="The invite token that the user is using to join a team",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
+     *     ),
      * @SWG\Parameter(
      *     name="fullname",
      *     description="Name of the user",
@@ -91,12 +98,15 @@ class Users extends REST_Controller
      */
     public function index_post()
     {
+        $this->load->model('Team');
+
         /* Validate add */
         $this->load->library('form_validation');
+        $this->form_validation->set_rules('invite_id', 'Invite ID', 'trim|alpha_dash|xss_clean');
         $this->form_validation->set_rules('fullname', 'Full Name', 'trim|required|xss_clean');
         $this->form_validation->set_rules('username', 'Username', 'trim|required|min_length[5]|xss_clean|is_unique[user.username]');
         $this->form_validation->set_rules('password', 'Password', 'trim|required|min_length[6]|xss_clean');
-        $this->form_validation->set_rules('email', 'Email', 'trim|xss_clean|valid_email|required');
+        $this->form_validation->set_rules('email', 'Email', 'trim|xss_clean|valid_email|required|is_unique[user.email]');
 
         if ($this->form_validation->run() == FALSE) {
             json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
@@ -108,7 +118,27 @@ class Users extends REST_Controller
                 'password' => $this->post('password', TRUE)
             );
 
-            $user = $this->decorate_object($this->User->load($this->User->add($data)));
+            $team_id = 0;
+            /* Validate that the team exists if it is set */
+            $invite_id = $this->post('invite_id', TRUE);
+            if($invite_id) {
+            }
+            $user_id = $this->User->add($data);
+
+            $this->session->set_userdata(SESS_USER_ID, $user_id);
+            $user = $this->decorate_object($this->User->load($user_id));
+
+            /* if this is a new user, add a team for them */
+            if(!isset($data['team_id'])) {
+                $team_id = $this->Team->add();
+            }
+
+            /* Set the team on the session */
+            if($team_id) {
+                $this->session->set_userdata(SESS_TEAM_ID, $team_id);
+                $user->team_id = $team_id;
+            }
+
             $this->response($user);
         }
     }
@@ -153,7 +183,8 @@ class Users extends REST_Controller
             $password = $this->post('password', TRUE);
             $user = $this->User->login($username, $password);
             if ($user && $user->id) {
-                $this->session->set_userdata('user_id', $user->id);
+                $this->session->set_userdata(SESS_USER_ID, $user->id);
+
                 log_message('info', 'Login - User ID: ' . $user->id . ', Username: ' . $user->username);
 
                 $this->User->record_login($user->id);
@@ -203,6 +234,19 @@ class Users extends REST_Controller
      *     required=true,
      *     type="string"
      *     )
+     *   ),
+     *
+     *  @SWG\Operation(
+     *    method="DELETE",
+     *    type="Response",
+     *    summary="Deletes a user with the specified UUID",
+     *   @SWG\Parameter(
+     *     name="uuid",
+     *     description="The unique ID of the user",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     )
      *   )
      * )
      */
@@ -243,6 +287,26 @@ class Users extends REST_Controller
             exit;
         } else {
             $this->response($this->decorate_object($user));
+        }
+    }
+
+    /**
+     * Deletes a user by its uuid
+     * @param string $uuid
+     */
+    public function user_delete($uuid = '')
+    {
+        if (!$uuid) {
+            json_error('uuid is required');
+            exit;
+        }
+        $user = $this->User->load_by_uuid($uuid);
+        if (!$user) {
+            json_error('There is no user with that id');
+            exit;
+        } else {
+            $this->User->delete($user->id);
+            json_success("User deleted successfully.");
         }
     }
 

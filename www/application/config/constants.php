@@ -3,6 +3,10 @@
 define("IS_TEST", strpos($_SERVER['SERVER_NAME'], 'scmreview') > 0);
 include_once(APPPATH.'version.php');
 
+define("SESS_ADMIN_USER_ID", "admin_user_id");
+define("SESS_USER_ID", "user_id");
+define("SESS_TEAM_ID", "team_id");
+
 define("USER_TYPE_ADMIN", 99);
 define("USER_TYPE_USER", 1);
 

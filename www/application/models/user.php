@@ -19,6 +19,13 @@ class User extends MY_Model
         return $column_map[intval($col)];
     }
 
+    function get_all()
+    {
+        $this->db->where('deleted', 0);
+        $query = $this->db->get($this->get_scope());
+        return $query->result();
+    }
+
     function load_by_username($username = '', $include_deleted = FALSE)
     {
         $this->db->where("username", $username);
@@ -36,8 +43,9 @@ class User extends MY_Model
 
     function delete($user_id = 0)
     {
+        $this->mark_deleted('project', array("creator_id" => $user_id));
+        $this->mark_deleted('team', array("owner_id" => $user_id));
         parent::delete($user_id);
-        //$this->mark_deleted('request', array("user_id" => $user_id));
     }
 
     function load_by_email($email = '', $include_deleted = FALSE)
@@ -66,6 +74,11 @@ class User extends MY_Model
         return $query->row();
     }
 
+    /**
+     * Returns all users attached to a specified project
+     * @param int $project_id
+     * @return mixed
+     */
     function get_for_project($project_id = 0) {
         $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
         $this->db->join('project_user', 'project_user.user_id = user.id');
@@ -74,12 +87,50 @@ class User extends MY_Model
         return $query->result();
     }
 
+    /**
+     * Returns all users attached to a specified team
+     * @param int $team_id
+     * @return mixed
+     */
+    function get_for_team($team_id = 0) {
+        $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
+        $this->db->join('team_user', 'team_user.user_id = user.id');
+        $this->db->where('team_user.team_id', $team_id);
+        $query = $this->db->get($this->get_scope());
+        return $query->result();
+    }
+
+    /**
+     * Validates that the specified user is a member of the specified project
+     * @param int $project_id
+     * @param int $user_id
+     * @return bool
+     */
     function is_on_project($project_id = 0, $user_id = 0) {
         if($project_id > 0 && $user_id > 0) {
-            $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
             $this->db->join('project_user', 'project_user.user_id = user.id');
             $this->db->where('project_user.project_id', $project_id);
             $this->db->where('project_user.user_id', $user_id);
+            $query = $this->db->get($this->get_scope());
+            $row = $query->row();
+            if($row) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Validates that a user is a member of the specified team
+     * @param int $team_id
+     * @param int $user_id
+     * @return bool
+     */
+    function is_on_team($team_id = 0, $user_id = 0) {
+        if($team_id > 0 && $user_id > 0) {
+            $this->db->join('team_user', 'team_user.user_id = user.id');
+            $this->db->where('team_user.team_id', $team_id);
+            $this->db->where('team_user.user_id', $user_id);
             $query = $this->db->get($this->get_scope());
             $row = $query->row();
             if($row) {
