@@ -21,6 +21,21 @@ class Team extends MY_Model
     }
 
     /**
+     * Adds a user to the team_user table for the specified team
+     * @param $team_id
+     * @param $user_id
+     */
+    function add_user($team_id = 0, $user_id = 0) {
+
+        $this->db->query($this->db->insert_string('team_user', array(
+            'team_id' => $team_id,
+            'user_id' => $user_id
+        )));
+        $id = $this->db->insert_id();
+        return $id;
+    }
+
+    /**
      * Returns the list of teams for the current user
      * @param int $user_id
      * @return mixed

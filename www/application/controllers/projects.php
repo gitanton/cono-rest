@@ -126,7 +126,7 @@ class Projects extends REST_Controller
      *    method="GET",
      *    type="Project",
      *    summary="Returns a project that matches the given uuid",
-     *   @SWG\Parameter(
+     * @SWG\Parameter(
      *     name="uuid",
      *     description="The unique ID of the project",
      *     paramType="path",
@@ -135,11 +135,11 @@ class Projects extends REST_Controller
      *     )
      *   ),
      *
-     *  @SWG\Operation(
+     * @SWG\Operation(
      *    method="DELETE",
      *    type="Response",
      *    summary="Deletes a project with the specified UUID",
-     *   @SWG\Parameter(
+     * @SWG\Parameter(
      *     name="uuid",
      *     description="The unique ID of the project",
      *     paramType="path",
@@ -149,7 +149,7 @@ class Projects extends REST_Controller
      *   )
      * )
      */
-    public function project_put($uuid='')
+    public function project_put($uuid = '')
     {
         /* Validate update - have to copy the fields from put to $_POST for validation */
         $_POST['name'] = $this->put('name');
@@ -160,7 +160,7 @@ class Projects extends REST_Controller
         $this->form_validation->set_rules('type_id', 'Type ID', 'trim|integer|xss_clean|callback_validate_project_type');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
         } else {
             $data = $this->get_put_fields($this->Project->get_fields());
             $this->Project->update_by_uuid($uuid, $data);
@@ -174,22 +174,9 @@ class Projects extends REST_Controller
      */
     public function project_get($uuid = '')
     {
-        if (!$uuid) {
-            json_error('uuid is required');
-            exit;
-        }
-        $project = $this->Project->load_by_uuid($uuid);
-        if (!$project) {
-            json_error('There is no project with that id');
-            exit;
-        } else {
-            /* Validate that the user is on the project */
-            if(!$this->User->is_on_project($project->id, get_user_id())) {
-                json_error('You are not authorized to view this project.');
-                exit;
-            }
-            $this->response($this->decorate_object($project));
-        }
+        $project = $this->validate_uuid($uuid);
+
+        $this->response($this->decorate_object($project));
     }
 
     /**
@@ -198,6 +185,132 @@ class Projects extends REST_Controller
      */
     public function project_delete($uuid = '')
     {
+        $project = $this->validate_uuid($uuid);
+
+        $this->Project->delete($project->id);
+        json_success("Project deleted successfully.");
+    }
+
+
+    /**
+     * Rest endpoint for project related actions with a post
+     * @param string $uuid
+     * @param $action the action being performed
+     */
+    public function project_post($uuid = '', $action = '')
+    {
+        if ($action) {
+            if ($action == 'duplicate') {
+                return $this->project_duplicate($uuid);
+            } else if ($action == 'invite') {
+                return $this->team_invite($uuid);
+            }
+        }
+    }
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/project/{uuid}/duplicate",
+     *   description="API for project actions",
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="Project",
+     *    summary="Duplicate a project as specified by its uuid (user must be logged in)",
+     * @SWG\Parameter(
+     *     name="uuid",
+     *     description="UUID of the project",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="name",
+     *     description="Name of the new, duplicated project",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
+     *     ),
+     *   )
+     * )
+     *
+     * Duplicates an existing project along with the list of users that is assigned to that project
+     * @param string $uuid
+     */
+    private function project_duplicate($uuid = '')
+    {
+        $project = $this->validate_uuid($uuid);
+
+        $duplicate_id = $this->Project->duplicate($project, get_user_id(), trim($this->post('name', TRUE)));
+        $duplicate = $this->Project->load($duplicate_id);
+        $this->response($this->decorate_object($duplicate));
+    }
+
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/project/{uuid}/invite",
+     *   description="API for project actions",
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="ProjectInvite",
+     *    summary="Invite a user to a project.  You can either invite a member of your team by passing their uuid or by sending them an external email",
+     * @SWG\Parameter(
+     *     name="uuid",
+     *     description="UUID of the project",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="user_uuid",
+     *     description="The uuid of the user you would like to invite (optional)",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="email",
+     *     description="The email address of the external user you would like to invite (optional)",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
+     *     ),
+     *   )
+     * )
+     *
+     * Invites a user to a project
+     * @param string $uuid
+     */
+    private function project_invite($uuid = '')
+    {
+
+    }
+
+    public function validate_project_type($type_id = 0)
+    {
+        if (intval($type_id)) {
+            $type = table_lookup('project_type', $type_id);
+            if ($type) {
+                return TRUE;
+            }
+        }
+        $this->form_validation->set_message('validate_project_type', 'The %s is an invalid type.');
+        return FALSE;
+    }
+
+    protected function decorate_object($object)
+    {
+        unset($object->deleted);
+
+        $users = $this->User->get_for_project($object->id);
+        $object->users = $users;
+        return $object;
+    }
+
+    private function validate_uuid($uuid = '')
+    {
         if (!$uuid) {
             json_error('uuid is required');
             exit;
@@ -206,43 +319,14 @@ class Projects extends REST_Controller
         if (!$project) {
             json_error('There is no project with that id');
             exit;
-        } else {
-            /* Validate that the user is on the project */
-            if(!$this->User->is_on_project($project->id, get_user_id())) {
-                json_error('You are not authorized to delete this project.');
-                exit;
-            }
-            $this->Project->delete($project->id);
-            json_success("Project deleted successfully.");
         }
-    }
-
-    /**
-     * Duplicates an existing project along with the list of users that is assigned to that project
-     * @param string $uuid
-     */
-    public function project_duplicate($uuid = '') {
-
-    }
-
-    public function validate_project_type($type_id=0)
-    {
-        if(intval($type_id)) {
-            $type = table_lookup('project_type', $type_id);
-            if($type) {
-                return TRUE;
-            }
+        /* Validate that the user is on the project */
+        if (!$this->User->is_on_project($project->id, get_user_id())) {
+            json_error('You are not authorized to duplicate this project.');
+            exit;
         }
-        $this->form_validation->set_message('validate_project_type', 'The %s is an invalid type.');
-        return FALSE;
-    }
 
-    protected function decorate_object($object) {
-        unset($object->deleted);
-
-        $users = $this->User->get_for_project($object->id);
-        $object->users = $users;
-        return $object;
+        return $project;
     }
 }
 

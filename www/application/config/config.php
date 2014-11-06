@@ -15,6 +15,8 @@
 |
 */
 $config['base_url'] = 'http://conojoapp.scmreview.com/rest/';
+$config['webapp_url'] = 'http://conojoapp.scmreview.com/';
+$config['signin_url'] = 'http://conojoapp.scmreview.com/';
 
 $config['site_title'] = 'Conojo';
 

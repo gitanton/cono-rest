@@ -59,8 +59,8 @@ class Users extends REST_Controller
      *    type="User",
      *    summary="Registers a new user.  If the post includes an invite id, it will try to validate that invite id against a team invitation and add them to the team.  Otherwise, it will create a new team for that user",
      * @SWG\Parameter(
-     *     name="invite_id",
-     *     description="The invite token that the user is using to join a team",
+     *     name="invite_key",
+     *     description="The invite key that the user is using to join a team",
      *     paramType="form",
      *     required=false,
      *     type="string"
@@ -98,7 +98,7 @@ class Users extends REST_Controller
      */
     public function index_post()
     {
-        $this->load->model('Team');
+        $this->load->model(array('Team', 'Team_Invite'));
 
         /* Validate add */
         $this->load->library('form_validation');
@@ -120,8 +120,20 @@ class Users extends REST_Controller
 
             $team_id = 0;
             /* Validate that the team exists if it is set */
-            $invite_id = $this->post('invite_id', TRUE);
-            if($invite_id) {
+            $invite_key = $this->post('invite_key', TRUE);
+            if($invite_key) {
+                $invite = $this->Team_Invite->load_by_key($invite_key);
+                if(!$invite) {
+                    json_error('The invitation key you have entered is invalid');
+                    exit;
+                }
+
+                if($invite->user_id) {
+                    json_error('The invitation you are attempting to use has already been used.');
+                    exit;
+                }
+
+                $team_id = $invite->team_id;
             }
             $user_id = $this->User->add($data);
 
@@ -129,14 +141,24 @@ class Users extends REST_Controller
             $user = $this->decorate_object($this->User->load($user_id));
 
             /* if this is a new user, add a team for them */
-            if(!isset($data['team_id'])) {
+            if(!$team_id) {
                 $team_id = $this->Team->add();
+            } else {
+                $this->Team->add_user($team_id, $user_id);
             }
 
             /* Set the team on the session */
             if($team_id) {
                 $this->session->set_userdata(SESS_TEAM_ID, $team_id);
                 $user->team_id = $team_id;
+            }
+
+            /* If this was an invitation, update the invite to mark it as used */
+            if($invite) {
+                $this->Team_Invite->update($invite->id, array(
+                    'user_id' => $user_id,
+                    'used' => timestamp_to_mysqldatetime(now())
+                ));
             }
 
             $this->response($user);
