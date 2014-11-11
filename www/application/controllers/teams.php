@@ -78,7 +78,7 @@ class Teams extends REST_Controller
     public function team_get($uuid = '')
     {
         if ($uuid) {
-            $team = $this->validate_uuid();
+            $team = validate_team_uuid($uuid);
         } else {
             $team = $this->Team->load($this->session->userdata(SESS_TEAM_ID));
         }
@@ -139,7 +139,7 @@ class Teams extends REST_Controller
         $this->load->library('form_validation');
         $this->load->helper('notification');
 
-        $team = $this->validate_uuid($uuid);
+        $team = validate_team_uuid($uuid);
 
         $this->form_validation->set_rules('email', 'Email', 'required|trim|xss_clean|valid_email');
 
@@ -174,25 +174,5 @@ class Teams extends REST_Controller
         $users = $this->User->get_for_team($object->id);
         $object->users = $users;
         return $object;
-    }
-
-    private function validate_uuid($uuid = '')
-    {
-        if (!$uuid) {
-            json_error('uuid is required');
-            exit;
-        }
-        $team = $this->Team->load_by_uuid($uuid);
-        if (!$team) {
-            json_error('There is no active team with that id');
-            exit;
-        }
-        /* Validate that the user is on the project */
-        if (!$this->User->is_on_team($team->id, get_user_id())) {
-            json_error('You are not authorized to view this team.');
-            exit;
-        }
-
-        return $team;
     }
 }

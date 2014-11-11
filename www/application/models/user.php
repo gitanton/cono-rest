@@ -88,6 +88,19 @@ class User extends MY_Model
     }
 
     /**
+     * Returns all users attached to a specified project
+     * @param int $project_id
+     * @return mixed
+     */
+    function get_for_message($message_id = 0) {
+        $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
+        $this->db->join('message_user', 'message_user.user_id = user.id');
+        $this->db->where('message_user.message_id', $message_id);
+        $query = $this->db->get($this->get_scope());
+        return $query->result();
+    }
+
+    /**
      * Returns all users attached to a specified team
      * @param int $team_id
      * @return mixed
@@ -131,6 +144,26 @@ class User extends MY_Model
             $this->db->join('team_user', 'team_user.user_id = user.id');
             $this->db->where('team_user.team_id', $team_id);
             $this->db->where('team_user.user_id', $user_id);
+            $query = $this->db->get($this->get_scope());
+            $row = $query->row();
+            if($row) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Validates that a user is a recipient of the specified message
+     * @param int $message_id
+     * @param int $user_id
+     * @return bool
+     */
+    function is_on_message($message_id = 0, $user_id = 0) {
+        if($message_id > 0 && $user_id > 0) {
+            $this->db->join('message_user', 'message_user.user_id = user.id');
+            $this->db->where('message_user.message_id', $message_id);
+            $this->db->where('message_user.user_id', $user_id);
             $query = $this->db->get($this->get_scope());
             $row = $query->row();
             if($row) {

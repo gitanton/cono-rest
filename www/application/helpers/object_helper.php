@@ -234,4 +234,82 @@ function convert_field($value, $datatype = '')
     return $value;
 }
 
+
+/* Object Validation */
+function validate_project_uuid($uuid = '')
+{
+    $CI =& get_instance();
+    $CI->load->model('Project');
+    if (!$uuid) {
+        json_error('uuid is required');
+        exit;
+    }
+    $project = $CI->Project->load_by_uuid($uuid);
+    if (!$project || $project->deleted) {
+        json_error('There is no project with that id');
+        exit;
+    }
+    /* Validate that the user is on the project */
+    if (!$CI->User->is_on_project($project->id, get_user_id())) {
+        json_error('You are not authorized to duplicate this project.');
+        exit;
+    }
+
+    return $project;
+}
+
+function validate_team_uuid($uuid = '')
+{
+    $CI =& get_instance();
+    $CI->load->model('Team');
+    if (!$uuid) {
+        json_error('uuid is required');
+        exit;
+    }
+    $team = $CI->Team->load_by_uuid($uuid);
+    if (!$team || $team->deleted) {
+        json_error('There is no active team with that id');
+        exit;
+    }
+    /* Validate that the user is on the project */
+    if (!$CI->User->is_on_team($team->id, get_user_id())) {
+        json_error('You are not authorized to view this team.');
+        exit;
+    }
+
+    return $team;
+}
+
+function validate_message_uuid($uuid = '', $validate_own = false)
+{
+    $CI =& get_instance();
+    $CI->load->model('Message');
+    if (!$uuid) {
+        json_error('uuid is required');
+        exit;
+    }
+    $message = $CI->Message->load_by_uuid($uuid);
+    if (!$message || $message->deleted) {
+        json_error('There is no active message with that id');
+        exit;
+    }
+
+    $parent_id = $message->id;
+    if($message->parent_id) {
+        $parent_id = $message->parent_id;
+    }
+    /* Validate that the user is on the message */
+    if (!$CI->User->is_on_message($parent_id, get_user_id())) {
+        json_error('You are not authorized to view this message.');
+        exit;
+    }
+    /* Validate that the user is on the message */
+    if ($validate_own && get_user_id()!=$message->sender_id) {
+        json_error('You are not authorized to view this message.');
+        exit;
+    }
+
+    return $message;
+}
+
 ?>

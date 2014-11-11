@@ -38,7 +38,7 @@ class Projects extends REST_Controller
         parent::__construct();
         $this->validate_user();
         $this->load->helper('json');
-        $this->load->model('Project');
+        $this->load->model(array('Project', 'Project_Invite'));
     }
 
     /**
@@ -183,7 +183,7 @@ class Projects extends REST_Controller
      */
     public function project_get($uuid = '')
     {
-        $project = $this->validate_uuid($uuid);
+        $project = validate_project_uuid($uuid);
 
         $this->response($this->decorate_object($project));
     }
@@ -194,7 +194,7 @@ class Projects extends REST_Controller
      */
     public function project_delete($uuid = '')
     {
-        $project = $this->validate_uuid($uuid);
+        $project = validate_project_uuid($uuid);
 
         $this->Project->delete($project->id);
         json_success("Project deleted successfully.");
@@ -248,7 +248,7 @@ class Projects extends REST_Controller
      */
     private function project_duplicate($uuid = '')
     {
-        $project = $this->validate_uuid($uuid);
+        $project = validate_project_uuid($uuid);
 
         $duplicate_id = $this->Project->duplicate($project, get_user_id(), trim($this->post('name', TRUE)));
         $duplicate = $this->Project->load($duplicate_id);
@@ -311,31 +311,11 @@ class Projects extends REST_Controller
 
     protected function decorate_object($object)
     {
-        unset($object->deleted);
+        unset($object->deleted, $object->team_id);
 
         $users = $this->User->get_for_project($object->id);
         $object->users = $users;
         return $object;
-    }
-
-    private function validate_uuid($uuid = '')
-    {
-        if (!$uuid) {
-            json_error('uuid is required');
-            exit;
-        }
-        $project = $this->Project->load_by_uuid($uuid);
-        if (!$project) {
-            json_error('There is no project with that id');
-            exit;
-        }
-        /* Validate that the user is on the project */
-        if (!$this->User->is_on_project($project->id, get_user_id())) {
-            json_error('You are not authorized to duplicate this project.');
-            exit;
-        }
-
-        return $project;
     }
 }
 
