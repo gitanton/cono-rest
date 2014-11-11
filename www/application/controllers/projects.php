@@ -14,6 +14,15 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="created",type="string",format="date",description="The date/time that this project was created")
  * @SWG\Property(name="users",type="array",@SWG\Items("User"),description="The users attached to this project")
  *
+ * @SWG\Model(id="ProjectInvite",required="uuid,project_id,email")
+ * @SWG\Property(name="id",type="integer",description="The unique ID of the ProjectInvite (for private use in referencing other objects)")
+ * @SWG\Property(name="uuid",type="string",description="The unique ID of the ProjectInvite (for public consumption)")
+ * @SWG\Property(name="email",type="string",description="The email that the invite is sent to")
+ * @SWG\Property(name="team_id",type="integer",description="The id of the project for whom the invite is provided")
+ * @SWG\Property(name="user_id",type="integer",description="The id of the user who used the invite")
+ * @SWG\Property(name="created",type="string",format="date",description="The date/time that this invite was created")
+ * @SWG\Property(name="used",type="string",format="date",description="The date/time that this invite was used")
+ *
  * @SWG\Resource(
  *     apiVersion="1.0",
  *     swaggerVersion="2.0",
