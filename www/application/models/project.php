@@ -80,6 +80,7 @@ class Project extends MY_Model
         $data = array(
             'name' => $project_name,
             'type_id' => $project->type_id,
+            'team_id' => get_team_id(),
             'creator_id' => $creator_id
         );
         $duplicate_id = $this->add($data);

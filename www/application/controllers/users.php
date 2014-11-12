@@ -66,6 +66,13 @@ class Users extends REST_Controller
      *     type="string"
      *     ),
      * @SWG\Parameter(
+     *     name="invite_type",
+     *     description="The invite type that the user is using (either 'team' or 'project')",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
      *     name="fullname",
      *     description="Name of the user",
      *     paramType="form",
@@ -186,6 +193,20 @@ class Users extends REST_Controller
      *     description="Password of the user (Should be at least six characters long)",
      *     paramType="form",
      *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="invite_key",
+     *     description="The invite key that the user is using to join a team",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="invite_type",
+     *     description="The invite type that the user is using (either 'team' or 'project')",
+     *     paramType="form",
+     *     required=false,
      *     type="string"
      *     )
      *   )

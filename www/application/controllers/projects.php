@@ -18,7 +18,8 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="id",type="integer",description="The unique ID of the ProjectInvite (for private use in referencing other objects)")
  * @SWG\Property(name="uuid",type="string",description="The unique ID of the ProjectInvite (for public consumption)")
  * @SWG\Property(name="email",type="string",description="The email that the invite is sent to")
- * @SWG\Property(name="team_id",type="integer",description="The id of the project for whom the invite is provided")
+ * @SWG\Property(name="key",type="string",description="The unique 32 character key assigned to this invite that allows the user to accept the invite")
+ * @SWG\Property(name="project_id",type="integer",description="The id of the project for whom the invite is provided")
  * @SWG\Property(name="user_id",type="integer",description="The id of the user who used the invite")
  * @SWG\Property(name="created",type="string",format="date",description="The date/time that this invite was created")
  * @SWG\Property(name="used",type="string",format="date",description="The date/time that this invite was used")
@@ -97,7 +98,8 @@ class Projects extends REST_Controller
         } else {
             $data = array(
                 'name' => $this->post('name', TRUE),
-                'type_id' => intval($this->post('type_id', TRUE))
+                'type_id' => intval($this->post('type_id', TRUE)),
+                'team_id' => get_team_id()
             );
 
             $project = $this->decorate_object($this->Project->load($this->Project->add($data)));
@@ -184,7 +186,6 @@ class Projects extends REST_Controller
     public function project_get($uuid = '')
     {
         $project = validate_project_uuid($uuid);
-
         $this->response($this->decorate_object($project));
     }
 
@@ -212,7 +213,7 @@ class Projects extends REST_Controller
             if ($action == 'duplicate') {
                 return $this->project_duplicate($uuid);
             } else if ($action == 'invite') {
-                return $this->team_invite($uuid);
+                return $this->project_invite($uuid);
             }
         }
     }
@@ -294,7 +295,37 @@ class Projects extends REST_Controller
      */
     private function project_invite($uuid = '')
     {
+        $this->load->helper('notification');
 
+        $project = validate_project_uuid($uuid);
+        $user_uuid = $this->post('user_uuid');
+        $email = $this->post('email');
+
+        if ($email) {
+            /** Look to see if there is an existing invite and resend it */
+            $invite = $this->Project_Invite->get_for_email_project($email, $project->id);
+
+            $invite_id = 0;
+            if ($invite && !$invite->user_id) {
+                $invite_id = $invite->id;
+                $key = $invite->key;
+            } else {
+                $key = random_string('unique');
+                $invite_id = $this->Project_Invite->add(array(
+                    'email' => $email,
+                    'project_id' => $project->id,
+                    'key' => $key
+                ));
+            }
+
+            notify_project_invite_new_user($invite_id, get_user_id());
+            json_success("User invited successfully", array('invite_id' => $invite_id, 'email' => $email, 'key' => $key));
+            exit;
+        } else if ($user_uuid) {
+            exit;
+        }
+
+        json_error("You must provide either a user id or an email address to invite to this project.");
     }
 
     public function validate_project_type($type_id = 0)

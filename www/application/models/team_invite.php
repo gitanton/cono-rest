@@ -20,7 +20,7 @@ class Team_Invite extends MY_Model
     }
 
     /**
-     * Returns the list of teams for the current user
+     * Returns the list of matching invite for the email/team
      * @param int $user_id
      * @return mixed
      */

@@ -1,8 +1,9 @@
 <?
 
-function loggly($data = '') {
+function loggly($data = '')
+{
 
-    if(is_array($data) || is_object($data)) {
+    if (is_array($data) || is_object($data)) {
         $data = json_encode($data);
     }
 
@@ -17,7 +18,8 @@ function loggly($data = '') {
     $result = curl_exec($curl);
 }
 
-function dologin($username='', $password='') {
+function dologin($username = '', $password = '')
+{
     $CI =& get_instance();
 
     /** Do Login **/
@@ -34,19 +36,6 @@ function dologin($username='', $password='') {
     return $user;
 }
 
-function validate_permission($permission_name)
-{
-    $permissions = array(
-        'USER_LOGIN_AS' => 2,
-        'USER_SET_COMPANY' => 2,
-        'COMPANY_SWITCH' => 2
-    );
-
-    $permission_type_id = $permissions[$permission_name];
-    return get_user_type_id() >= $permission_type_id;
-    return TRUE;
-}
-
 function get_user_type_id()
 {
     $user_type_id = 0;
@@ -57,9 +46,9 @@ function get_user_type_id()
         return $CI->session->userdata('user_type_id');
     }
 
-    if ($CI->session->userdata('user_id')) {
+    if ($CI->session->userdata(SESS_USER_ID)) {
         $CI->load->model('User');
-        $user_id = $CI->session->userdata('user_id');
+        $user_id = $CI->session->userdata(SESS_USER_ID);
         $user = $CI->User->load($user_id);
         if ($user) {
             $user_type_id = $user->user_type_id;
@@ -76,9 +65,9 @@ function get_user($user_id = 0)
     $CI->load->database();
 
     if ($user_id === 0) {
-        $user_id = $CI->session->userdata('user_id');
+        $user_id = $CI->session->userdata(SESS_USER_ID);
         if (!$user_id) {
-            $user_id = $CI->session->userdata('admin_user_id');
+            $user_id = $CI->session->userdata(SESS_ADMIN_USER_ID);
         }
     }
 
@@ -100,7 +89,8 @@ function get_user_json($user_id = 0)
     }
 }
 
-function clean_user($user) {
+function clean_user($user)
+{
     unset($user->id);
     unset($user->password);
     unset($user->salt);
@@ -122,18 +112,22 @@ function get_user_name($user_id = 0)
 function get_user_id()
 {
     $CI =& get_instance();
-    $CI->load->database();
+    return $CI->session->userdata(SESS_USER_ID);
+}
 
-    return $CI->session->userdata('user_id');
+function get_team_id()
+{
+    $CI =& get_instance();
+    return $CI->session->userdata(SESS_TEAM_ID);
 }
 
 function get_user_email()
 {
     $CI =& get_instance();
     $CI->load->database();
-    if ($CI->session->userdata('user_id')) {
+    if ($CI->session->userdata(SESS_USER_ID)) {
         $CI->load->model('User');
-        $user_id = $CI->session->userdata('user_id');
+        $user_id = $CI->session->userdata(SESS_USER_ID);
         $user = $CI->User->load($user_id);
         return $user->email;
     }
@@ -209,19 +203,19 @@ function convert_field($value, $datatype = '')
     } else if ($datatype == 'time') {
         $value = mysql_time($value);
     } else if ($datatype == 'int') {
-        if($value || $value===0 || $value==="0") {
+        if ($value || $value === 0 || $value === "0") {
             $value = intval($value);
         } else {
             $value = NULL;
         }
     } else if ($datatype == 'float') {
-        if($value || $value===0) {
+        if ($value || $value === 0) {
             $value = floatval($value);
         } else {
             $value = NULL;
         }
     } else if ($datatype == 'double') {
-        if($value || $value===0) {
+        if ($value || $value === 0) {
             $value = doubleval($value);
         } else {
             $value = NULL;
@@ -295,7 +289,7 @@ function validate_message_uuid($uuid = '', $validate_own = false)
     }
 
     $parent_id = $message->id;
-    if($message->parent_id) {
+    if ($message->parent_id) {
         $parent_id = $message->parent_id;
     }
     /* Validate that the user is on the message */
@@ -304,7 +298,7 @@ function validate_message_uuid($uuid = '', $validate_own = false)
         exit;
     }
     /* Validate that the user is on the message */
-    if ($validate_own && get_user_id()!=$message->sender_id) {
+    if ($validate_own && get_user_id() != $message->sender_id) {
         json_error('You are not authorized to view this message.');
         exit;
     }

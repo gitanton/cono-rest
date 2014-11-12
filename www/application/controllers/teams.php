@@ -14,6 +14,7 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="id",type="integer",description="The unique ID of the TeamInvite (for private use in referencing other objects)")
  * @SWG\Property(name="uuid",type="string",description="The unique ID of the TeamInvite (for public consumption)")
  * @SWG\Property(name="email",type="string",description="The email that the invite is sent to")
+ * @SWG\Property(name="key",type="string",description="The unique 32 character key assigned to this invite that allows the user to accept the invite")
  * @SWG\Property(name="team_id",type="integer",description="The id of the team for whom the invite is provided")
  * @SWG\Property(name="user_id",type="integer",description="The id of the user who used the invite")
  * @SWG\Property(name="created",type="string",format="date",description="The date/time that this invite was created")
@@ -80,7 +81,7 @@ class Teams extends REST_Controller
         if ($uuid) {
             $team = validate_team_uuid($uuid);
         } else {
-            $team = $this->Team->load($this->session->userdata(SESS_TEAM_ID));
+            $team = $this->Team->load(get_team_id());
         }
         if (!$team) {
             json_error('There is no active team for that user');

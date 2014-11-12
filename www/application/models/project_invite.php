@@ -20,7 +20,7 @@ class Project_Invite extends MY_Model
     }
 
     /**
-     * Returns the list of teams for the current user
+     * Returns the matching project invite for the email/project
      * @param int $user_id
      * @return mixed
      */
