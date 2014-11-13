@@ -21,6 +21,21 @@ class Project extends MY_Model
         return $column_map[intval($col)];
     }
 
+    /**
+     * Adds a user to the project_user table for the specified project
+     * @param $project_id
+     * @param $user_id
+     */
+    function add_user($project_id = 0, $user_id = 0) {
+
+        $this->db->query($this->db->insert_string('project_user', array(
+            'project_id' => $project_id,
+            'user_id' => $user_id
+        )));
+        $id = $this->db->insert_id();
+        return $id;
+    }
+
     function get_for_user($user_id = 0, $archived = 0) {
         $sql = "SELECT p.*, pu.ordering from ".$this->get_scope()." p, project_user pu where p.id = pu.project_id and "
             ." pu.user_id = ? and p.deleted = 0";
@@ -134,6 +149,7 @@ class Project extends MY_Model
         $data = array(
             'uuid' => $this->uuid->v4(),
             'creator_id' => intval(get_user_id()),
+            'team_id' => intval(get_team_id()),
             'archived' => 0,
             'deleted' => 0,
             'created' => timestamp_to_mysqldatetime(now())

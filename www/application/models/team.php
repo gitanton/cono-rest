@@ -36,6 +36,22 @@ class Team extends MY_Model
     }
 
     /**
+     * Returns the first team in the user's list
+     * @param int $user_id
+     * @return mixed
+     */
+    function get_active_for_user($user_id = 0)
+    {
+        $sql = "SELECT t.* from " . $this->get_scope() . " t, team_user tu where t.id = tu.team_id and "
+            . " tu.user_id = ? and t.deleted = 0";
+        $query_params = array(intval($user_id));
+        $sql .= " ORDER by t.id ASC LIMIT 0,1";
+
+        $query = $this->db->query($sql, $query_params);
+        return $query->row();
+    }
+
+    /**
      * Returns the list of teams for the current user
      * @param int $user_id
      * @return mixed

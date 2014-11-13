@@ -298,8 +298,8 @@ class Projects extends REST_Controller
         $this->load->helper('notification');
 
         $project = validate_project_uuid($uuid);
-        $user_uuid = $this->post('user_uuid');
-        $email = $this->post('email');
+        $user_uuid = $this->post('user_uuid', TRUE);
+        $email = $this->post('email', TRUE);
 
         if ($email) {
             /** Look to see if there is an existing invite and resend it */
@@ -322,6 +322,31 @@ class Projects extends REST_Controller
             json_success("User invited successfully", array('invite_id' => $invite_id, 'email' => $email, 'key' => $key));
             exit;
         } else if ($user_uuid) {
+            $user = validate_user_uuid($user_uuid);
+
+            /* Validate that the user is on the project */
+            if (!$this->User->is_on_team(get_team_id(), $user->id)) {
+                json_error('The user you are inviting is not on your team.  Please invite them to your team first.');
+                exit;
+            }
+
+            $invite = $this->Project_Invite->get_for_user_id_project($user->id, $project->id);
+
+            if ($invite) {
+                $invite_id = $invite->id;
+                $key = $invite->key;
+            } else {
+                $key = random_string('unique');
+                $invite_id = $this->Project_Invite->add(array(
+                    'project_id' => $project->id,
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'key' => $key
+                ));
+            }
+
+            notify_project_invite_new_user($invite_id, get_user_id());
+            json_success("User invited successfully", array('invite_id' => $invite_id, 'email' => $email, 'key' => $key));
             exit;
         }
 

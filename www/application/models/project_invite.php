@@ -31,6 +31,18 @@ class Project_Invite extends MY_Model
         return $query->row();
     }
 
+    /**
+     * Returns the matching project invite for the user uuid/project
+     * @param int $user_id
+     * @return mixed
+     */
+    function get_for_user_id_project($user_id = '', $project_id = 0)
+    {
+        $this->db->where(array('user_id' => $user_id, 'project_id' => $project_id));
+        $query = $this->db->get($this->get_scope());
+        return $query->row();
+    }
+
     function column_map($col)
     {
         $column_map = array('id');
