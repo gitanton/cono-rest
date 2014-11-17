@@ -20,7 +20,7 @@ function notify_team_invite($invite_id, $inviter_id)
         $CI->email->message($msg);
 
         $CI->email->from($CI->config->item('notifications_email'), $CI->config->item('site_title'));
-        $CI->email->to($user->email);
+        $CI->email->to($invite->email);
 
         process_notification_send();
         $log_text = sprintf('[Notify Team Invite] Sending message: [%s] to %s', $subject, $invite->email);
@@ -48,6 +48,12 @@ function notify_project_invite_new_user($invite_id, $inviter_id)
         $user = $CI->User->load($inviter_id);
         $invite = $CI->Project_Invite->load($invite_id);
 
+        $email = $invite->email;
+        if(!$email) {
+            $invitee = $CI->User->load($invite->user_id);
+            $email = $invitee->email;
+        }
+
         $CI->email->clear();
         $subject = "You have been invited to join a project on ".$CI->config->item('site_title');
         include(APPPATH . '/views/emails/project_invite.php');
@@ -55,15 +61,16 @@ function notify_project_invite_new_user($invite_id, $inviter_id)
         $CI->email->message($msg);
 
         $CI->email->from($CI->config->item('notifications_email'), $CI->config->item('site_title'));
-        $CI->email->to($user->email);
+        $CI->email->to($email);
 
         process_notification_send();
-        $log_text = sprintf('[Notify Project Invite New User] Sending message: [%s] to %s', $subject, $invite->email);
+        $log_text = sprintf('[Notify Project Invite New User] Sending message: [%s] to %s', $subject, $email);
         log_message('info', $log_text);
         loggly(array(
             'text' => $log_text,
             'method' => 'notification_helper.notify_project_invite_new',
-            'team_invite' => $invite,
+            'project_invite' => $invite,
+            'email' => $email,
             'user_id' => $inviter_id
         ));
     }

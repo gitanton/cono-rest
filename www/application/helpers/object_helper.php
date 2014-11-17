@@ -230,6 +230,15 @@ function convert_field($value, $datatype = '')
 
 
 /* Object Validation */
+
+/**
+ * Validates that:
+ *   - a project exists with the specified uuid
+ *   - the project isn't deleted
+ *   - The currently logged in user is a member of that project
+ * @param string $uuid
+ * @return mixed
+ */
 function validate_project_uuid($uuid = '')
 {
     $CI =& get_instance();
@@ -252,6 +261,15 @@ function validate_project_uuid($uuid = '')
     return $project;
 }
 
+
+/**
+ * Validates that:
+ *   - a team exists with the specified uuid
+ *   - the team isn't deleted
+ *   - The currently logged in user is a member of that team
+ * @param string $uuid
+ * @return mixed
+ */
 function validate_team_uuid($uuid = '')
 {
     $CI =& get_instance();
@@ -274,6 +292,40 @@ function validate_team_uuid($uuid = '')
     return $team;
 }
 
+
+/**
+ * Validates that:
+ *   - a user exists with the specified uuid
+ *   - the user isn't deleted
+ * @param string $uuid
+ * @return mixed
+ */
+function validate_user_uuid($uuid = '')
+{
+    $CI =& get_instance();
+    if (!$uuid) {
+        json_error('uuid is required');
+        exit;
+    }
+    $user = $CI->User->load_by_uuid($uuid);
+    if (!$user || $user->deleted) {
+        json_error('There is no active user with that id');
+        exit;
+    }
+
+    return $user;
+}
+
+
+/**
+ * Validates that:
+ *   - a message exists with the specified uuid
+ *   - the message isn't deleted
+ *   - The currently logged in user is a member of the recipients of that message
+ * @param string $uuid
+ * @param boolean $validate_own whether to validate that the user is the sender of the message
+ * @return mixed
+ */
 function validate_message_uuid($uuid = '', $validate_own = false)
 {
     $CI =& get_instance();
@@ -304,6 +356,34 @@ function validate_message_uuid($uuid = '', $validate_own = false)
     }
 
     return $message;
+}
+
+
+/**
+ * Validates that:
+ *   - a invite exists
+ *   - the invite isn't used
+ *   - The currently logged in user is a member of that project
+ * @param Invite $invite
+ * @return mixed
+ */
+function validate_invite($invite, $user_id = 0) {
+    if (!$invite) {
+        json_error('There is no active invite with that key');
+        exit;
+    }
+
+    if($invite->used && $invite->used!='0000-00-00 00:00:00') {
+        json_error('The invite you are attempting to use has already been used.');
+        exit;
+    }
+
+    if($invite->user_id && $user_id) {
+        if($invite->user_id != $user_id) {
+            json_error('You are trying to accept an invite that is assigned to a different user.');
+            exit;
+        }
+    }
 }
 
 ?>

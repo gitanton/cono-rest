@@ -105,7 +105,7 @@ class Users extends REST_Controller
      */
     public function index_post()
     {
-        $this->load->model(array('Team', 'Team_Invite'));
+        $this->load->model(array('Team', 'Team_Invite', 'Project_Invite', 'Project'));
 
         /* Validate add */
         $this->load->library('form_validation');
@@ -126,32 +126,18 @@ class Users extends REST_Controller
             );
 
             $team_id = 0;
-            /* Validate that the team exists if it is set */
-            $invite_key = $this->post('invite_key', TRUE);
-            if($invite_key) {
-                $invite = $this->Team_Invite->load_by_key($invite_key);
-                if(!$invite) {
-                    json_error('The invitation key you have entered is invalid');
-                    exit;
-                }
 
-                if($invite->user_id) {
-                    json_error('The invitation you are attempting to use has already been used.');
-                    exit;
-                }
+            /* Get the invite if there is an invite key/invite type on the request */
+            $invite = $this->validate_invite();
 
-                $team_id = $invite->team_id;
-            }
             $user_id = $this->User->add($data);
+            $user = $this->User->load($user_id);
 
-            $this->session->set_userdata(SESS_USER_ID, $user_id);
-            $user = $this->decorate_object($this->User->load($user_id));
-
-            /* if this is a new user, add a team for them */
-            if(!$team_id) {
-                $team_id = $this->Team->add();
+            /* If the invite is not null, we will process the invite and add the new user to the team/project */
+            if($invite) {
+                $this->process_invite($invite, $user);
             } else {
-                $this->Team->add_user($team_id, $user_id);
+                $team_id = $this->Team->add();
             }
 
             /* Set the team on the session */
@@ -160,15 +146,7 @@ class Users extends REST_Controller
                 $user->team_id = $team_id;
             }
 
-            /* If this was an invitation, update the invite to mark it as used */
-            if($invite) {
-                $this->Team_Invite->update($invite->id, array(
-                    'user_id' => $user_id,
-                    'used' => timestamp_to_mysqldatetime(now())
-                ));
-            }
-
-            $this->response($user);
+            $this->response($this->decorate_object($user));
         }
     }
 
@@ -213,10 +191,13 @@ class Users extends REST_Controller
      * )
      */
     public function login_post() {
+        $this->load->model(array('Team', 'Team_Invite', 'Project_Invite', 'Project'));
 
         $this->load->library('form_validation');
         $this->form_validation->set_rules('username', 'Username', 'trim|required|min_length[5]|xss_clean');
         $this->form_validation->set_rules('password', 'Password', 'trim|required|min_length[6]|xss_clean');
+        $this->form_validation->set_rules('invite_key', 'Invite Key', 'trim|xss_clean');
+        $this->form_validation->set_rules('invite_type', 'Invite Type', 'trim|xss_clean|callback_validate_invite_type');
 
         if ($this->form_validation->run() == FALSE) {
             json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
@@ -226,7 +207,17 @@ class Users extends REST_Controller
             $password = $this->post('password', TRUE);
             $user = $this->User->login($username, $password);
             if ($user && $user->id) {
+
+                $invite = $this->validate_invite($user->id);
+                if($invite) {
+                    $this->process_invite($invite, $user);
+                }
+
                 $this->session->set_userdata(SESS_USER_ID, $user->id);
+                $team = $this->Team->get_active_for_user($user->id);
+                if($team) {
+                    $this->session->set_userdata(SESS_TEAM_ID, $team->id);
+                }
 
                 log_message('info', 'Login - User ID: ' . $user->id . ', Username: ' . $user->username);
 
@@ -237,6 +228,25 @@ class Users extends REST_Controller
             }
         }
         json_error('The username/password you have entered are invalid.');
+    }
+
+
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/logout",
+     *   description="API for user actions",
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="User",
+     *    summary="Logs out the current user"
+     *   )
+     * )
+     */
+    public function logout_post() {
+        $this->session->sess_destroy();
+        json_success('You have been logged out successfully.');
     }
 
 
@@ -391,6 +401,74 @@ class Users extends REST_Controller
             echo json_encode("The email address you are attempting to use is currently in use, please choose another");
         } else {
             echo "true";
+        }
+    }
+
+    public function validate_invite_type($type = '')
+    {
+        if ($type) {
+            if($type!=INVITE_TYPE_PROJECT && $type!=INVITE_TYPE_TEAM) {
+                $this->form_validation->set_message('validate_invite_type', 'The %s is an invalid invite type.');
+                return FALSE;
+            }
+        }
+        return TRUE;
+    }
+
+    private function validate_invite($user_id = 0) {
+        $invite = null;
+
+        $invite_key = $this->post('invite_key', TRUE);
+        $invite_type = $this->post('invite_type', TRUE);
+        if($invite_key && $invite_type) {
+            /* Team Invite */
+            if($invite_type==INVITE_TYPE_TEAM) {
+                $invite = $this->Team_Invite->load_by_key($invite_key);
+                validate_invite($invite);
+            }
+            /* Project Invite */
+            else {
+                $invite = $this->Project_Invite->load_by_key($invite_key);
+                validate_invite($invite, $user_id);
+            }
+        }
+
+        return $invite;
+    }
+
+    private function process_invite($invite, $user) {
+        /* Process Invites */
+        $invite_key = $this->post('invite_key', TRUE);
+        $invite_type = $this->post('invite_type', TRUE);
+        if($invite_key && $invite_type && $invite) {
+            /* Team Invite */
+            if($invite_type==INVITE_TYPE_TEAM) {
+                /* Add the user to the team */
+                $this->Team->add_user($invite->team_id, $user->id);
+
+                /* Update the invite so that the user is set on it */
+                $this->Team_Invite->update($invite->id, array(
+                    'user_id' => $user->id,
+                    'used' => timestamp_to_mysqldatetime(now())
+                ));
+            }
+            /* Project Invite */
+            else {
+                /* Add the user to the project */
+                $this->Project->add_user($invite->project_id, $user->id);
+
+                /* Look up the project to see if the user is already on the team, if not add them */
+                $project = $this->Project->load($invite->project_id);
+                if(!$this->User->is_on_team($project->team_id, $user->id)) {
+                    $this->Team->add_user($project->team_id, $user->id);
+                }
+
+                /* Update the invite so that the user is set on it */
+                $this->Project_Invite->update($invite->id, array(
+                    'user_id' => $user->id,
+                    'used' => timestamp_to_mysqldatetime(now())
+                ));
+            }
         }
     }
 }

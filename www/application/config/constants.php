@@ -14,6 +14,9 @@ define("IMG_SIZE_SM", 50);
 define("IMG_SIZE_MD", 160);
 define("IMG_SIZE_LG", 230);
 
+define("INVITE_TYPE_PROJECT", 'project');
+define("INVITE_TYPE_TEAM", 'team');
+
 define("DEFAULT_LIMIT", 20);
 define("DEFAULT_PAGE", 0);
 
