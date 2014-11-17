@@ -7,5 +7,5 @@ Header set Access-Control-Allow-Headers: "X-API-KEY, Origin, X-Requested-With, C
 
 RewriteEngine on
 
-RewriteCond $1 !^(index\.php|assets|cache|application/cache|robots\.txt)
+RewriteCond $1 !^(index\.php|assets|cache|docs|application/cache|robots\.txt)
 RewriteRule ^(.*)$ /rest/index.php?/$1 [L]
