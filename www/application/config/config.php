@@ -21,7 +21,7 @@ $config['signin_url'] = 'http://conojoapp.scmreview.com/';
 $config['site_title'] = 'Conojo';
 
 $config['max_file_upload_size'] = 20480;
-$config['upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/assets/uploads/';
+$config['upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/uploads/';
 $config['upload_types'] = 'jpg|png|gif';
 
 $config['contact_email'] = 'info@conojo.com';
