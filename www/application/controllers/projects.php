@@ -4,10 +4,9 @@ use Swagger\Annotations as SWG;
 /**
  *
  * @SWG\Model(id="Project",required="uuid,name,type_id")
- * @SWG\Property(name="id",type="integer",description="The unique ID of the Project (for private use in referencing other objects)")
  * @SWG\Property(name="uuid",type="string",description="The unique ID of the Project (for public consumption)")
  * @SWG\Property(name="name",type="string",description="The name of the Project")
- * @SWG\Property(name="creator_id",type="integer",description="The id of the user who created the project")
+ * @SWG\Property(name="creator_uuid",type="string",description="The id of the user who created the project")
  * @SWG\Property(name="type_id",type="integer",description="The project type id")
  * @SWG\Property(name="archived",type="integer",description="Whether this project is archived or not")
  * @SWG\Property(name="ordering",type="integer",description="The ordering of how the project should be displayed in the list of projects")
@@ -15,7 +14,6 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="users",type="array",@SWG\Items("User"),description="The users attached to this project")
  *
  * @SWG\Model(id="ProjectInvite",required="uuid,project_id,email")
- * @SWG\Property(name="id",type="integer",description="The unique ID of the ProjectInvite (for private use in referencing other objects)")
  * @SWG\Property(name="uuid",type="string",description="The unique ID of the ProjectInvite (for public consumption)")
  * @SWG\Property(name="email",type="string",description="The email that the invite is sent to")
  * @SWG\Property(name="key",type="string",description="The unique 32 character key assigned to this invite that allows the user to accept the invite")
@@ -367,11 +365,7 @@ class Projects extends REST_Controller
 
     protected function decorate_object($object)
     {
-        unset($object->deleted, $object->team_id);
-
-        $users = $this->User->get_for_project($object->id);
-        $object->users = $users;
-        return $object;
+        return decorate_project($object);
     }
 }
 

@@ -7,8 +7,7 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="message",type="string",description="The success/error message related to the response")
  * @SWG\Property(name="data",type="object",description="Miscellaneous data associated with the message or error")
  *
- * @SWG\Model(id="User",required="id,uuid,username")
- * @SWG\Property(name="id",type="integer",description="The unique ID of the User (for private use in referencing other objects)")
+ * @SWG\Model(id="User",required="uuid,username")
  * @SWG\Property(name="uuid",type="string",description="The unique ID of the User (for public use)")
  * @SWG\Property(name="fullname",type="string",description="The full name of the User")
  * @SWG\Property(name="email",type="string",description="The email address of the User")
@@ -365,7 +364,7 @@ class Users extends REST_Controller
 
     protected function decorate_object($object)
     {
-        return clean_user($object);
+        return decorate_user($object);
     }
 
     public function query_username_get()

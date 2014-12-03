@@ -4,14 +4,12 @@ use Swagger\Annotations as SWG;
 /**
  *
  * @SWG\Model(id="Team",required="uuid,name,type_id")
- * @SWG\Property(name="id",type="integer",description="The unique ID of the Team (for private use in referencing other objects)")
  * @SWG\Property(name="uuid",type="string",description="The unique ID of the Team (for public consumption)")
- * @SWG\Property(name="owner_id",type="integer",description="The id of the user who owns the team")
+ * @SWG\Property(name="owner_uuid",type="string",description="The id of the user who owns the team")
  * @SWG\Property(name="created",type="string",format="date",description="The date/time that this team was created")
  * @SWG\Property(name="users",type="array",@SWG\Items("User"),description="The users attached to this team")
  *
  * @SWG\Model(id="TeamInvite",required="uuid,team_id,email")
- * @SWG\Property(name="id",type="integer",description="The unique ID of the TeamInvite (for private use in referencing other objects)")
  * @SWG\Property(name="uuid",type="string",description="The unique ID of the TeamInvite (for public consumption)")
  * @SWG\Property(name="email",type="string",description="The email that the invite is sent to")
  * @SWG\Property(name="key",type="string",description="The unique 32 character key assigned to this invite that allows the user to accept the invite")
@@ -170,10 +168,6 @@ class Teams extends REST_Controller
     }
 
     protected function decorate_object($object) {
-        unset($object->deleted);
-
-        $users = $this->User->get_for_team($object->id);
-        $object->users = $users;
-        return $object;
+        return decorate_team($object);
     }
 }

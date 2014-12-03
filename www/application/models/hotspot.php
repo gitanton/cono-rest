@@ -3,7 +3,7 @@ class Hotspot extends MY_Model
 {
 
     protected static $fields = array(
-        '' => 'string'
+        'data' => 'string'
     );
 
     function get_scope()

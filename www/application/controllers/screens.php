@@ -4,9 +4,8 @@ use Swagger\Annotations as SWG;
 /**
  *
  * @SWG\Model(id="Screen",required="uuid")
- * @SWG\Property(name="id",type="integer",description="The unique ID of the Screen (for private use in referencing other objects)")
  * @SWG\Property(name="uuid",type="string",description="The unique ID of the Screen (for public consumption)")
- * @SWG\Property(name="creator_id",type="integer",description="The id of the user who created the screen")
+ * @SWG\Property(name="creator_uuid",type="string",description="The id of the user who created the screen")
  * @SWG\Property(name="ordering",type="integer",description="The ordering of how the screen should be displayed in the list of screens for this project")
  * @SWG\Property(name="created",type="string",format="date",description="The date/time that this screen was created")
  * @SWG\Property(name="image_width",type="float",description="The width of the image")
@@ -45,13 +44,27 @@ class Screens extends REST_Controller
      *    method="GET",
      *    nickname="Get Screens",
      *    type="array[Screen]",
-     *    summary="Returns a list of screens for the specified project"
+     *    summary="Returns a list of screens for the specified project",
+     * @SWG\Parameter(
+     *     name="project_uuid",
+     *     description="The unique ID of the project",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     )
      *   ),
      * @SWG\Operation(
      *    method="POST",
      *    nickname="Add Screen",
      *    type="Screen",
      *    summary="Create a new screen for the given project",
+     * @SWG\Parameter(
+     *     name="project_uuid",
+     *     description="The unique ID of the project",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     ),
      * @SWG\Parameter(
      *     name="file",
      *     description="File Upload of the screenshot",
@@ -106,7 +119,14 @@ class Screens extends REST_Controller
      *    method="GET",
      *    type="Screen",
      *    nickname="Get Screen",
-     *    summary="Returns a screen specified by the given uuid"
+     *    summary="Returns a screen specified by the given uuid",
+     * @SWG\Parameter(
+     *     name="screen_uuid",
+     *     description="The unique ID of the screen",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     )
      *   ),
      *
      * @SWG\Operation(
@@ -115,7 +135,7 @@ class Screens extends REST_Controller
      *    type="Response",
      *    summary="Deletes a screen with the specified UUID",
      * @SWG\Parameter(
-     *     name="uuid",
+     *     name="screen_uuid",
      *     description="The unique ID of the screen",
      *     paramType="path",
      *     required=true,
@@ -163,13 +183,27 @@ class Screens extends REST_Controller
      *    method="GET",
      *    nickname="List Hotspots",
      *    type="array[Hotspot]",
-     *    summary="Returns a list of hotspots for the specified screen"
+     *    summary="Returns a list of hotspots for the specified screen",
+     * @SWG\Parameter(
+     *     name="screen_uuid",
+     *     description="The unique ID of the screen",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     )
      *   ),
      * @SWG\Operation(
      *    method="POST",
      *    type="Hotspot",
      *    nickname="Add Hotspot",
      *    summary="Create a new hotspot for the given screen",
+     * @SWG\Parameter(
+     *     name="screen_uuid",
+     *     description="The unique ID of the screen",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     ),
      * @SWG\Parameter(
      *     name="data",
      *     description="The hotspot json data in string form",

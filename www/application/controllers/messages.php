@@ -2,14 +2,14 @@
 use Swagger\Annotations as SWG;
 
 /** *
- * @SWG\Model(id="Message",required="id,uuid,content,sender_id")
- * @SWG\Property(name="id",type="integer",description="The unique ID of the Message (for private use in referencing other objects)")
+ * @SWG\Model(id="Message",required="uuid,content,sender_id")
  * @SWG\Property(name="uuid",type="string",description="The unique ID of the Message (for public use)")
- * @SWG\Property(name="sender_id",type="string",description="The id of the sender of the message")
+ * @SWG\Property(name="sender_uuid",type="string",description="The id of the sender of the message")
  * @SWG\Property(name="content",type="string",description="The content of the message")
  * @SWG\Property(name="created",type="string",format="date",description="The date/time of that the message was sent")
  * @SWG\Property(name="updated",type="string",format="date",description="The date/time of that the message was last updated")
  * @SWG\Property(name="reply_count",type="integer",description="The number of replies to this message")
+ * @SWG\Property(name="project_uuid",type="string",description="The uuid of the project for whom the screen is provided")
  * @SWG\Property(name="recipients",type="array",@SWG\Items("User"),description="The recipients attached to this message")
  * @SWG\Property(name="replies",type="array",@SWG\Items("Message"),description="The replies attached to this message")
  *
@@ -241,13 +241,7 @@ class Messages extends REST_Controller
 
     protected function decorate_object($object)
     {
-        unset($object->deleted);
-
-        $users = $this->User->get_for_message($object->id);
-        $object->recipients = $users;
-        $replies = $this->Message->get_replies($object->id);
-        $object->replies = $replies;
-        return $object;
+        return decorate_message($object);
     }
 }
 
