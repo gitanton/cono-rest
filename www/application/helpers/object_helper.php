@@ -254,11 +254,72 @@ function validate_project_uuid($uuid = '')
     }
     /* Validate that the user is on the project */
     if (!$CI->User->is_on_project($project->id, get_user_id())) {
-        json_error('You are not authorized to duplicate this project.');
+        json_error('You are not authorized to access this project.');
         exit;
     }
 
     return $project;
+}
+
+/**
+ * Validates that:
+ *  - a screen exists with that specified uuid
+ *  - the screen isn't deleted
+ *  - the screen's project is one that the user belongs to
+ * @param string $uuid
+ * @return mixed
+ */
+function validate_screen_uuid($uuid = '')
+{
+    $CI =& get_instance();
+    $CI->load->model('Screen');
+    if (!$uuid) {
+        json_error('uuid is required');
+        exit;
+    }
+    $screen = $CI->Screen->load_by_uuid($uuid);
+    if (!$screen || $screen->deleted) {
+        json_error('There is no screen with that id');
+        exit;
+    }
+    /* Validate that the user is on the project that the screen belongs to */
+    if (!$CI->User->is_on_project($screen->project_id, get_user_id())) {
+        json_error('You are not authorized to access this project.');
+        exit;
+    }
+
+    return $screen;
+}
+
+/**
+ * Validates that:
+ *  - a screen exists with that specified uuid
+ *  - the screen isn't deleted
+ *  - the screen's project is one that the user belongs to
+ * @param string $uuid
+ * @return mixed
+ */
+function validate_hotspot_uuid($uuid = '')
+{
+    $CI =& get_instance();
+    $CI->load->model(array('Hotspot','Screen'));
+    if (!$uuid) {
+        json_error('uuid is required');
+        exit;
+    }
+    $hotspot = $CI->Hotspot->load_by_uuid($uuid);
+    if (!$hotspot || $hotspot->deleted) {
+        json_error('There is no hotspot with that id');
+        exit;
+    }
+    $screen = $CI->Screen->load($hotspot->screen_id);
+    /* Validate that the user is on the project that the screen belongs to */
+    if (!$CI->User->is_on_project($screen->project_id, get_user_id())) {
+        json_error('You are not authorized to access this project.');
+        exit;
+    }
+
+    return $hotspot;
 }
 
 
@@ -367,19 +428,20 @@ function validate_message_uuid($uuid = '', $validate_own = false)
  * @param Invite $invite
  * @return mixed
  */
-function validate_invite($invite, $user_id = 0) {
+function validate_invite($invite, $user_id = 0)
+{
     if (!$invite) {
         json_error('There is no active invite with that key');
         exit;
     }
 
-    if($invite->used && $invite->used!='0000-00-00 00:00:00') {
+    if ($invite->used && $invite->used != '0000-00-00 00:00:00') {
         json_error('The invite you are attempting to use has already been used.');
         exit;
     }
 
-    if($invite->user_id && $user_id) {
-        if($invite->user_id != $user_id) {
+    if ($invite->user_id && $user_id) {
+        if ($invite->user_id != $user_id) {
             json_error('You are trying to accept an invite that is assigned to a different user.');
             exit;
         }

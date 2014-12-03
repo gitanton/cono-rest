@@ -32,6 +32,19 @@ class Hotspot extends MY_Model
         return $query->result();
     }
 
+    /**
+     * Find the max ordering for screens for the current project (used when creating new screens)
+     * @param $user_id
+     * @return mixed
+     */
+    function get_max_ordering_for_screen($screen_id = 0) {
+        $this->db->select_max('ordering');
+        $this->db->where(array('screen_id' => $screen_id));
+        $query = $this->db->get($this->get_scope());
+        $row = $query->row();
+        return $row->ordering;
+    }
+
     function add_data()
     {
         $this->load->library('uuid');

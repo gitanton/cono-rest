@@ -114,10 +114,9 @@ function page_url($page_id)
     }
 }
 
-function file_url($file, $is_public = FALSE)
+function file_url($url)
 {
-    $CI =& get_instance();
-    return app_url('files/download/' . $file->uuid);
+    return app_url('assets/uploads/' . $url);
 }
 
 function url_parts($url)
