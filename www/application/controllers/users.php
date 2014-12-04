@@ -131,12 +131,15 @@ class Users extends REST_Controller
 
             $user_id = $this->User->add($data);
             $user = $this->User->load($user_id);
+            $this->session->set_userdata(SESS_USER_ID, $user->id);
 
             /* If the invite is not null, we will process the invite and add the new user to the team/project */
             if($invite) {
                 $this->process_invite($invite, $user);
             } else {
-                $team_id = $this->Team->add();
+                $team_id = $this->Team->add(array(
+                    'owner_id' => $user_id
+                ));
             }
 
             /* Set the team on the session */
