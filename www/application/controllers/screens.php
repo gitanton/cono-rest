@@ -95,9 +95,9 @@ class Screens extends REST_Controller
         $screen = null;
 
         if (isset($_FILES['file'])) {
-            $screen = $this->add_screenshot_upload($project);
+            $screen = $this->add_screen_upload($project);
         } else if ($this->post('url')) {
-
+            $screen = $this->add_screen_url($project);
         }
 
         if (!$screen) {
@@ -248,12 +248,14 @@ class Screens extends REST_Controller
      * Adds a screenshot to a project via a file upload.  Requires that the file be uploaded as 'upload'
      * @param $project
      */
-    private function add_screenshot_upload($project)
+    private function add_screen_upload($project)
     {
-        $config['upload_path'] = $this->config->item('upload_dir');
-        $config['allowed_types'] = $this->config->item('upload_types');
-        $config['max_size'] = $this->config->item('max_file_upload_size');
-        $config['encrypt_name'] = true;
+        $config = array(
+            'upload_path' => $this->config->item('upload_dir'),
+            'allowed_types' => $this->config->item('upload_types'),
+            'max_size' => $this->config->item('max_file_upload_size'),
+            'encrypt_name' => true
+        );
 
         /* Handle the file upload */
         $this->load->library('upload', $config);
@@ -268,6 +270,42 @@ class Screens extends REST_Controller
                 'file_size' => $data['file_size'],
                 'image_height' => $data['image_height'],
                 'image_width' => $data['image_width']
+            );
+            $screen = $this->decorate_object($this->Screen->load($this->Screen->add($insert)));
+            return $screen;
+        }
+    }
+
+    /**
+     * Adds a screenshot to a project via a file upload.  Requires that the file be uploaded as 'upload'
+     * @param $project
+     */
+    private function add_screen_url($project)
+    {
+        $this->load->library('upload');
+        /* encrypt the filename */
+
+        $file_ext = $this->upload->get_extension($this->post('url'));
+        if(!in_array(str_replace(".", "", $file_ext), explode("|", $this->config->item('upload_types')))) {
+            json_error("The image url is invalid.  Only ".implode(", ", explode("|", $this->config->item('upload_types')))." are allowed.");
+            exit;
+        }
+        $file = file_get_contents($this->post('url'));
+        if($file) {
+            $file_name = md5(uniqid(mt_rand())).$file_ext;
+            $full_path = $this->config->item('upload_dir').$file_name;
+            file_put_contents($full_path, $file);
+            $file_size = filesize($full_path)/1000;
+            $file_dimensions = getimagesize($full_path);
+
+            $insert = array(
+                'creator_id' => get_user_id(),
+                'project_id' => $project->id,
+                'ordering' => $this->Screen->get_max_ordering_for_project($project->id) + 1,
+                'url' => $file_name,
+                'file_size' => $file_size,
+                'image_height' => $file_dimensions[1],
+                'image_width' => $file_dimensions[0]
             );
             $screen = $this->decorate_object($this->Screen->load($this->Screen->add($insert)));
             return $screen;

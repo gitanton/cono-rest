@@ -22,7 +22,7 @@ $config['site_title'] = 'Conojo';
 
 $config['max_file_upload_size'] = 20480;
 $config['upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/';
-$config['upload_types'] = 'jpg|png|gif';
+$config['upload_types'] = 'jpg|png|gif|jpeg';
 
 $config['contact_email'] = 'info@conojo.com';
 
