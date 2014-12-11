@@ -153,7 +153,6 @@ class Screens extends REST_Controller
     public function screen_get($uuid = '', $action = '')
     {
         $screen = validate_screen_uuid($uuid);
-        $screen = $this->decorate_object($screen);
         if ($action && $action === 'hotspots') {
             $this->response(decorate_hotspots($screen->hotspots));
         } else {
