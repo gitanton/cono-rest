@@ -102,7 +102,7 @@ class Meetings extends REST_Controller
      *   )
      * )
      *
-     * Creates a new message and attaches project members to it.
+     * Creates a new meeting and attaches project members to it.
      */
     public function index_post()
     {
@@ -157,6 +157,63 @@ class Meetings extends REST_Controller
             $meeting = $this->Meeting->load($meeting_id);
             $this->response($this->decorate_object($meeting));
         }
+    }
+
+    /**
+     * @SWG\Api(
+     *   path="/meeting/{uuid}",
+     *   description="API for meeting actions",
+     * @SWG\Operation(
+     *    method="GET",
+     *    nickname="getMeeting",
+     *    type="Meeting",
+     *    summary="Returns a meeting that matches the given uuid",
+     * @SWG\Parameter(
+     *     name="uuid",
+     *     description="The unique ID of the meeting",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     )
+     *   ),
+     *
+     * @SWG\Operation(
+     *    method="DELETE",
+     *    type="Response",
+     *    nickname="deleteMeeting",
+     *    summary="Deletes a meeting with the specified UUID",
+     * @SWG\Parameter(
+     *     name="uuid",
+     *     description="The unique ID of the meeting",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     )
+     *   )
+     * )
+     */
+
+    /**
+     * Returns a single meeting referenced by their uuid
+     * @param string $uuid
+     */
+    public function meeting_get($uuid = '')
+    {
+        $meeting = validate_meeting_uuid($uuid);
+
+        $this->response($this->decorate_object($meeting));
+    }
+
+    /**
+     * Deletes a project by its uuid
+     * @param string $uuid
+     */
+    public function meeting_delete($uuid = '')
+    {
+        $meeting = validate_meeting_uuid($uuid, true);
+
+        $this->Meeting->delete($meeting->id);
+        json_success("Message deleted successfully.");
     }
 
     protected function decorate_object($object)

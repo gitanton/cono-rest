@@ -219,7 +219,7 @@ class Messages extends REST_Controller
      */
 
     /**
-     * Returns a single user referenced by their uuid
+     * Returns a single message referenced by their uuid
      * @param string $uuid
      */
     public function message_get($uuid = '')

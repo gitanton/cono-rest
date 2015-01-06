@@ -69,7 +69,7 @@ function decorate_message($object, $ignore_replies = false)
 function decorate_meeting($object)
 {
     $CI =& get_instance();
-    $CI->load->model(array('Meeting'));
+    $CI->load->model(array('Meeting', 'Project'));
 
     if (isset($object->project_id)) {
         $object->project_uuid = $CI->Project->get_uuid($object->project_id);

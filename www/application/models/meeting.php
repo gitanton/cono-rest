@@ -74,8 +74,7 @@ class Meeting extends MY_Model
 
         $data = array(
             'uuid' => $this->uuid->v4(),
-            'created' => timestamp_to_mysqldatetime(now()),
-            'ended' => 0
+            'created' => timestamp_to_mysqldatetime(now())
         );
         return $data;
     }

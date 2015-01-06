@@ -422,6 +422,44 @@ function validate_message_uuid($uuid = '', $validate_own = false)
 
 /**
  * Validates that:
+ *   - a meeting exists with the specified uuid
+ *   - the meeting isn't deleted
+ *   - The currently logged in user is a member of the attendees of that meeting
+ * @param string $uuid
+ * @param boolean $validate_own whether to validate that the user is the creator of the meeting
+ * @return mixed
+ */
+function validate_meeting_uuid($uuid = '', $validate_own = false)
+{
+    $CI =& get_instance();
+    $CI->load->model('Meeting');
+    if (!$uuid) {
+        json_error('uuid is required');
+        exit;
+    }
+    $meeting = $CI->Meeting->load_by_uuid($uuid);
+    if (!$meeting || $meeting->deleted) {
+        json_error('There is no active meeting with that id');
+        exit;
+    }
+
+    /* Validate that the user is on the meeting */
+    if (!$CI->User->is_on_meeting($meeting->id, get_user_id())) {
+        json_error('You are not authorized to view this meeting.');
+        exit;
+    }
+    /* Validate that the user is on the meeting */
+    if ($validate_own && get_user_id() != $meeting->creator_id) {
+        json_error('You are not authorized to view this meeting.');
+        exit;
+    }
+
+    return $meeting;
+}
+
+
+/**
+ * Validates that:
  *   - a invite exists
  *   - the invite isn't used
  *   - The currently logged in user is a member of that project
