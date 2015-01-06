@@ -66,6 +66,29 @@ function decorate_message($object, $ignore_replies = false)
     return $object;
 }
 
+function decorate_meeting($object)
+{
+    $CI =& get_instance();
+    $CI->load->model(array('Meeting'));
+
+    if (isset($object->project_id)) {
+        $object->project_uuid = $CI->Project->get_uuid($object->project_id);
+    }
+
+    if (isset($object->moderator_id)) {
+        $object->moderator_uuid = $CI->User->get_uuid($object->moderator_id);
+    }
+
+    $users = $CI->User->get_for_meeting($object->id);
+    $object->recipients = decorate_users($users);
+    $datetime = localize_datetime($object->date, $object->time);
+    $object->date = $datetime->format('Y-m-d');
+    $object->time = $datetime->format('H:i');
+
+    unset($object->deleted, $object->moderator_id, $object->id);
+    return $object;
+}
+
 function decorate_messages($objects, $ignore_replies = false)
 {
     $updated = array();

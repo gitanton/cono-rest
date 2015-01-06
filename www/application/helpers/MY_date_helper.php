@@ -1,4 +1,22 @@
 <?
+function server_datetime($date, $time) {
+    if(get_user()->timezone) {
+        date_default_timezone_set(get_user()->timezone);
+    }
+    $datetime = new DateTime($date." ".$time);
+    $datetime->setTimezone(new DateTimeZone(getenv('TZ')));
+    return $datetime;
+}
+
+function localize_datetime($date, $time) {
+    date_default_timezone_set(getenv('TZ'));
+    $datetime = new DateTime($date." ".$time);
+    if(get_user()->timezone) {
+        $datetime->setTimezone(new DateTimeZone(get_user()->timezone));
+    }
+    return $datetime;
+}
+
 function current_time($timezone, $daylight_saving)
 {
     $time = time();

@@ -33,6 +33,8 @@ $config['notifications_user'] = 'kali@conojo.com';
 $config['loggly_tag'] = 'conojo';
 $config['loggly_token'] = 'c51b721e-e3bb-4ea8-8210-68b59046fcc0';
 
+$config['google_api_key'] = 'AIzaSyDnGoUa_UuPqYMAvFLiRUZyHVcHOAIXIWM';
+
 if (IS_TEST) {
     $config['domain_url'] = 'http://conojoapp.scmreview.com/rest';
     $config['base_url'] = 'http://conojoapp.scmreview.com/rest';

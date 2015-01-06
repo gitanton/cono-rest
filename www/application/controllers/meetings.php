@@ -65,6 +65,13 @@ class Meetings extends REST_Controller
      *     type="string"
      *     ),
      * @SWG\Parameter(
+     *     name="project_uuid",
+     *     description="The UUID of the project that this meeting is attached to",
+     *     paramType="form",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
      *     name="name",
      *     description="Name of the meeting",
      *     paramType="form",
@@ -87,9 +94,9 @@ class Meetings extends REST_Controller
      *     ),
      * @SWG\Parameter(
      *     name="attendees",
-     *     description="An array of UUIDs of individuals who should be invited to the meeting",
+     *     description="A Comma-Separated List of UUIDs of individuals who should be invited to the meeting (Example: '123,232,443'). If this is null, all members of the project will be invited",
      *     paramType="form",
-     *     required=true,
+     *     required=false,
      *     type="array[string]"
      *     )
      *   )
@@ -99,7 +106,62 @@ class Meetings extends REST_Controller
      */
     public function index_post()
     {
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('notes', 'Notes', 'trim|xss_clean');
+        $this->form_validation->set_rules('name', 'Name', 'trim|required|xss_clean');
+        $this->form_validation->set_rules('date', 'Date', 'trim|required|xss_clean');
+        $this->form_validation->set_rules('time', 'Time', 'trim|required|xss_clean');
+        $this->form_validation->set_rules('attendees', 'Attendees', 'trim|required|xss_clean');
+        $this->form_validation->set_rules('project_uuid', 'Project UUID', 'trim|required|xss_clean');
 
+        if ($this->form_validation->run() == FALSE) {
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+        } else {
+            $project = validate_project_uuid($this->post('project_uuid', TRUE));
+
+            $datetime = server_datetime($this->post('date', TRUE), $this->post('time', TRUE));
+
+            $data = array(
+                'project_id' => $project->id,
+                'date' => $datetime->format('Y-m-d'),
+                'time' => $datetime->format('H:i'),
+                'notes' => $this->post('notes', TRUE),
+                'name' => $this->post('name', TRUE),
+                'pin' => random_string('numeric', 6),
+                'creator_id' => get_user_id(),
+                'moderator_id' => get_user_id()
+            );
+
+            $meeting_id = $this->Meeting->add($data);
+
+            /* Allow the attendees to be optional, if it isn't specified, all people on the project are invited */
+            $attendees = $this->post('attendees', TRUE);
+            if(!$attendees) {
+                $users = $this->User->get_for_project($project->id);
+                foreach($users as $user) {
+                    $existing = $this->Meeting->get_meeting_user($meeting_id, $user->id);
+                    if(!$existing) {
+                        $this->Meeting->add_meeting_user($meeting_id, $user->id);
+                    }
+                }
+            } else {
+                $attendees = explode(",", $attendees);
+                foreach($attendees as $attendee) {
+                    $user = $this->User->load_by_uuid($attendee);
+                    $existing = $this->Meeting->get_meeting_user($meeting_id, $user->id);
+                    if(!$existing) {
+                        $this->Meeting->add_meeting_user($meeting_id, $user->id);
+                    }
+                }
+            }
+            $meeting = $this->Meeting->load($meeting_id);
+            $this->response($this->decorate_object($meeting));
+        }
+    }
+
+    protected function decorate_object($object)
+    {
+        return decorate_meeting($object);
     }
 }
 ?>

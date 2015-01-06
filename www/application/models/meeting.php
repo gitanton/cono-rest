@@ -58,8 +58,14 @@ class Meeting extends MY_Model
      */
     function after_add($id = 0)
     {
-        /* Don't deal with meeting recipients on replies */
+        $meeting = $this->load($id);
+
+        /* Add the creator as a meeting participant */
         $this->add_meeting_user($id, get_user_id());
+
+        /* Create the shortened url */
+        $short_url = google_short_url($this->config->item('webapp_url').'#/meeting/'.$meeting->uuid);
+        $this->update($id, array('share_link'=>$short_url));
     }
 
     function add_data()
@@ -69,7 +75,6 @@ class Meeting extends MY_Model
         $data = array(
             'uuid' => $this->uuid->v4(),
             'created' => timestamp_to_mysqldatetime(now()),
-            'updated' => timestamp_to_mysqldatetime(now()),
             'ended' => 0
         );
         return $data;

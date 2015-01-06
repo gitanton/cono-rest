@@ -170,6 +170,31 @@ function auto_link($str, $type = 'both', $popup = FALSE)
     return $str;
 }
 
+function google_short_url($url) {
+    $CI =& get_instance();
+
+    $postData = array(
+        'longUrl' => $url,
+        'key' => $CI->config->item('google_api_key')
+    );
+    $jsonData = json_encode($postData);
+    $curlObj = curl_init();
+
+    curl_setopt($curlObj, CURLOPT_URL, 'https://www.googleapis.com/urlshortener/v1/url');
+    curl_setopt($curlObj, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($curlObj, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_setopt($curlObj, CURLOPT_HEADER, 0);
+    curl_setopt($curlObj, CURLOPT_HTTPHEADER, array('Content-type:application/json'));
+    curl_setopt($curlObj, CURLOPT_POST, 1);
+    curl_setopt($curlObj, CURLOPT_POSTFIELDS, $jsonData);
+
+    $response = curl_exec($curlObj);
+    $json = json_decode($response);
+    curl_close($curlObj);
+
+    return $json->id;
+}
+
 if (!function_exists('http_response_code'))
 {
     function http_response_code($newcode = NULL)

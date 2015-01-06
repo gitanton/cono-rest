@@ -108,7 +108,7 @@ class Messages extends REST_Controller
      *     ),
      * @SWG\Parameter(
      *     name="recipients",
-     *     description="An array of UUIDs of individuals who should receive the message.  If this is null, the message will be sent to all users on the project.  This will also be ignored if there is a parent_uuid set since we will default to the parent email for recipients",
+     *     description="A Comma-Separated List of UUIDs of individuals who should be recipients of the message (Example: '123,232,443').  If this is null, the message will be sent to all users on the project.  This will also be ignored if there is a parent_uuid set since we will default to the parent email for recipients",
      *     paramType="form",
      *     required=false,
      *     type="array[string]"
@@ -152,6 +152,7 @@ class Messages extends REST_Controller
             $message = $this->Message->load($this->Message->add($data));
 
             /* Set the recipients on the message if it doesn't have a parent */
+            /* Allow the recipients to be optional, if it isn't specified, all people on the project are marked as recipients */
             if(!$message->parent_id) {
                 $recipients = $this->post('recipients', TRUE);
                 if(!$recipients) {
@@ -163,6 +164,7 @@ class Messages extends REST_Controller
                         }
                     }
                 } else {
+                    $recipients = explode(",", $recipients);
                     foreach($recipients as $recipient) {
                         $user = $this->User->load_by_uuid($recipient);
                         $existing = $this->Message->get_message_user($message->id, $user->id);

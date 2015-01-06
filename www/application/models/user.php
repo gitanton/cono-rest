@@ -89,14 +89,27 @@ class User extends MY_Model
     }
 
     /**
-     * Returns all users attached to a specified project
-     * @param int $project_id
+     * Returns all users attached to a specified message
+     * @param int $message_id
      * @return mixed
      */
     function get_for_message($message_id = 0) {
         $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
         $this->db->join('message_user', 'message_user.user_id = user.id');
         $this->db->where('message_user.message_id', $message_id);
+        $query = $this->db->get($this->get_scope());
+        return $query->result();
+    }
+
+    /**
+     * Returns all users attached to a specified meeting
+     * @param int $meeting_id
+     * @return mixed
+     */
+    function get_for_meeting($meeting_id = 0) {
+        $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
+        $this->db->join('meeting_user', 'meeting_user.user_id = user.id');
+        $this->db->where('meeting_user.meeting_id', $meeting_id);
         $query = $this->db->get($this->get_scope());
         return $query->result();
     }
@@ -165,6 +178,26 @@ class User extends MY_Model
             $this->db->join('message_user', 'message_user.user_id = user.id');
             $this->db->where('message_user.message_id', $message_id);
             $this->db->where('message_user.user_id', $user_id);
+            $query = $this->db->get($this->get_scope());
+            $row = $query->row();
+            if($row) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Validates that a user is an attendee of the specified meeting
+     * @param int $meeting_id
+     * @param int $user_id
+     * @return bool
+     */
+    function is_on_meeting($meeting_id = 0, $user_id = 0) {
+        if($meeting_id > 0 && $user_id > 0) {
+            $this->db->join('meeting_user', 'meeting_user.user_id = user.id');
+            $this->db->where('meeting_user.meeting_id', $meeting_id);
+            $this->db->where('meeting_user.user_id', $user_id);
             $query = $this->db->get($this->get_scope());
             $row = $query->row();
             if($row) {
