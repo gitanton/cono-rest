@@ -13,6 +13,7 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="email",type="string",description="The email address of the User")
  * @SWG\Property(name="username",type="string",description="The username of the User")
  * @SWG\Property(name="last_login",type="string",format="date",description="The date/time of the last login of the user")
+ * @SWG\Property(name="timezone",type="string",format="date",description="The timezone that the user belongs to")
  *
  * @SWG\Resource(
  *     apiVersion="1.0",
@@ -83,6 +84,13 @@ class Users extends REST_Controller
      *     description="Email address of the user",
      *     paramType="form",
      *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="timezone",
+     *     description="Timezone of the user",
+     *     paramType="form",
+     *     required=false,
      *     type="string"
      *     ),
      * @SWG\Parameter(
@@ -307,6 +315,7 @@ class Users extends REST_Controller
      */
     public function user_put($uuid='')
     {
+        $this->validate_user();
         /* Validate update - have to copy the fields from put to $_POST for validation */
         $_POST['fullname'] = $this->put('fullname');
         $_POST['username'] = $this->put('username');
@@ -323,6 +332,9 @@ class Users extends REST_Controller
         } else {
             $data = $this->get_put_fields($this->User->get_fields());
             $this->User->update_by_uuid($uuid, $data);
+            $user = $this->decorate_object($this->User->load_by_uuid($uuid));
+            $this->response($user);
+            exit;
         }
     }
 
@@ -332,6 +344,7 @@ class Users extends REST_Controller
      */
     public function user_get($uuid = '')
     {
+        $this->validate_user();
         if (!$uuid) {
             json_error('uuid is required');
             exit;
@@ -351,6 +364,7 @@ class Users extends REST_Controller
      */
     public function user_delete($uuid = '')
     {
+        $this->validate_user();
         if (!$uuid) {
             json_error('uuid is required');
             exit;

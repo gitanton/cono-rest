@@ -5,7 +5,8 @@ class User extends MY_Model
     protected static $fields = array(
         'fullname' => 'string',
         'username' => 'username',
-        'email' => 'email'
+        'email' => 'email',
+        'timezone' => 'string'
     );
 
     function get_scope()
