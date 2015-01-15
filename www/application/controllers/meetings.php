@@ -40,7 +40,7 @@ class Meetings extends REST_Controller
     {
         parent::__construct();
         $this->load->helper('json');
-        $this->load->model(array('Meeting'));
+        $this->load->model(array('Meeting', 'Meeting_Comment', 'Meeting_Delta'));
     }
 
     /**
@@ -289,9 +289,24 @@ class Meetings extends REST_Controller
      */
     private function meeting_chat_add($uuid = '')
     {
-        $meeting = validate_meeting_uuid($uuid);
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('comment', 'Comment', 'trim|required|xss_clean');
+        if ($this->form_validation->run() == FALSE) {
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+        } else {
 
-        $this->response($this->decorate_object($comment));
+            $meeting = validate_meeting_uuid($uuid, true);
+
+            $comment_id = $this->Meeting_Comment->add(array(
+                'comment' => $this->post('comment'),
+                'meeting_id' => $meeting->id,
+                'creator_id' => get_user_id()
+            ));
+            $comment = $this->Meeting_Comment->load($comment_id);
+
+            $this->response(decorate_meeting_comment($comment));
+
+        }
     }
 
     /**
@@ -311,7 +326,7 @@ class Meetings extends REST_Controller
      *     type="string"
      *     ),
      * @SWG\Parameter(
-     *     name="last_id",
+     *     name="last_uuid",
      *     description="The last meeting comment id that the client has received",
      *     paramType="query",
      *     required=false,
@@ -325,9 +340,14 @@ class Meetings extends REST_Controller
      */
     private function meeting_chat_get($uuid = '')
     {
-        $meeting = validate_meeting_uuid($uuid);
+        $meeting = validate_meeting_uuid($uuid, true);
+        $last_id = 0;
+        if($this->get('last_uuid')) {
+            $last_id = $this->Meeting_Comment->get_id($this->get('last_uuid'));
+        }
+        $comments = $this->Meeting_Comment->get_for_meeting($meeting->id, $last_id);
 
-        $this->response($this->decorate_object($delta));
+        $this->response(decorate_meeting_comments($comments));
     }
 
     /**
@@ -391,9 +411,23 @@ class Meetings extends REST_Controller
      */
     private function meeting_delta_add($uuid = '')
     {
-        $meeting = validate_meeting_uuid($uuid);
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('data', 'Data', 'trim|required|xss_clean');
+        if ($this->form_validation->run() == FALSE) {
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+        } else {
 
-        $this->response($this->decorate_object($delta));
+            $meeting = validate_meeting_uuid($uuid, true);
+
+            $delta_id = $this->Meeting_Delta->add(array(
+                'data' => $this->post('data'),
+                'meeting_id' => $meeting->id
+            ));
+            $delta = $this->Meeting_Delta->load($delta_id);
+
+            $this->response(decorate_meeting_delta($delta));
+
+        }
     }
 
     /**
@@ -413,7 +447,7 @@ class Meetings extends REST_Controller
      *     type="string"
      *     ),
      * @SWG\Parameter(
-     *     name="last_id",
+     *     name="last_uuid",
      *     description="The last meeting delta id that the client has received",
      *     paramType="query",
      *     required=false,
@@ -425,11 +459,16 @@ class Meetings extends REST_Controller
      * Adds a delta (change) to an ongoing meeting
      * @param string $uuid
      */
-    private function meeting_deltas_get($uuid = '')
+    private function meeting_delta_get($uuid = '')
     {
-        $meeting = validate_meeting_uuid($uuid);
+        $meeting = validate_meeting_uuid($uuid, true);
+        $last_id = 0;
+        if($this->get('last_uuid')) {
+            $last_id = $this->Meeting_Delta->get_id($this->get('last_uuid'));
+        }
+        $comments = $this->Meeting_Delta->get_for_meeting($meeting->id, $last_id);
 
-        $this->response($this->decorate_object($delta));
+        $this->response(decorate_meeting_deltas($comments));
     }
 
     /**

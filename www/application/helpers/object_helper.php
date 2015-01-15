@@ -97,6 +97,7 @@ function clean_user($user)
     unset($user->user_type_id);
     unset($user->created);
     unset($user->deleted);
+    unset($user->inactive);
     return $user;
 }
 

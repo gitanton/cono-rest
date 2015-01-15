@@ -89,6 +89,45 @@ function decorate_meeting($object)
     return $object;
 }
 
+function decorate_meeting_comment($object) {
+    $CI =& get_instance();
+    $CI->load->model(array('Meeting_Comment'));
+
+    if (isset($object->creator_id)) {
+        $object->creator = decorate_user($CI->User->load($object->creator_id));
+        $object->creator_uuid = $object->creator->uuid;
+    }
+
+    unset($object->deleted, $object->creator_id, $object->id, $object->meeting_id);
+    return $object;
+}
+
+function decorate_meeting_comments($objects)
+{
+    $updated = array();
+    foreach ($objects as $object) {
+        $updated[] = decorate_meeting_comment($object);
+    }
+    return $updated;
+}
+
+function decorate_meeting_delta($object) {
+    $CI =& get_instance();
+    $CI->load->model(array('Meeting_Delta'));
+
+    unset($object->id, $object->meeting_id);
+    return $object;
+}
+
+function decorate_meeting_deltas($objects)
+{
+    $updated = array();
+    foreach ($objects as $object) {
+        $updated[] = decorate_meeting_delta($object);
+    }
+    return $updated;
+}
+
 function decorate_messages($objects, $ignore_replies = false)
 {
     $updated = array();
