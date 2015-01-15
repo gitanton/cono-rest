@@ -38,7 +38,8 @@ class Meeting extends MY_Model
     {
         $data = array(
             'meeting_id' => $meeting_id,
-            'user_id' => $user_id
+            'user_id' => $user_id,
+            'connected' => 0
         );
         $this->db->query($this->db->insert_string('meeting_user', $data));
     }

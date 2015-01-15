@@ -13,6 +13,19 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="ended",type="string",description="The date/time that the meeting was ended")
  * @SWG\Property(name="attendees",type="array",@SWG\Items("User"),description="The attendees invited to this message")
  *
+ * @SWG\Model(id="MeetingComment",required="uuid,created,comment")
+ * @SWG\Property(name="uuid",type="string",description="The unique ID of the Message (for public use)")
+ * @SWG\Property(name="creator_uuid",type="string",description="The id of the creator of the comment")
+ * @SWG\Property(name="comment",type="string",description="The text of the comment")
+ * @SWG\Property(name="created",type="string",format="date",description="The date/time of that the meeting was created")
+ * @SWG\Property(name="creator",type="User",description="The user who created the message")
+ *
+ * @SWG\Model(id="MeetingDelta",required="uuid,created,data")
+ * @SWG\Property(name="uuid",type="string",description="The unique ID of the Message (for public use)")
+ * @SWG\Property(name="creator_uuid",type="string",description="The id of the creator of the comment")
+ * @SWG\Property(name="data",type="string",description="The data of the change")
+ * @SWG\Property(name="created",type="string",format="date",description="The date/time of that the meeting was created")
+ *
  * @SWG\Resource(
  *     apiVersion="1.0",
  *     swaggerVersion="2.0",
@@ -197,11 +210,20 @@ class Meetings extends REST_Controller
      * Returns a single meeting referenced by their uuid
      * @param string $uuid
      */
-    public function meeting_get($uuid = '')
+    public function meeting_get($uuid = '', $action = '')
     {
-        $meeting = validate_meeting_uuid($uuid);
-
-        $this->response($this->decorate_object($meeting));
+        if($action) {
+            if ($action == 'chat') {
+                return $this->meeting_chat_get($uuid);
+            } else if ($action === 'delta') {
+                return $this->meeting_delta_get($uuid);
+            } else if ($action === 'participants') {
+                return $this->meeting_participants($uuid);
+            }
+        } else {
+            $meeting = validate_meeting_uuid($uuid);
+            $this->response($this->decorate_object($meeting));
+        }
     }
 
     /**
@@ -214,6 +236,268 @@ class Meetings extends REST_Controller
 
         $this->Meeting->delete($meeting->id);
         json_success("Message deleted successfully.");
+    }
+
+    /**
+     * Rest endpoint for meeting related actions with a post
+     * @param string $uuid
+     * @param $action the action being performed
+     */
+    public function meeting_post($uuid = '', $action = '')
+    {
+        if ($action) {
+            if ($action == 'chat') {
+                return $this->meeting_chat_add($uuid);
+            } else if ($action === 'delta') {
+                return $this->meeting_delta_add($uuid);
+            } else if ($action === 'start') {
+                return $this->meeting_start($uuid);
+            } else if ($action === 'end') {
+                return $this->meeting_end($uuid);
+            }
+        }
+    }
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/meeting/{uuid}/chat",
+     *   description="API for meeting actions",
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="MeetingComment",
+     *    summary="Adds a comment to the live chat for the current meeting",
+     * @SWG\Parameter(
+     *     name="uuid",
+     *     description="UUID of the meeting",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="comment",
+     *     description="The comment to be added to the meeting",
+     *     paramType="form",
+     *     required=true,
+     *     type="string"
+     *     ),
+     *   )
+     * )
+     *
+     * Adds a comment to an existing meeting
+     * @param string $uuid
+     */
+    private function meeting_chat_add($uuid = '')
+    {
+        $meeting = validate_meeting_uuid($uuid);
+
+        $this->response($this->decorate_object($comment));
+    }
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/meeting/{uuid}/chat",
+     *   description="API for meeting actions",
+     * @SWG\Operation(
+     *    method="GET",
+     *    type="array[MeetingComments]",
+     *    summary="Get the last comments of a meeting",
+     * @SWG\Parameter(
+     *     name="uuid",
+     *     description="UUID of the meeting",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="last_id",
+     *     description="The last meeting comment id that the client has received",
+     *     paramType="query",
+     *     required=false,
+     *     type="string"
+     *     ),
+     *   )
+     * )
+     *
+     * Adds a delta (change) to an ongoing meeting
+     * @param string $uuid
+     */
+    private function meeting_chat_get($uuid = '')
+    {
+        $meeting = validate_meeting_uuid($uuid);
+
+        $this->response($this->decorate_object($delta));
+    }
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/meeting/{uuid}/participants",
+     *   description="API for meeting actions",
+     * @SWG\Operation(
+     *    method="GET",
+     *    type="array[User]",
+     *    summary="Get the users who have connected to a meeting",
+     * @SWG\Parameter(
+     *     name="uuid",
+     *     description="UUID of the meeting",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     ),
+     *   )
+     * )
+     *
+     * Adds a delta (change) to an ongoing meeting
+     * @param string $uuid
+     */
+    private function meeting_participants($uuid = '')
+    {
+        $meeting = validate_meeting_uuid($uuid, true);
+        $users = $this->User->get_for_meeting($meeting->id, true);
+
+        $this->response($this->decorate_object($users));
+    }
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/meeting/{uuid}/delta",
+     *   description="API for meeting actions",
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="MeetingDelta",
+     *    summary="Post a screen update to a meeting",
+     * @SWG\Parameter(
+     *     name="uuid",
+     *     description="UUID of the meeting",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="data",
+     *     description="The json data representation of how the meeting has changed",
+     *     paramType="form",
+     *     required=true,
+     *     type="string"
+     *     ),
+     *   )
+     * )
+     *
+     * Adds a delta (change) to an ongoing meeting
+     * @param string $uuid
+     */
+    private function meeting_delta_add($uuid = '')
+    {
+        $meeting = validate_meeting_uuid($uuid);
+
+        $this->response($this->decorate_object($delta));
+    }
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/meeting/{uuid}/delta",
+     *   description="API for meeting actions",
+     * @SWG\Operation(
+     *    method="GET",
+     *    type="array[MeetingDelta]",
+     *    summary="Get the last screen updates to a meeting",
+     * @SWG\Parameter(
+     *     name="uuid",
+     *     description="UUID of the meeting",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="last_id",
+     *     description="The last meeting delta id that the client has received",
+     *     paramType="query",
+     *     required=false,
+     *     type="string"
+     *     ),
+     *   )
+     * )
+     *
+     * Adds a delta (change) to an ongoing meeting
+     * @param string $uuid
+     */
+    private function meeting_deltas_get($uuid = '')
+    {
+        $meeting = validate_meeting_uuid($uuid);
+
+        $this->response($this->decorate_object($delta));
+    }
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/meeting/{uuid}/start",
+     *   description="API for meeting actions",
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="Meeting",
+     *    summary="Starts a new meeting from a moderator",
+     * @SWG\Parameter(
+     *     name="uuid",
+     *     description="UUID of the meeting",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     ),
+     *   )
+     * )
+     *
+     * Adds a delta (change) to an ongoing meeting
+     * @param string $uuid
+     */
+    private function meeting_start($uuid = '')
+    {
+        $meeting = validate_meeting_uuid($uuid, false, true);
+        if($meeting->ended) {
+            json_error('This meeting has already ended and cannot be restarted.');
+        }
+        if(!$meeting->started) {
+            $this->Meeting->update($meeting->id, array('started' => timestamp_to_mysqldatetime(now())));
+            $meeting = $this->Meeting->load($meeting->id);
+        }
+        $this->response($this->decorate_object($meeting));
+    }
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/meeting/{uuid}/end",
+     *   description="API for meeting actions",
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="Meeting",
+     *    summary="Ends an ongoing meeting from a moderator",
+     * @SWG\Parameter(
+     *     name="uuid",
+     *     description="UUID of the meeting",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     ),
+     *   )
+     * )
+     *
+     * Adds a delta (change) to an ongoing meeting
+     * @param string $uuid
+     */
+    private function meeting_end($uuid = '')
+    {
+        $meeting = validate_meeting_uuid($uuid, true, true);
+        if($meeting->ended) {
+            $this->Meeting->update($meeting->id, array('ended' => timestamp_to_mysqldatetime(now())));
+            $meeting = $this->Meeting->load($meeting->id);
+        }
+
+        $this->response($this->decorate_object($meeting));
     }
 
     protected function decorate_object($object)

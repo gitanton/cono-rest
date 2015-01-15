@@ -429,7 +429,7 @@ function validate_message_uuid($uuid = '', $validate_own = false)
  * @param boolean $validate_own whether to validate that the user is the creator of the meeting
  * @return mixed
  */
-function validate_meeting_uuid($uuid = '', $validate_own = false)
+function validate_meeting_uuid($uuid = '', $validate_started = false, $validate_moderator = false)
 {
     $CI =& get_instance();
     $CI->load->model('Meeting');
@@ -448,9 +448,14 @@ function validate_meeting_uuid($uuid = '', $validate_own = false)
         json_error('You are not authorized to view this meeting.');
         exit;
     }
-    /* Validate that the user is on the meeting */
-    if ($validate_own && get_user_id() != $meeting->creator_id) {
-        json_error('You are not authorized to view this meeting.');
+    /* Validate that the meeting has started */
+    if ($validate_started && !$meeting->started) {
+        json_error('This meeting has not started yet.');
+        exit;
+    }
+    /* Validate that the user is the moderator */
+    if ($validate_moderator && get_user_id() != $meeting->moderator_id) {
+        json_error('Only the moderator can perform this action.');
         exit;
     }
 

@@ -106,10 +106,13 @@ class User extends MY_Model
      * @param int $meeting_id
      * @return mixed
      */
-    function get_for_meeting($meeting_id = 0) {
+    function get_for_meeting($meeting_id = 0, $is_connected = false) {
         $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
         $this->db->join('meeting_user', 'meeting_user.user_id = user.id');
         $this->db->where('meeting_user.meeting_id', $meeting_id);
+        if($is_connected) {
+            $this->db->where('meeting_user.connected', 1);
+        }
         $query = $this->db->get($this->get_scope());
         return $query->result();
     }
