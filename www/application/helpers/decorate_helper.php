@@ -84,6 +84,7 @@ function decorate_meeting($object)
     $datetime = localize_datetime($object->date, $object->time);
     $object->date = $datetime->format('Y-m-d');
     $object->time = $datetime->format('H:i');
+    $object->phone = $CI->config->item('twilio_phone');
 
     unset($object->deleted, $object->moderator_id, $object->id);
     return $object;

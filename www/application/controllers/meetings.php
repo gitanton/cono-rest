@@ -140,7 +140,8 @@ class Meetings extends REST_Controller
                 'time' => $datetime->format('H:i'),
                 'notes' => $this->post('notes', TRUE),
                 'name' => $this->post('name', TRUE),
-                'pin' => random_string('numeric', 6),
+                'pin' => random_string('numeric', 7),
+                'moderator_pin' => random_string('numeric', 7),
                 'creator_id' => get_user_id(),
                 'moderator_id' => get_user_id()
             );

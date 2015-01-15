@@ -35,7 +35,17 @@ class Utils extends REST_Controller
     public function bootstrap_get() {
         $response = new stdClass;
         $response->timezones = get_timezones();
+        $response->token = $this->twilio_token();
         $this->response($response);
+    }
+
+    private function twilio_token() {
+
+        include APPPATH.'../vendor/twilio/sdk/Services/Twilio/Capability.php';
+        $capability = new Services_Twilio_Capability($this->config->item('twilio_account_sid'), $this->config->item('twilio_auth_token'));
+        $capability->allowClientOutgoing($this->config->item('twilio_app_sid'));
+        $token = $capability->generateToken();
+        return $token;
     }
 
 

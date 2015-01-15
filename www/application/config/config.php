@@ -39,6 +39,11 @@ if (IS_TEST) {
     $config['domain_url'] = 'http://conojoapp.scmreview.com/rest';
     $config['base_url'] = 'http://conojoapp.scmreview.com/rest';
 }
+
+$config['twilio_phone'] = '+1 415-599-2671';
+$config['twilio_app_sid'] = 'AP07d1a612c9206dfdae2b7e5e2abe64fd';
+$config['twilio_auth_token'] = 'cf35bb56f52ee86283c81ff65b713943';
+$config['twilio_account_sid'] = 'AC49956886473a6038c7f014ac68b4a8f2';
 /*
 |--------------------------------------------------------------------------
 | Index File

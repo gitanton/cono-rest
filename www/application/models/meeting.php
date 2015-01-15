@@ -29,6 +29,24 @@ class Meeting extends MY_Model
         return $query->result();
     }
 
+    function load_by_pin($pin = '', $date)
+    {
+        $this->db->where("pin", $pin);
+        $this->db->where('deleted', 0);
+        $this->db->where('date', $date);
+        $query = $this->db->get($this->get_scope());
+        return $this->after_load($query->row());
+    }
+
+    function load_by_moderator_pin($pin = '', $date)
+    {
+        $this->db->where("moderator_pin", $pin);
+        $this->db->where('deleted', 0);
+        $this->db->where('date', $date);
+        $query = $this->db->get($this->get_scope());
+        return $this->after_load($query->row());
+    }
+
     /**
      * Add a recipient to a meeting
      * @param $meeting_id

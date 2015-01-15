@@ -3,6 +3,7 @@
         "classmap": ["application/core"]
     },
     "require": {
-        "zircote/swagger-php": "*"
+        "zircote/swagger-php": "*",
+        "twilio/sdk" : "*"
     }
 }
