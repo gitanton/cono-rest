@@ -86,6 +86,7 @@ class Projects extends REST_Controller
      */
     public function index_post()
     {
+        $this->validate_user();
         /* Validate add */
         $this->load->library('form_validation');
         $this->form_validation->set_rules('name', 'Project Name', 'trim|required|xss_clean');
@@ -99,8 +100,10 @@ class Projects extends REST_Controller
                 'type_id' => intval($this->post('type_id', TRUE)),
                 'team_id' => get_team_id()
             );
-
-            $project = $this->decorate_object($this->Project->load($this->Project->add($data)));
+            $project_id = $this->Project->add($data);
+            /* Add the activity item to indicate that a project was added */
+            activity_add_project($project_id, get_user_id());
+            $project = $this->decorate_object($this->Project->load($project_id));
             $this->response($project);
         }
     }
@@ -160,6 +163,7 @@ class Projects extends REST_Controller
      */
     public function project_put($uuid = '')
     {
+        $this->validate_user();
         /* Validate update - have to copy the fields from put to $_POST for validation */
         $_POST['name'] = $this->put('name');
         $_POST['type_id'] = $this->put('type_id');
@@ -171,8 +175,12 @@ class Projects extends REST_Controller
         if ($this->form_validation->run() == FALSE) {
             json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
         } else {
+            $project = validate_project_uuid($uuid);
+
             $data = $this->get_put_fields($this->Project->get_fields());
             $this->Project->update_by_uuid($uuid, $data);
+            /* Add the activity item to indicate that a project was updated */
+            activity_update_project($project->id, get_user_id());
             $this->project_get($uuid);
         }
     }
@@ -183,6 +191,7 @@ class Projects extends REST_Controller
      */
     public function project_get($uuid = '')
     {
+        $this->validate_user();
         $project = validate_project_uuid($uuid);
         $this->response($this->decorate_object($project));
     }
@@ -193,8 +202,11 @@ class Projects extends REST_Controller
      */
     public function project_delete($uuid = '')
     {
+        $this->validate_user();
         $project = validate_project_uuid($uuid);
 
+        /* Add the activity item to indicate that a project was updated */
+        activity_delete_project($project->id, get_user_id());
         $this->Project->delete($project->id);
         json_success("Project deleted successfully.");
     }
@@ -207,6 +219,7 @@ class Projects extends REST_Controller
      */
     public function project_post($uuid = '', $action = '')
     {
+        $this->validate_user();
         if ($action) {
             if ($action == 'duplicate') {
                 return $this->project_duplicate($uuid);

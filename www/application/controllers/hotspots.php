@@ -2,7 +2,7 @@
 use Swagger\Annotations as SWG;
 
 /**
- * @SWG\Model(id="Hotspot",required="uuid")
+ * @SWG\Model(id="Hotspot",required="uuid,data")
  * @SWG\Property(name="uuid",type="string",description="The unique ID of the Hotspot (for public consumption)")
  * @SWG\Property(name="screen_uuid",type="string",description="The uuid of the screen for whom the hotspot is provided")
  * @SWG\Property(name="video_uuid",type="string",description="The uuid of the video for whom the hotspot is provided")

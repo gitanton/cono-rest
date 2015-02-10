@@ -104,6 +104,8 @@ class Screens extends REST_Controller
             json_error('You must provide either a url or uploaded file for the screenshot.');
             exit;
         }
+        /* Add the activity item to indicate that a screen was added */
+        activity_add_screen($screen->id, get_user_id());
 
         /* Handle the download situation */
         $this->response($screen);
@@ -152,6 +154,7 @@ class Screens extends REST_Controller
      */
     public function screen_get($uuid = '', $action = '')
     {
+        $this->validate_user();
         $screen = validate_screen_uuid($uuid);
         if ($action && $action === 'hotspots') {
             $hotspots = $this->Hotspot->get_for_screen($screen->id);
@@ -167,8 +170,11 @@ class Screens extends REST_Controller
      */
     public function screen_delete($uuid = '')
     {
+        $this->validate_user();
         $screen = validate_screen_uuid($uuid);
 
+        /* Add the activity item to indicate that a screen was deleted */
+        activity_delete_screen($screen->id, get_user_id());
         $this->Screen->delete($screen->id);
         json_success("Screen deleted successfully.");
     }

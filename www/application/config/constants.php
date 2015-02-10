@@ -23,6 +23,14 @@ define("FILE_TYPE_VIDEO", 2);
 define("DEFAULT_LIMIT", 20);
 define("DEFAULT_PAGE", 0);
 
+define("ACTIVITY_TYPE_PROJECT_ADD", 1);
+define("ACTIVITY_TYPE_PROJECT_UPDATE", 2);
+define("ACTIVITY_TYPE_PROJECT_DELETE", 3);
+define("ACTIVITY_TYPE_SCREEN_ADD", 4);
+define("ACTIVITY_TYPE_SCREEN_UPDATE", 5);
+define("ACTIVITY_TYPE_SCREEN_DELETE", 6);
+
+
 /*
 |--------------------------------------------------------------------------
 | File and Directory Modes

@@ -163,6 +163,20 @@ function decorate_hotspot($object)
     return $object;
 }
 
+function decorate_activity($object)
+{
+    $CI =& get_instance();
+
+    if (isset($object->creator_id)) {
+        $object->creator_uuid = $CI->User->get_uuid($object->creator_id);
+    }
+    if (isset($object->team_id)) {
+        $object->team_uuid = $CI->Team->get_uuid($object->team_id);
+    }
+    unset($object->deleted, $object->id, $object->creator_id, $object->team_id);
+    return $object;
+}
+
 function decorate_comment($object)
 {
     $CI =& get_instance();
