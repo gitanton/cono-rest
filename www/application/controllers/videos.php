@@ -15,6 +15,15 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="comments",type="array",@SWG\Items("Comment"),description="The comments assigned to this video")
  * @SWG\Property(name="hotspots",type="array",@SWG\Items("HotSpot"),description="The hotspots assigned to this video")
  *
+ * @SWG\Model(id="Comment",required="uuid")
+ * @SWG\Property(name="uuid",type="string",description="The unique ID of the Comment (for public consumption)")
+ * @SWG\Property(name="screen_uuid",type="string",description="The uuid of the screen for whom the comment is provided")
+ * @SWG\Property(name="video_uuid",type="string",description="The uuid of the video for whom the comment is provided")
+ * @SWG\Property(name="ordering",type="integer",description="The ordering of how the comment should be displayed in the list of comments")
+ * @SWG\Property(name="content",type="string",description="The content of the comment")
+ * @SWG\Property(name="creator_uuid",type="string",description="The id of the user who created the comment")
+ * @SWG\Property(name="created",type="string",format="date",description="The date/time that this comment was created")
+ *
  *
  * @SWG\Resource(
  *     apiVersion="1.0",
@@ -155,6 +164,9 @@ class Videos extends REST_Controller
         if ($action && $action === 'hotspots') {
             $hotspots = $this->Hotspot->get_for_video($video->id);
             $this->response(decorate_hotspots($hotspots));
+        } else if ($action && $action === 'comments') {
+            $comments = $this->Comment->get_for_video($video->id);
+            $this->response(decorate_comments($comments));
         } else {
             $this->response($this->decorate_object($video));
         }
@@ -213,11 +225,54 @@ class Videos extends REST_Controller
      *   )
      * )
      */
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/video/{video_uuid}/comments/",
+     *   description="API for video actions",
+     * @SWG\Operation(
+     *    method="GET",
+     *    nickname="List Comments",
+     *    type="array[Comment]",
+     *    summary="Returns a list of comments for the specified video",
+     * @SWG\Parameter(
+     *     name="video_uuid",
+     *     description="The unique ID of the video",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     )
+     *   ),
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="Comments",
+     *    nickname="Add Comments",
+     *    summary="Create a new comment for the given video",
+     * @SWG\Parameter(
+     *     name="video_uuid",
+     *     description="The unique ID of the video",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="content",
+     *     description="The comment content for the video",
+     *     paramType="form",
+     *     required=true,
+     *     type="string"
+     *     )
+     *   )
+     * )
+     */
     public function video_post($uuid = '', $action = '')
     {
         $video = validate_video_uuid($uuid);
         if ($action && $action === 'hotspots') {
             $this->add_hotspot($video);
+        } else if ($action && $action === 'comments') {
+            $this->add_comment($video);
         }
     }
 
@@ -239,8 +294,32 @@ class Videos extends REST_Controller
                 'creator_id' => get_user_id(),
                 'data' => $this->post('data', TRUE)
             ));
-            $hotspot = decorate_hurlotspot($this->Hotspot->load($hotspot_id));
+            $hotspot = decorate_hotspot($this->Hotspot->load($hotspot_id));
             $this->response($hotspot);
+        }
+    }
+
+    /**
+     * Creates a new comment on the video
+     * @param $video
+     */
+    private function add_comment($video)
+    {
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('content', 'Content', 'trim|required|xss_clean');
+
+        if ($this->form_validation->run() == FALSE) {
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+        } else {
+            $comment_id = $this->Comment->add(array(
+                'video_id' => $video->id,
+                'project_id' => $video->project_id,
+                'ordering' => $this->Comment->get_max_ordering_for_video($video->id) + 1,
+                'creator_id' => get_user_id(),
+                'content' => $this->post('content', TRUE)
+            ));
+            $comment = decorate_comment($this->Comment->load($comment_id));
+            $this->response($comment);
         }
     }
 
@@ -284,16 +363,16 @@ class Videos extends REST_Controller
         /* encrypt the filename */
 
         $file_ext = $this->upload->get_extension($this->post('url'));
-        if(!in_array(str_replace(".", "", $file_ext), explode("|", $this->config->item('video_upload_types')))) {
-            json_error("The video url is invalid.  Only ".implode(", ", explode("|", $this->config->item('video_upload_types')))." are allowed.");
+        if (!in_array(str_replace(".", "", $file_ext), explode("|", $this->config->item('video_upload_types')))) {
+            json_error("The video url is invalid.  Only " . implode(", ", explode("|", $this->config->item('video_upload_types'))) . " are allowed.");
             exit;
         }
         $file = file_get_contents($this->post('url'));
-        if($file) {
-            $file_name = md5(uniqid(mt_rand())).$file_ext;
-            $full_path = $this->config->item('video_upload_dir').$file_name;
+        if ($file) {
+            $file_name = md5(uniqid(mt_rand())) . $file_ext;
+            $full_path = $this->config->item('video_upload_dir') . $file_name;
             file_put_contents($full_path, $file);
-            $file_size = filesize($full_path)/1000;
+            $file_size = filesize($full_path) / 1000;
 
             $insert = array(
                 'creator_id' => get_user_id(),

@@ -49,7 +49,7 @@ class Hotspot extends MY_Model
 
     /**
      * Find the max ordering for screens for the current project (used when creating new screens)
-     * @param $user_id
+     * @param $screen_id
      * @return mixed
      */
     function get_max_ordering_for_screen($screen_id = 0) {
@@ -61,13 +61,13 @@ class Hotspot extends MY_Model
     }
 
     /**
-     * Find the max ordering for screens for the current project (used when creating new screens)
-     * @param $user_id
+     * Find the max ordering for videos for the current project (used when creating new videos)
+     * @param $screen_id
      * @return mixed
      */
-    function get_max_ordering_for_video($screen_id = 0) {
+    function get_max_ordering_for_video($video_id = 0) {
         $this->db->select_max('ordering');
-        $this->db->where(array('video_id' => $screen_id));
+        $this->db->where(array('video_id' => $video_id));
         $query = $this->db->get($this->get_scope());
         $row = $query->row();
         return $row->ordering;

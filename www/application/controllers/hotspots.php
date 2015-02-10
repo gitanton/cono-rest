@@ -3,13 +3,13 @@ use Swagger\Annotations as SWG;
 
 /**
  * @SWG\Model(id="Hotspot",required="uuid")
- * @SWG\Property(name="uuid",type="string",description="The unique ID of the Screen (for public consumption)")
+ * @SWG\Property(name="uuid",type="string",description="The unique ID of the Hotspot (for public consumption)")
  * @SWG\Property(name="screen_uuid",type="string",description="The uuid of the screen for whom the hotspot is provided")
  * @SWG\Property(name="video_uuid",type="string",description="The uuid of the video for whom the hotspot is provided")
- * @SWG\Property(name="ordering",type="integer",description="The ordering of how the screen should be displayed in the list of screens")
+ * @SWG\Property(name="ordering",type="integer",description="The ordering of how the screen should be displayed in the list of hotspots")
  * @SWG\Property(name="data",type="string",description="The json data for the html5 canvas object")
- * @SWG\Property(name="creator_uuid",type="string",description="The id of the user who created the screen")
- * @SWG\Property(name="created",type="string",format="date",description="The date/time that this screen was created")
+ * @SWG\Property(name="creator_uuid",type="string",description="The id of the user who created the hotspot")
+ * @SWG\Property(name="created",type="string",format="date",description="The date/time that this hotspot was created")
  *
  * @SWG\Resource(
  *     apiVersion="1.0",

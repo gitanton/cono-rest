@@ -47,6 +47,19 @@ class Comment extends MY_Model
         return $query->result();
     }
 
+    /**
+     * Find the max ordering for videos for the current project (used when creating new videos)
+     * @param $screen_id
+     * @return mixed
+     */
+    function get_max_ordering_for_video($video_id = 0) {
+        $this->db->select_max('ordering');
+        $this->db->where(array('video_id' => $video_id));
+        $query = $this->db->get($this->get_scope());
+        $row = $query->row();
+        return $row->ordering;
+    }
+
     function add_data()
     {
         $this->load->library('uuid');
