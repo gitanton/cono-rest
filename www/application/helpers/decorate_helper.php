@@ -1,4 +1,11 @@
 <?
+/**
+ * These are a set of decorators that can be used by the REST endpoints to add and remove attributes from
+ * objects after they are pulled out of the database and sent down.  Useful for doing things like removing the
+ * id, password etc.. information from users and objects.
+ *
+ * Also useful for loading lists of related objects such as the users on a project or the replies to a message
+ */
 function decorate_user($object)
 {
     return clean_user($object);
@@ -141,9 +148,27 @@ function decorate_messages($objects, $ignore_replies = false)
 function decorate_hotspot($object)
 {
     $CI =& get_instance();
-    $CI->load->model(array('Screen'));
-    if (isset($object->screen_id)) {
+    $CI->load->model(array('Screen', 'Video'));
+    if (isset($object->screen_id) && $object->screen_id > 0) {
         $object->screen_uuid = $CI->Screen->get_uuid($object->screen_id);
+    }
+    if (isset($object->video_id) && $object->video_id > 0) {
+        $object->video_uuid = $CI->Video->get_uuid($object->video_id);
+    }
+
+    if (isset($object->creator_id)) {
+        $object->creator_uuid = $CI->User->get_uuid($object->creator_id);
+    }
+    unset($object->deleted, $object->screen_id, $object->id, $object->creator_id, $object->video_i);
+    return $object;
+}
+
+function decorate_comment($object)
+{
+    $CI =& get_instance();
+    $CI->load->model(array('Video'));
+    if (isset($object->video_id)) {
+        $object->video_uuid = $CI->Video->get_uuid($object->video_id);
     }
 
     if (isset($object->creator_id)) {
@@ -158,6 +183,15 @@ function decorate_hotspots($objects)
     $updated = array();
     foreach ($objects as $object) {
         $updated[] = decorate_hotspot($object);
+    }
+    return $updated;
+}
+
+function decorate_comments($objects)
+{
+    $updated = array();
+    foreach ($objects as $object) {
+        $updated[] = decorate_comment($object);
     }
     return $updated;
 }
@@ -179,6 +213,31 @@ function decorate_screen($object)
 
     $hospots = $CI->Hotspot->get_for_screen($object->id);
     $object->hotspots = decorate_hotspots($hospots);
+
+    unset($object->deleted, $object->project_id, $object->id, $object->creator_id);
+    return $object;
+}
+
+function decorate_video($object)
+{
+    $CI =& get_instance();
+    $CI->load->model(array('Project', 'Hotspot', 'Comment'));
+
+    if (isset($object->project_id)) {
+        $object->project_uuid = $CI->Project->get_uuid($object->project_id);
+    }
+
+    if (isset($object->creator_id)) {
+        $object->creator_uuid = $CI->User->get_uuid($object->creator_id);
+    }
+
+    $object->url = file_url($object->url, FILE_TYPE_VIDEO);
+
+    $hotspots = $CI->Hotspot->get_for_video($object->id);
+    $object->hotspots = decorate_hotspots($hotspots);
+
+    $comments = $CI->Comment->get_for_video($object->id);
+    $object->comments = decorate_comments($comments);
 
     unset($object->deleted, $object->project_id, $object->id, $object->creator_id);
     return $object;

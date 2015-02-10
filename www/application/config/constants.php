@@ -17,6 +17,9 @@ define("IMG_SIZE_LG", 230);
 define("INVITE_TYPE_PROJECT", 'project');
 define("INVITE_TYPE_TEAM", 'team');
 
+define("FILE_TYPE_SCREEN", 1);
+define("FILE_TYPE_VIDEO", 2);
+
 define("DEFAULT_LIMIT", 20);
 define("DEFAULT_PAGE", 0);
 

@@ -33,6 +33,21 @@ class Hotspot extends MY_Model
     }
 
     /**
+     * Returns the list of hotspots for the current video
+     * @param int $screen_id
+     * @return mixed
+     */
+    function get_for_video($video_id = 0)
+    {
+        $sql = "SELECT h.* from " . $this->get_scope() . " h where h.video_id = ? and h.deleted = 0";
+        $query_params = array(intval($video_id));
+        $sql .= " ORDER by h.ordering ASC";
+
+        $query = $this->db->query($sql, $query_params);
+        return $query->result();
+    }
+
+    /**
      * Find the max ordering for screens for the current project (used when creating new screens)
      * @param $user_id
      * @return mixed
@@ -40,6 +55,19 @@ class Hotspot extends MY_Model
     function get_max_ordering_for_screen($screen_id = 0) {
         $this->db->select_max('ordering');
         $this->db->where(array('screen_id' => $screen_id));
+        $query = $this->db->get($this->get_scope());
+        $row = $query->row();
+        return $row->ordering;
+    }
+
+    /**
+     * Find the max ordering for screens for the current project (used when creating new screens)
+     * @param $user_id
+     * @return mixed
+     */
+    function get_max_ordering_for_video($screen_id = 0) {
+        $this->db->select_max('ordering');
+        $this->db->where(array('video_id' => $screen_id));
         $query = $this->db->get($this->get_scope());
         $row = $query->row();
         return $row->ordering;

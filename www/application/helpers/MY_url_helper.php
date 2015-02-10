@@ -114,9 +114,13 @@ function page_url($page_id)
     }
 }
 
-function file_url($url)
+function file_url($url, $file_type = 1)
 {
-    return app_url('assets/uploads/' . $url);
+    if($file_type==1) {
+        return app_url('assets/uploads/screens/' . $url);
+    } else {
+        return app_url('assets/uploads/videos/' . $url);
+    }
 }
 
 function url_parts($url)

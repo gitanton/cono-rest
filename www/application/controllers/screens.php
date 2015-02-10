@@ -154,7 +154,8 @@ class Screens extends REST_Controller
     {
         $screen = validate_screen_uuid($uuid);
         if ($action && $action === 'hotspots') {
-            $this->response(decorate_hotspots($screen->hotspots));
+            $hotspots = $this->Hotspot->get_for_screen($screen->id);
+            $this->response(decorate_hotspots($hotspots));
         } else {
             $this->response($this->decorate_object($screen));
         }
@@ -251,9 +252,9 @@ class Screens extends REST_Controller
     private function add_screen_upload($project)
     {
         $config = array(
-            'upload_path' => $this->config->item('upload_dir'),
-            'allowed_types' => $this->config->item('upload_types'),
-            'max_size' => $this->config->item('max_file_upload_size'),
+            'upload_path' => $this->config->item('screen_upload_dir'),
+            'allowed_types' => $this->config->item('screen_upload_types'),
+            'max_size' => $this->config->item('max_screen_upload_size'),
             'encrypt_name' => true
         );
 
@@ -286,14 +287,14 @@ class Screens extends REST_Controller
         /* encrypt the filename */
 
         $file_ext = $this->upload->get_extension($this->post('url'));
-        if(!in_array(str_replace(".", "", $file_ext), explode("|", $this->config->item('upload_types')))) {
-            json_error("The image url is invalid.  Only ".implode(", ", explode("|", $this->config->item('upload_types')))." are allowed.");
+        if(!in_array(str_replace(".", "", $file_ext), explode("|", $this->config->item('screen_upload_types')))) {
+            json_error("The image url is invalid.  Only ".implode(", ", explode("|", $this->config->item('screen_upload_types')))." are allowed.");
             exit;
         }
         $file = file_get_contents($this->post('url'));
         if($file) {
             $file_name = md5(uniqid(mt_rand())).$file_ext;
-            $full_path = $this->config->item('upload_dir').$file_name;
+            $full_path = $this->config->item('screen_upload_dir').$file_name;
             file_put_contents($full_path, $file);
             $file_size = filesize($full_path)/1000;
             $file_dimensions = getimagesize($full_path);

@@ -294,6 +294,36 @@ function validate_screen_uuid($uuid = '')
 
 /**
  * Validates that:
+ *  - a video exists with that specified uuid
+ *  - the video isn't deleted
+ *  - the video's project is one that the user belongs to
+ * @param string $uuid
+ * @return mixed
+ */
+function validate_video_uuid($uuid = '')
+{
+    $CI =& get_instance();
+    $CI->load->model('Video');
+    if (!$uuid) {
+        json_error('uuid is required');
+        exit;
+    }
+    $video = $CI->Video->load_by_uuid($uuid);
+    if (!$video || $video->deleted) {
+        json_error('There is no video with that id');
+        exit;
+    }
+    /* Validate that the user is on the project that the video belongs to */
+    if (!$CI->User->is_on_project($video->project_id, get_user_id())) {
+        json_error('You are not authorized to access this project.');
+        exit;
+    }
+
+    return $video;
+}
+
+/**
+ * Validates that:
  *  - a screen exists with that specified uuid
  *  - the screen isn't deleted
  *  - the screen's project is one that the user belongs to

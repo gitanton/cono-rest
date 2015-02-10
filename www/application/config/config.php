@@ -20,9 +20,16 @@ $config['signin_url'] = 'http://conojoapp.scmreview.com/';
 
 $config['site_title'] = 'Conojo';
 
-$config['max_file_upload_size'] = 20480;
-$config['upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/';
-$config['upload_types'] = 'jpg|png|gif|jpeg';
+/* 20MB max screen upload size */
+$config['max_screen_upload_size'] = 20000;
+$config['screen_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/screens/';
+$config['screen_upload_types'] = 'jpg|png|gif|jpeg';
+
+
+/* 2G max video upload size */
+$config['max_video_upload_size'] = 2000000;
+$config['video_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/videos/';
+$config['video_upload_types'] = 'mp4|mov|avi';
 
 $config['contact_email'] = 'info@conojo.com';
 
