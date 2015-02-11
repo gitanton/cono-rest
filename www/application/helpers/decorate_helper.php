@@ -36,12 +36,16 @@ function decorate_team($object)
 function decorate_project($object)
 {
     $CI =& get_instance();
+    $CI->load->model(array('Team'));
 
     $users = $CI->User->get_for_project($object->id);
     $object->users = decorate_users($users);
 
     if (isset($object->creator_id)) {
         $object->creator_uuid = $CI->User->get_uuid($object->creator_id);
+    }
+    if (isset($object->team_id)) {
+        $object->team_uuid = $CI->Team->get_uuid($object->team_id);
     }
 
     unset($object->deleted, $object->team_id, $object->id, $object->creator_id);

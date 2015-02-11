@@ -36,6 +36,7 @@ class Utils extends REST_Controller
         $response = new stdClass;
         $response->timezones = get_timezones();
         $response->token = $this->twilio_token();
+        $response->stripe_key = $this->config->item('stripe_public_key');
         $this->response($response);
     }
 

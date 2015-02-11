@@ -5,6 +5,7 @@ use Swagger\Annotations as SWG;
  *
  * @SWG\Model(id="Team",required="uuid,name,type_id")
  * @SWG\Property(name="uuid",type="string",description="The unique ID of the Team (for public consumption)")
+ * @SWG\Property(name="name",type="string",description="The name of the team")
  * @SWG\Property(name="owner_uuid",type="string",description="The id of the user who owns the team")
  * @SWG\Property(name="created",type="string",format="date",description="The date/time that this team was created")
  * @SWG\Property(name="users",type="array",@SWG\Items("User"),description="The users attached to this team")
@@ -54,10 +55,39 @@ class Teams extends REST_Controller
         $this->response($this->decorate_objects($teams));
     }
 
+
+    public function team_put($uuid='')
+    {
+        $this->validate_user();
+        /* Validate update - have to copy the fields from put to $_POST for validation */
+        $_POST['name'] = $this->put('name');
+
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('name', 'Name', 'trim|required|xss_clean');
+
+        if ($this->form_validation->run() == FALSE) {
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
+        } else {
+            if ($uuid) {
+                $team = validate_team_uuid($uuid);
+            } else {
+                $team = $this->Team->load(get_team_id());
+            }
+
+            $data = $this->get_put_fields($this->Team->get_fields());
+            $this->Team->update($team->id, $data);
+
+            /* Reload the team so we pick up the changes */
+            $team = $this->decorate_object($this->Team->load($team->id));
+            $this->response($team);
+            exit;
+        }
+    }
+
     /**
      *
      * @SWG\Api(
-     *   path="/team",
+     *   path="/team/{uuid}",
      *   description="API for team actions",
      * @SWG\Operation(
      *    method="GET",
@@ -65,12 +95,31 @@ class Teams extends REST_Controller
      *    summary="Returns the active team for the currently logged in user (or the team specified by the uuid)",
      * @SWG\Parameter(
      *       name="uuid",
-     *       description="The unique ID of the project",
+     *       description="The unique ID of the team",
      *       paramType="path",
      *       required=false,
      *       type="string"
      *       )
+     *     ),
+     * @SWG\Operation(
+     *    method="PUT",
+     *    type="Team",
+     *    summary="Updates the active team for the currently logged in user (or the team specified by the uuid)",
+     * @SWG\Parameter(
+     *     name="uuid",
+     *     description="Unique ID of the team",
+     *     paramType="path",
+     *     required=false,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="body",
+     *     description="Team object that needs to be updated",
+     *     paramType="body",
+     *     required=true,
+     *     type="Team"
      *     )
+     *   ),
      *   )
      * )
      */

@@ -48,13 +48,13 @@ class Projects extends REST_Controller
      * @SWG\Operation(
      *    method="GET",
      *    type="array[Project]",
-     *    summary="Returns a list of projects for the currently logged in user (must be logged in to view)"
+     *    summary="Returns a list of projects for the currently logged in user (must be logged in to view) for the current team"
      *   )
      * )
      */
     public function index_get()
     {
-        $projects = $this->Project->get_for_user(get_user_id());
+        $projects = $this->Project->get_for_user_team(get_user_id(), get_team_id());
         $this->response($this->decorate_objects($projects));
     }
 

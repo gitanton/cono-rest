@@ -51,6 +51,28 @@ class Project extends MY_Model
         return $query->result();
     }
 
+    function get_for_user_team($user_id = 0, $team_id = 0, $archived = 0) {
+        $sql = "SELECT p.*, pu.ordering from ".$this->get_scope()." p, project_user pu where p.id = pu.project_id and "
+            ." pu.user_id = ? and p.deleted = 0 and p.team_id = ?";
+        $query_params = array(intval($user_id), intval($team_id));
+
+        if($archived>1) {
+            $sql.=" AND p.archived = ?";
+            $query_params[] = $archived;
+        }
+        $sql.=" ORDER by pu.ordering";
+
+        $query = $this->db->query($sql, $query_params);
+        return $query->result();
+    }
+
+    function remove_for_user_team($user_id, $team_id) {
+        $sql = "delete from project_user where user_id = ? and project_id in (select id from project where team_id = ?)";
+        $query_params = array(intval($user_id), intval($team_id));
+
+        $query = $this->db->query($sql, $query_params);
+    }
+
     /**
      * Find the max ordering for projects for the current user (used when creating new projects
      * @param $user_id

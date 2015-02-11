@@ -369,7 +369,7 @@ class Users extends REST_Controller
      * so if the current user on the current team isn't the creator, we'll kick back an error.
      */
     public function projects_post($uuid='') {
-        $this->load->model(array('Team', 'Project_User'));
+        $this->load->model(array('Team','Project'));
         $this->load->library('form_validation');
         $this->form_validation->set_rules('projects', 'Projects', 'trim|required|xss_clean');
 
@@ -382,18 +382,25 @@ class Users extends REST_Controller
                 $team = $this->Team->load(get_team_id());
                 $project_uuids = explode(",", $this->post('projects', TRUE));
 
-                if($team && $current_user->id == $team->creator_id) {
+                if($team && $current_user->id == $team->owner_id) {
+
+                    /* Remove the user from all projects on the team */
+                    $this->Project->remove_for_user_team($user->id, $team->id);
+
                     foreach($project_uuids as $project_uuid) {
                         $project = $this->Project->load_by_uuid(trim($project_uuid));
-                        if($project && $project->team_id == $team->id) {
 
+                        if($project && $project->team_id == $team->id) {
+                            /* Add the user to the project */
+                            $this->Project->add_user($project->id, $user->id);
+                            activity_user_join_project($project->id, $user->id);
                         }
                     }
+                    json_success("Projects updated succesfully");
+                    exit;
                 } else {
                     json_error('You do not have the authorization to update the permissions of users on this team.');
                 }
-
-                exit;
             }
         }
 
@@ -529,6 +536,7 @@ class Users extends REST_Controller
                     'user_id' => $user->id,
                     'used' => timestamp_to_mysqldatetime(now())
                 ));
+                activity_user_join_team($invite->team_id, $user->id);
             }
             /* Project Invite */
             else {
@@ -539,6 +547,7 @@ class Users extends REST_Controller
                 $project = $this->Project->load($invite->project_id);
                 if(!$this->User->is_on_team($project->team_id, $user->id)) {
                     $this->Team->add_user($project->team_id, $user->id);
+                    activity_user_join_team($project->team_id, $user->id);
                 }
 
                 /* Update the invite so that the user is set on it */
@@ -546,6 +555,7 @@ class Users extends REST_Controller
                     'user_id' => $user->id,
                     'used' => timestamp_to_mysqldatetime(now())
                 ));
+                activity_user_join_project($project->id, $user->id);
             }
         }
     }

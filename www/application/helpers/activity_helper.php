@@ -22,6 +22,10 @@ function activity_add($user_id, $team_id, $project_id, $object_id, $activity_typ
 
 }
 
+
+/**********************************************
+ * Project
+ **********************************************/
 function activity_add_project($project_id, $user_id) {
 
     $CI =& get_instance();
@@ -55,6 +59,9 @@ function activity_delete_project($project_id, $user_id) {
     activity_add($user->id, $project->team_id, $project->id, $project->id, ACTIVITY_TYPE_PROJECT_DELETE, $title);
 }
 
+/**********************************************
+ * Screen
+ **********************************************/
 function activity_add_screen($screen_id, $user_id) {
 
     $CI =& get_instance();
@@ -89,5 +96,35 @@ function activity_delete_screen($screen_id, $user_id) {
     $user = $CI->User->load($user_id);
     $title = $user->fullname." deleted a screen from the '".$project->name."' project.";
     activity_add($user->id, $project->team_id, $project->id, $screen_id, ACTIVITY_TYPE_SCREEN_DELETE, $title);
+}
+
+
+/**********************************************
+ * User
+ **********************************************/
+function activity_user_join_team($team_id, $user_id) {
+
+    $CI =& get_instance();
+    $CI->load->model('Team');
+
+    $team = $CI->Team->load($team_id);
+    $user = $CI->User->load($user_id);
+    if($team->name) {
+        $title = $user->fullname." has joined the '".$team->name."' team.";
+    } else {
+        $title = $user->fullname." has joined the team.";
+    }
+    activity_add($user->id, $team->id, null, $team->id, ACTIVITY_TYPE_USER_TEAM_JOIN, $title);
+}
+
+function activity_user_join_project($project_id, $user_id) {
+
+    $CI =& get_instance();
+    $CI->load->model('Team');
+
+    $project = $CI->Project->load($project_id);
+    $user = $CI->User->load($user_id);
+    $title = $user->fullname." has been added to the '".$project->name."' Project.";
+    activity_add($user->id, $project->team_id, $project->id, $project->id, ACTIVITY_TYPE_USER_PROJECT_JOIN, $title);
 }
 ?>
