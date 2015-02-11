@@ -338,6 +338,68 @@ class Users extends REST_Controller
         }
     }
 
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/projects/{uuid}",
+     *   description="API for user actions",
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="Response",
+     *    summary="Set the active projects for a user.  Any other projects on the current team will be removed from the user's access",
+     * @SWG\Parameter(
+     *     name="uuid",
+     *     description="Unique ID of the user to update",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="projects",
+     *     description="A comma separated list of project uuids that this user can contribute to on this team",
+     *     paramType="form",
+     *     required=true,
+     *     type="User"
+     *     )
+     *   ),
+     * )
+     *
+     * Update the list of projects that a user can have access to on the current team.  Only team creator's can do this
+     * so if the current user on the current team isn't the creator, we'll kick back an error.
+     */
+    public function projects_post($uuid='') {
+        $this->load->model(array('Team', 'Project_User'));
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('projects', 'Projects', 'trim|required|xss_clean');
+
+        if ($this->form_validation->run() == FALSE) {
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
+        } else {
+            $user = $this->User->load_by_uuid($uuid);
+            if($user) {
+                $current_user = get_user();
+                $team = $this->Team->load(get_team_id());
+                $project_uuids = explode(",", $this->post('projects', TRUE));
+
+                if($team && $current_user->id == $team->creator_id) {
+                    foreach($project_uuids as $project_uuid) {
+                        $project = $this->Project->load_by_uuid(trim($project_uuid));
+                        if($project && $project->team_id == $team->id) {
+
+                        }
+                    }
+                } else {
+                    json_error('You do not have the authorization to update the permissions of users on this team.');
+                }
+
+                exit;
+            }
+        }
+
+        json_error('Unable to update user with uuid of '.$uuid);
+    }
+
     /**
      * Returns a single user referenced by their uuid
      * @param string $uuid
