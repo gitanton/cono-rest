@@ -350,6 +350,9 @@ class Videos extends REST_Controller
             );
             $video = $this->decorate_object($this->Video->load($this->Video->add($insert)));
             return $video;
+        } else {
+            json_error($this->upload->display_errors());
+            exit;
         }
     }
 

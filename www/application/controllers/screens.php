@@ -280,6 +280,9 @@ class Screens extends REST_Controller
             );
             $screen = $this->decorate_object($this->Screen->load($this->Screen->add($insert)));
             return $screen;
+        }  else {
+            json_error($this->upload->display_errors());
+            exit;
         }
     }
 
