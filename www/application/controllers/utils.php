@@ -33,10 +33,12 @@ class Utils extends REST_Controller
      * )
      */
     public function bootstrap_get() {
+        $this->load->model('Plan');
         $response = new stdClass;
-        $response->timezones = get_timezones();
         $response->token = $this->twilio_token();
         $response->stripe_key = $this->config->item('stripe_public_key');
+        $response->plans = $this->Plan->get_all();
+        $response->timezones = get_timezones();
         $this->response($response);
     }
 

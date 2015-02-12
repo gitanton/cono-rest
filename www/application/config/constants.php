@@ -23,6 +23,8 @@ define("FILE_TYPE_VIDEO", 2);
 define("DEFAULT_LIMIT", 20);
 define("DEFAULT_PAGE", 0);
 
+define("STRIPE_PLAN_ADDITIONAL_USER", "additional-user");
+
 define("ACTIVITY_TYPE_PROJECT_ADD", 1);
 define("ACTIVITY_TYPE_PROJECT_UPDATE", 2);
 define("ACTIVITY_TYPE_PROJECT_DELETE", 3);

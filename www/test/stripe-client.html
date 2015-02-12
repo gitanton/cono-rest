@@ -1,0 +1,29 @@
+<html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script type="text/javascript" src="https://js.stripe.com/v2/"></script>
+
+    <script>
+        Stripe.setPublishableKey('pk_test_qfSibHadzKvpVKdrPoBwHbGN');
+        Stripe.card.createToken({
+            number: '4242424242424242',
+            cvc: '321',
+            exp_month: '12',
+            exp_year: '2016'
+        }, function(status, response) {
+
+            if (response.error) {
+                $("h1").text(response.error.message);
+            } else {
+                // response contains id and card, which contains additional card details
+                var token = response.id;
+                // Insert the token into the form so it gets submitted to the server
+                $("h1").text(token);
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1></h1>
+</body>
+</html>

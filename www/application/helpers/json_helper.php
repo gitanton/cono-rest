@@ -1,7 +1,7 @@
 <?
-function json_error($message, $data = array())
+function json_error($message, $data = array(), $response_code = 400)
 {
-    http_response_code(400);
+    http_response_code($response_code);
     echo json_encode(array('status'=> false, 'error'=> $message, 'data'=> $data));
 }
 

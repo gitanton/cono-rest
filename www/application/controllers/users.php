@@ -123,7 +123,7 @@ class Users extends REST_Controller
         $this->form_validation->set_rules('email', 'Email', 'trim|xss_clean|valid_email|required|is_unique[user.email]');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
         } else {
             $data = array(
                 'fullname' => $this->post('fullname', TRUE),
@@ -142,7 +142,7 @@ class Users extends REST_Controller
             $this->session->set_userdata(SESS_USER_ID, $user->id);
 
             /* If the invite is not null, we will process the invite and add the new user to the team/project */
-            if($invite) {
+            if ($invite) {
                 $this->process_invite($invite, $user);
             } else {
                 $team_id = $this->Team->add(array(
@@ -151,7 +151,7 @@ class Users extends REST_Controller
             }
 
             /* Set the team on the session */
-            if($team_id) {
+            if ($team_id) {
                 $this->session->set_userdata(SESS_TEAM_ID, $team_id);
                 $user->team_id = $team_id;
             }
@@ -200,7 +200,8 @@ class Users extends REST_Controller
      *   )
      * )
      */
-    public function login_post() {
+    public function login_post()
+    {
         $this->load->model(array('Team', 'Team_Invite', 'Project_Invite', 'Project'));
 
         $this->load->library('form_validation');
@@ -210,7 +211,7 @@ class Users extends REST_Controller
         $this->form_validation->set_rules('invite_type', 'Invite Type', 'trim|xss_clean|callback_validate_invite_type');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
             exit;
         } else {
             $username = $this->post('username', TRUE);
@@ -219,13 +220,13 @@ class Users extends REST_Controller
             if ($user && $user->id) {
 
                 $invite = $this->validate_invite($user->id);
-                if($invite) {
+                if ($invite) {
                     $this->process_invite($invite, $user);
                 }
 
                 $this->session->set_userdata(SESS_USER_ID, $user->id);
                 $team = $this->Team->get_active_for_user($user->id);
-                if($team) {
+                if ($team) {
                     $this->session->set_userdata(SESS_TEAM_ID, $team->id);
                 }
 
@@ -241,6 +242,223 @@ class Users extends REST_Controller
     }
 
 
+    /**
+     *
+     * @SWG\Api(
+     *   path="/subscription",
+     *   description="API for user actions",
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="Response",
+     *    summary="Adds/Updates the subscription for the current user",
+     * @SWG\Parameter(
+     *     name="token",
+     *     description="The token received from stripe for this transaction",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="plan_id",
+     *     description="The id of the plan that the user is signing up for",
+     *     paramType="form",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="additional_users",
+     *     description="The number of additional users that the user is signing up for",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
+     *     ),
+     *   ),
+     * @SWG\Operation(
+     *    method="DELETE",
+     *    type="Response",
+     *    summary="Deletes/Cancels the user's subscription",
+     *   )
+     * )
+     */
+    public function subscription_post()
+    {
+        $this->validate_user();
+        $this->load->model(array('Plan', 'Subscription'));
+
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('token', 'Token', 'trim|xss_clean');
+        $this->form_validation->set_rules('additional_users', 'Password', 'trim|numeric|xss_clean');
+        $this->form_validation->set_rules('plan_id', 'Plan ID', 'trim|numeric|required|xss_clean');
+
+        if ($this->form_validation->run() == FALSE) {
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+            exit;
+        } else {
+            include_once(APPPATH . 'libraries/stripe-php-1.18.0/lib/Stripe.php');
+            Stripe::setApiKey($this->config->item('stripe_private_key'));
+            $plan_id = $this->post('plan_id', TRUE);
+            $token = $this->post('token', TRUE);
+            $additional_users = intval($this->post('additional_users', TRUE));
+
+            $user = get_user();
+            $plan = $this->Plan->load($plan_id);
+            if ($plan) {
+                $subscription = $this->Subscription->load_by_user_id($user->id);
+
+                /* We are adding a new subscription for this user */
+                if (!$subscription) {
+                    try {
+
+                        /* We need the token here, so throw if we don't have it */
+                        if (!$token) {
+                            json_error("Unable to create subscription without token");
+                            exit;
+                        }
+
+                        $stripe_customer = Stripe_Customer::create(array(
+                            "card" => $token,
+                            "email" => $user->email
+                        ));
+                        $stripe_subscription = $stripe_customer->subscriptions->create(array(
+                            "plan" => $plan->stripe_plan_id
+                        ));
+                        $subscription_id = $this->Subscription->add(array(
+                            'user_id' => $user->id,
+                            'plan_id' => $plan->id,
+                            'additional_users' => 0,
+                            'stripe_customer_id' => $stripe_customer->id,
+                            'stripe_subscription_id' => $stripe_subscription->id
+                        ));
+
+                        if($additional_users>0) {
+                            $stripe_additional_subscription = $stripe_customer->subscriptions->create(array(
+                                "plan" => STRIPE_PLAN_ADDITIONAL_USER,
+                                "quantity" => $additional_users
+                            ));
+
+                            /* Handle additional users */
+                            $this->Subscription->update($subscription_id, array(
+                                'additional_users' => $additional_users,
+                                'stripe_additional_subscription_id' => $stripe_additional_subscription->id
+                            ));
+                        }
+
+                        json_success('Subscription successfully created!', array('subscription_id' => $subscription_id));
+                        exit;
+                    } catch (Exception $e) {
+                        $error = '[Create Stripe Customer] Stripe_Customer::create Exception: ' . $e->getMessage();
+                        log_message('info', $error);
+                        loggly(array(
+                            'error' => $e->getMessage(),
+                            'text' => $error,
+                            'method' => 'rest.users.subscription_post',
+                            'actor_id' => $user->id
+                        ));
+                        json_error($e->getMessage());
+                        exit;
+                    }
+                } else {
+                    /* If they have an existing subscription, retrieve the customer and the subscription and update it */
+                    try {
+                        $stripe_customer = Stripe_Customer::retrieve($subscription->stripe_customer_id);
+                        $stripe_subscription = $stripe_customer->subscriptions->retrieve($subscription->stripe_subscription_id);
+                        $stripe_subscription->plan = $plan->stripe_plan_id;
+                        $stripe_subscription->prorate = false;
+                        if ($token) {
+                            $stripe_subscription->card = $token;
+                        }
+                        $stripe_subscription->save();
+
+                        $this->Subscription->update($subscription->id, array(
+                            'plan_id' => $plan_id,
+                            'expired' => 0,
+                            'additional_users' => $additional_users
+                        ));
+
+                        /* Handle additional users */
+                        /* If they have an existing additional users subscription, just update it */
+                        if($subscription->stripe_additional_subscription_id) {
+                            $stripe_additional_subscription = $stripe_customer->subscriptions->retrieve($subscription->stripe_additional_subscription_id);
+                            if($additional_users>0) {
+                                $stripe_additional_subscription->quantity = $additional_users;
+                                $stripe_additional_subscription->prorate = false;
+                                $stripe_additional_subscription->save();
+
+                                $this->Subscription->update($subscription->id, array(
+                                    'additional_users' => $additional_users
+                                ));
+                            } else {
+                                $stripe_additional_subscription->cancel();
+                                $this->Subscription->update($subscription->id, array(
+                                    'additional_users' => $additional_users,
+                                    'stripe_additional_subscription_id' => null
+                                ));
+                            }
+                        } else if($additional_users) {
+                            /* Otherwise if they don't have one, but we are adding users, create the subscription */
+                            $stripe_additional_subscription = $stripe_customer->subscriptions->create(array(
+                                "plan" => STRIPE_PLAN_ADDITIONAL_USER,
+                                "quantity" => $additional_users
+                            ));
+
+                            $this->Subscription->update($subscription->id, array(
+                                'additional_users' => $additional_users,
+                                'stripe_additional_subscription_id' => $stripe_additional_subscription->id
+                            ));
+                        }
+                        json_success('Subscription successfully updated!');
+                        exit;
+                    } catch (Exception $e) {
+                        $error = '[Update Stripe Subscription] Stripe_Customer::retrieve Exception: ' . $e->getMessage();
+                        log_message('info', $error);
+                        loggly(array(
+                            'error' => $e->getMessage(),
+                            'text' => $error,
+                            'method' => 'rest.users.subscription_post',
+                            'actor_id' => $user->id
+                        ));
+                        json_error($e->getMessage());
+                        exit;
+                    }
+                }
+            }
+        }
+        json_error('Unable to process subscription info');
+    }
+
+    public function subscription_delete() {
+        $this->validate_user();
+        $this->load->model(array('Plan', 'Subscription'));
+
+        include_once(APPPATH . 'libraries/stripe-php-1.18.0/lib/Stripe.php');
+        Stripe::setApiKey($this->config->item('stripe_private_key'));
+        $subscription = $this->Subscription->load_by_user_id(get_user_id());
+
+        /* We are deleting the customer and subscription */
+        if ($subscription) {
+            try {
+                $stripe_customer = Stripe_Customer::retrieve($subscription->stripe_customer_id);
+                $stripe_customer->delete();
+
+                $this->Subscription->delete($subscription->id);
+                json_success('Subscription successfully deleted!');
+                exit;
+            } catch (Exception $e) {
+                $error = '[Delete Stripe Subscription] Stripe_Customer::retrieve Exception: ' . $e->getMessage();
+                log_message('info', $error);
+                loggly(array(
+                    'error' => $e->getMessage(),
+                    'text' => $error,
+                    'method' => 'rest.users.subscription_delete',
+                    'actor_id' => get_user_id()
+                ));
+                json_error($e->getMessage());
+                exit;
+            }
+        }
+        json_error('Unable to find subscription');
+    }
+
 
     /**
      *
@@ -254,9 +472,11 @@ class Users extends REST_Controller
      *   )
      * )
      */
-    public function logout_post() {
+    public function logout_post()
+    {
         $this->session->sess_destroy();
         json_success('You have been logged out successfully.');
+
     }
 
 
@@ -290,7 +510,7 @@ class Users extends REST_Controller
      *    method="GET",
      *    type="User",
      *    summary="Returns a user that matches the given uuid",
-     *   @SWG\Parameter(
+     * @SWG\Parameter(
      *     name="uuid",
      *     description="The unique ID of the user",
      *     paramType="path",
@@ -299,11 +519,11 @@ class Users extends REST_Controller
      *     )
      *   ),
      *
-     *  @SWG\Operation(
+     * @SWG\Operation(
      *    method="DELETE",
      *    type="Response",
      *    summary="Deletes a user with the specified UUID",
-     *   @SWG\Parameter(
+     * @SWG\Parameter(
      *     name="uuid",
      *     description="The unique ID of the user",
      *     paramType="path",
@@ -313,7 +533,7 @@ class Users extends REST_Controller
      *   )
      * )
      */
-    public function user_put($uuid='')
+    public function user_put($uuid = '')
     {
         $this->validate_user();
         /* Validate update - have to copy the fields from put to $_POST for validation */
@@ -328,7 +548,7 @@ class Users extends REST_Controller
         $this->form_validation->set_rules('email', 'Email', 'trim|xss_clean|valid_email');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
         } else {
             $data = $this->get_put_fields($this->User->get_fields());
             $this->User->update_by_uuid($uuid, $data);
@@ -368,29 +588,31 @@ class Users extends REST_Controller
      * Update the list of projects that a user can have access to on the current team.  Only team creator's can do this
      * so if the current user on the current team isn't the creator, we'll kick back an error.
      */
-    public function projects_post($uuid='') {
-        $this->load->model(array('Team','Project'));
+    public function projects_post($uuid = '')
+    {
+        $this->validate_user();
+        $this->load->model(array('Team', 'Project'));
         $this->load->library('form_validation');
         $this->form_validation->set_rules('projects', 'Projects', 'trim|required|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
         } else {
             $user = $this->User->load_by_uuid($uuid);
-            if($user) {
+            if ($user) {
                 $current_user = get_user();
                 $team = $this->Team->load(get_team_id());
                 $project_uuids = explode(",", $this->post('projects', TRUE));
 
-                if($team && $current_user->id == $team->owner_id) {
+                if ($team && $current_user->id == $team->owner_id) {
 
                     /* Remove the user from all projects on the team */
                     $this->Project->remove_for_user_team($user->id, $team->id);
 
-                    foreach($project_uuids as $project_uuid) {
+                    foreach ($project_uuids as $project_uuid) {
                         $project = $this->Project->load_by_uuid(trim($project_uuid));
 
-                        if($project && $project->team_id == $team->id) {
+                        if ($project && $project->team_id == $team->id) {
                             /* Add the user to the project */
                             $this->Project->add_user($project->id, $user->id);
                             activity_user_join_project($project->id, $user->id);
@@ -404,7 +626,7 @@ class Users extends REST_Controller
             }
         }
 
-        json_error('Unable to update user with uuid of '.$uuid);
+        json_error('Unable to update user with uuid of ' . $uuid);
     }
 
     /**
@@ -492,7 +714,7 @@ class Users extends REST_Controller
     public function validate_invite_type($type = '')
     {
         if ($type) {
-            if($type!=INVITE_TYPE_PROJECT && $type!=INVITE_TYPE_TEAM) {
+            if ($type != INVITE_TYPE_PROJECT && $type != INVITE_TYPE_TEAM) {
                 $this->form_validation->set_message('validate_invite_type', 'The %s is an invalid invite type.');
                 return FALSE;
             }
@@ -500,18 +722,18 @@ class Users extends REST_Controller
         return TRUE;
     }
 
-    private function validate_invite($user_id = 0) {
+    private function validate_invite($user_id = 0)
+    {
         $invite = null;
 
         $invite_key = $this->post('invite_key', TRUE);
         $invite_type = $this->post('invite_type', TRUE);
-        if($invite_key && $invite_type) {
+        if ($invite_key && $invite_type) {
             /* Team Invite */
-            if($invite_type==INVITE_TYPE_TEAM) {
+            if ($invite_type == INVITE_TYPE_TEAM) {
                 $invite = $this->Team_Invite->load_by_key($invite_key);
                 validate_invite($invite);
-            }
-            /* Project Invite */
+            } /* Project Invite */
             else {
                 $invite = $this->Project_Invite->load_by_key($invite_key);
                 validate_invite($invite, $user_id);
@@ -521,13 +743,14 @@ class Users extends REST_Controller
         return $invite;
     }
 
-    private function process_invite($invite, $user) {
+    private function process_invite($invite, $user)
+    {
         /* Process Invites */
         $invite_key = $this->post('invite_key', TRUE);
         $invite_type = $this->post('invite_type', TRUE);
-        if($invite_key && $invite_type && $invite) {
+        if ($invite_key && $invite_type && $invite) {
             /* Team Invite */
-            if($invite_type==INVITE_TYPE_TEAM) {
+            if ($invite_type == INVITE_TYPE_TEAM) {
                 /* Add the user to the team */
                 $this->Team->add_user($invite->team_id, $user->id);
 
@@ -537,15 +760,14 @@ class Users extends REST_Controller
                     'used' => timestamp_to_mysqldatetime(now())
                 ));
                 activity_user_join_team($invite->team_id, $user->id);
-            }
-            /* Project Invite */
+            } /* Project Invite */
             else {
                 /* Add the user to the project */
                 $this->Project->add_user($invite->project_id, $user->id);
 
                 /* Look up the project to see if the user is already on the team, if not add them */
                 $project = $this->Project->load($invite->project_id);
-                if(!$this->User->is_on_team($project->team_id, $user->id)) {
+                if (!$this->User->is_on_team($project->team_id, $user->id)) {
                     $this->Team->add_user($project->team_id, $user->id);
                     activity_user_join_team($project->team_id, $user->id);
                 }

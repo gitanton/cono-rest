@@ -42,7 +42,7 @@ $config['loggly_token'] = 'c51b721e-e3bb-4ea8-8210-68b59046fcc0';
 
 $config['google_api_key'] = 'AIzaSyDnGoUa_UuPqYMAvFLiRUZyHVcHOAIXIWM';
 
-$config['stripe_secret_key'] = 'sk_test_E6PXD0mPm8D0ugGrF5Z6ZYC3';
+$config['stripe_private_key'] = 'sk_test_E6PXD0mPm8D0ugGrF5Z6ZYC3';
 $config['stripe_public_key'] = 'pk_test_qfSibHadzKvpVKdrPoBwHbGN';
 
 if (IS_TEST) {

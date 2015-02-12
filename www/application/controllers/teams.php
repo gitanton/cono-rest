@@ -58,7 +58,6 @@ class Teams extends REST_Controller
 
     public function team_put($uuid='')
     {
-        $this->validate_user();
         /* Validate update - have to copy the fields from put to $_POST for validation */
         $_POST['name'] = $this->put('name');
 
@@ -68,12 +67,10 @@ class Teams extends REST_Controller
         if ($this->form_validation->run() == FALSE) {
             json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
         } else {
-            if ($uuid) {
-                $team = validate_team_uuid($uuid);
-            } else {
-                $team = $this->Team->load(get_team_id());
+            if (!$uuid) {
+                $uuid = $this->Team->get_uuid(get_team_id());
             }
-
+            $team = validate_team_uuid($uuid, true);
             $data = $this->get_put_fields($this->Team->get_fields());
             $this->Team->update($team->id, $data);
 
@@ -187,7 +184,8 @@ class Teams extends REST_Controller
         $this->load->library('form_validation');
         $this->load->helper('notification');
 
-        $team = validate_team_uuid($uuid);
+        /* Only the team owner can invite people */
+        $team = validate_team_uuid($uuid, true);
 
         $this->form_validation->set_rules('email', 'Email', 'required|trim|xss_clean|valid_email');
 
@@ -196,7 +194,9 @@ class Teams extends REST_Controller
         } else {
             $email = $this->post('email', TRUE);
 
-            /** Look to see if there is an existing invite and resend it */
+
+
+            /* Look to see if there is an existing invite and resend it */
             $invite = $this->Team_Invite->get_for_email_team($email, $team->id);
             $invite_id = 0;
             if($invite && !$invite->user_id) {

@@ -255,7 +255,7 @@ function validate_project_uuid($uuid = '')
     }
     /* Validate that the user is on the project */
     if (!$CI->User->is_on_project($project->id, get_user_id())) {
-        json_error('You are not authorized to access this project.');
+        json_error('You are not authorized to access this project.', null, 403);
         exit;
     }
 
@@ -285,7 +285,7 @@ function validate_screen_uuid($uuid = '')
     }
     /* Validate that the user is on the project that the screen belongs to */
     if (!$CI->User->is_on_project($screen->project_id, get_user_id())) {
-        json_error('You are not authorized to access this project.');
+        json_error('You are not authorized to access this project.', null, 403);
         exit;
     }
 
@@ -315,7 +315,7 @@ function validate_video_uuid($uuid = '')
     }
     /* Validate that the user is on the project that the video belongs to */
     if (!$CI->User->is_on_project($video->project_id, get_user_id())) {
-        json_error('You are not authorized to access this project.');
+        json_error('You are not authorized to access this project.', null, 403);
         exit;
     }
 
@@ -346,7 +346,7 @@ function validate_hotspot_uuid($uuid = '')
     $screen = $CI->Screen->load($hotspot->screen_id);
     /* Validate that the user is on the project that the screen belongs to */
     if (!$CI->User->is_on_project($screen->project_id, get_user_id())) {
-        json_error('You are not authorized to access this project.');
+        json_error('You are not authorized to access this project.', null, 403);
         exit;
     }
 
@@ -362,7 +362,7 @@ function validate_hotspot_uuid($uuid = '')
  * @param string $uuid
  * @return mixed
  */
-function validate_team_uuid($uuid = '')
+function validate_team_uuid($uuid = '', $validate_own = false)
 {
     $CI =& get_instance();
     $CI->load->model('Team');
@@ -377,7 +377,12 @@ function validate_team_uuid($uuid = '')
     }
     /* Validate that the user is on the project */
     if (!$CI->User->is_on_team($team->id, get_user_id())) {
-        json_error('You are not authorized to view this team.');
+        json_error('You are not authorized to view this team.', null, 403);
+        exit;
+    }
+    /* Validate that the user is the message sender */
+    if ($validate_own && get_user_id() != $team->owner_id) {
+        json_error('Only the team owner can perform that action.', null, 403);
         exit;
     }
 
@@ -438,12 +443,12 @@ function validate_message_uuid($uuid = '', $validate_own = false)
     }
     /* Validate that the user is on the message */
     if (!$CI->User->is_on_message($parent_id, get_user_id())) {
-        json_error('You are not authorized to view this message.');
+        json_error('You are not authorized to view this message.', null, 403);
         exit;
     }
-    /* Validate that the user is on the message */
+    /* Validate that the user is the message sender */
     if ($validate_own && get_user_id() != $message->sender_id) {
-        json_error('You are not authorized to view this message.');
+        json_error('Only the message sender can perform this action.', null, 403);
         exit;
     }
 
@@ -476,7 +481,7 @@ function validate_meeting_uuid($uuid = '', $validate_started = false, $validate_
 
     /* Validate that the user is on the meeting */
     if (!$CI->User->is_on_meeting($meeting->id, get_user_id())) {
-        json_error('You are not authorized to view this meeting.');
+        json_error('You are not authorized to view this meeting.', null, 403);
         exit;
     }
     /* Validate that the meeting has started */
@@ -486,7 +491,7 @@ function validate_meeting_uuid($uuid = '', $validate_started = false, $validate_
     }
     /* Validate that the user is the moderator */
     if ($validate_moderator && get_user_id() != $meeting->moderator_id) {
-        json_error('Only the moderator can perform this action.');
+        json_error('Only the moderator can perform this action.', null, 403);
         exit;
     }
 
