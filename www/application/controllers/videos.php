@@ -21,6 +21,7 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="video_uuid",type="string",description="The uuid of the video for whom the comment is provided")
  * @SWG\Property(name="ordering",type="integer",description="The ordering of how the comment should be displayed in the list of comments")
  * @SWG\Property(name="content",type="string",description="The content of the comment")
+ * @SWG\Property(name="time",type="string",format="time",description="The time of the video for this comment")
  * @SWG\Property(name="creator_uuid",type="string",description="The id of the user who created the comment")
  * @SWG\Property(name="created",type="string",format="date",description="The date/time that this comment was created")
  *
@@ -262,6 +263,13 @@ class Videos extends REST_Controller
      *     paramType="form",
      *     required=true,
      *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="time",
+     *     description="The time of the video that the comment was added",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
      *     )
      *   )
      * )
@@ -316,6 +324,7 @@ class Videos extends REST_Controller
                 'project_id' => $video->project_id,
                 'ordering' => $this->Comment->get_max_ordering_for_video($video->id) + 1,
                 'creator_id' => get_user_id(),
+                'time' => $this->post('time', TRUE),
                 'content' => $this->post('content', TRUE)
             ));
             $comment = decorate_comment($this->Comment->load($comment_id));

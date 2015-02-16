@@ -3,7 +3,8 @@ class Comment extends MY_Model
 {
 
     protected static $fields = array(
-        'data' => 'string'
+        'comment' => 'string',
+        'time' => 'string'
     );
 
     function get_scope()
