@@ -4,6 +4,7 @@ class Comment extends MY_Model
 
     protected static $fields = array(
         'comment' => 'string',
+        'data' => 'string',
         'time' => 'string'
     );
 

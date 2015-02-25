@@ -8,6 +8,7 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="video_uuid",type="string",description="The uuid of the video for whom the hotspot is provided")
  * @SWG\Property(name="ordering",type="integer",description="The ordering of how the screen should be displayed in the list of hotspots")
  * @SWG\Property(name="data",type="string",description="The json data for the html5 canvas object")
+ * @SWG\Property(name="time",type="string",format="time",description="The time of the video for this hotspot")
  * @SWG\Property(name="creator_uuid",type="string",description="The id of the user who created the hotspot")
  * @SWG\Property(name="created",type="string",format="date",description="The date/time that this hotspot was created")
  *
@@ -111,7 +112,7 @@ class Hotspots extends REST_Controller
     public function hotspot_delete($uuid = '')
     {
         $hotspot = validate_hotspot_uuid($uuid);
-
+        activity_delete_hotspot($hotspot->id);
         $this->Hotspot->delete($hotspot->id);
         json_success("Hotspot deleted successfully.");
     }

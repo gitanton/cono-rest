@@ -148,6 +148,7 @@ class Meetings extends REST_Controller
 
             $meeting_id = $this->Meeting->add($data);
 
+            activity_add_meeting($meeting_id);
             /* Allow the attendees to be optional, if it isn't specified, all people on the project are invited */
             $attendees = $this->post('attendees', TRUE);
             if(!$attendees) {
@@ -235,6 +236,7 @@ class Meetings extends REST_Controller
     {
         $meeting = validate_meeting_uuid($uuid, true);
 
+        activity_delete_meeting($meeting->id);
         $this->Meeting->delete($meeting->id);
         json_success("Message deleted successfully.");
     }

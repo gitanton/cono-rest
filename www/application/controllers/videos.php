@@ -22,6 +22,7 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="ordering",type="integer",description="The ordering of how the comment should be displayed in the list of comments")
  * @SWG\Property(name="content",type="string",description="The content of the comment")
  * @SWG\Property(name="time",type="string",format="time",description="The time of the video for this comment")
+ * @SWG\Property(name="data",type="string",description="The json data for the html5 canvas object")
  * @SWG\Property(name="creator_uuid",type="string",description="The id of the user who created the comment")
  * @SWG\Property(name="created",type="string",format="date",description="The date/time that this comment was created")
  *
@@ -217,6 +218,13 @@ class Videos extends REST_Controller
      *     type="string"
      *     ),
      * @SWG\Parameter(
+     *     name="time",
+     *     description="The time for the hotspot",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
      *     name="data",
      *     description="The hotspot json data in string form",
      *     paramType="form",
@@ -270,6 +278,13 @@ class Videos extends REST_Controller
      *     paramType="form",
      *     required=false,
      *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="data",
+     *     description="The hotspot json data in string form",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
      *     )
      *   )
      * )
@@ -292,6 +307,7 @@ class Videos extends REST_Controller
     {
         $this->load->library('form_validation');
         $this->form_validation->set_rules('data', 'Data', 'trim|required|xss_clean');
+        $this->form_validation->set_rules('time', 'Time', 'trim|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
             json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
@@ -300,8 +316,10 @@ class Videos extends REST_Controller
                 'video_id' => $video->id,
                 'ordering' => $this->Hotspot->get_max_ordering_for_video($video->id) + 1,
                 'creator_id' => get_user_id(),
+                'time' => $this->post('time', TRUE),
                 'data' => $this->post('data', TRUE)
             ));
+            activity_add_hotspot_video($hotspot_id);
             $hotspot = decorate_hotspot($this->Hotspot->load($hotspot_id));
             $this->response($hotspot);
         }
@@ -315,6 +333,8 @@ class Videos extends REST_Controller
     {
         $this->load->library('form_validation');
         $this->form_validation->set_rules('content', 'Content', 'trim|required|xss_clean');
+        $this->form_validation->set_rules('data', 'Data', 'trim|xss_clean');
+        $this->form_validation->set_rules('time', 'Time', 'trim|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
             json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
@@ -322,11 +342,13 @@ class Videos extends REST_Controller
             $comment_id = $this->Comment->add(array(
                 'video_id' => $video->id,
                 'project_id' => $video->project_id,
+                'data' => $this->post('data',TRUE),
                 'ordering' => $this->Comment->get_max_ordering_for_video($video->id) + 1,
                 'creator_id' => get_user_id(),
                 'time' => $this->post('time', TRUE),
                 'content' => $this->post('content', TRUE)
             ));
+            activity_add_comment($comment_id);
             $comment = decorate_comment($this->Comment->load($comment_id));
             $this->response($comment);
         }

@@ -246,6 +246,7 @@ class Screens extends REST_Controller
                 'creator_id' => get_user_id(),
                 'data' => $this->post('data', TRUE)
             ));
+            activity_add_hotspot_screen($hotspot_id);
             $hotspot = decorate_hotspot($this->Hotspot->load($hotspot_id));
             $this->response($hotspot);
         }

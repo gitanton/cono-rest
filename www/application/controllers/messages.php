@@ -139,7 +139,6 @@ class Messages extends REST_Controller
             if($parent_uuid) {
                 $parent_message = $this->Message->load_by_uuid($parent_uuid);
                 if($parent_message) {
-
                     /* Prevent messages that are replies to replies so we don't have to deal with a multi-level hierarchy */
                     if($parent_message->parent_id) {
                         json_error('The parent uuid provided belongs to a reply.  You cannot reply to a reply but only to the parent messgae.');
@@ -173,11 +172,15 @@ class Messages extends REST_Controller
                         }
                     }
                 }
+                /* This is a new message, so store the add activity */
+                activity_add_message($message->id);
             } else {
                 /* Update the updated date on the parent message */
                 $this->Message->update($message->parent_id, array(
                     'updated' => timestamp_to_mysqldatetime(now())
                 ));
+                /* This is a new message, so store the add activity */
+                activity_reply_message($message->id);
             }
 
             $this->response($this->decorate_object($message));
@@ -236,7 +239,7 @@ class Messages extends REST_Controller
     public function message_delete($uuid = '')
     {
         $message = validate_message_uuid($uuid, true);
-
+        activity_delete_message($message->id);
         $this->Message->delete($message->id);
         json_success("Message deleted successfully.");
     }
