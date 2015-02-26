@@ -653,6 +653,14 @@ class Users extends REST_Controller
     }
 
     /**
+     * Cancel's a user's account.
+     * - Deletes the user's teams, projects, screens, etc...
+     */
+    public function cancel_post() {
+
+    }
+
+    /**
      * Deletes a user by its uuid
      * @param string $uuid
      */
@@ -748,6 +756,7 @@ class Users extends REST_Controller
 
     private function process_invite($invite, $user)
     {
+        $this->load->helper('notification');
         /* Process Invites */
         $invite_key = $this->post('invite_key', TRUE);
         $invite_type = $this->post('invite_type', TRUE);
@@ -763,6 +772,7 @@ class Users extends REST_Controller
                     'used' => timestamp_to_mysqldatetime(now())
                 ));
                 activity_user_join_team($invite->team_id, $user->id);
+                notify_team_invite_accepted($invite->id);
             } /* Project Invite */
             else {
                 /* Add the user to the project */
@@ -781,6 +791,7 @@ class Users extends REST_Controller
                     'used' => timestamp_to_mysqldatetime(now())
                 ));
                 activity_user_join_project($project->id, $user->id);
+                notify_project_invite_accepted($invite->id);
             }
         }
     }

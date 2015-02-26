@@ -194,8 +194,6 @@ class Teams extends REST_Controller
         } else {
             $email = $this->post('email', TRUE);
 
-
-
             /* Look to see if there is an existing invite and resend it */
             $invite = $this->Team_Invite->get_for_email_team($email, $team->id);
             $invite_id = 0;

@@ -122,6 +122,7 @@ class Messages extends REST_Controller
     {
         /* Validate add */
         $this->load->library('form_validation');
+        $this->load->helper('notification');
         $this->form_validation->set_rules('content', 'Content', 'trim|required|xss_clean');
         $this->form_validation->set_rules('project_uuid', 'Project UUID', 'trim|required|xss_clean');
 
@@ -174,6 +175,7 @@ class Messages extends REST_Controller
                 }
                 /* This is a new message, so store the add activity */
                 activity_add_message($message->id);
+                notify_new_message($message->id, get_user_id());
             } else {
                 /* Update the updated date on the parent message */
                 $this->Message->update($message->parent_id, array(
@@ -181,6 +183,7 @@ class Messages extends REST_Controller
                 ));
                 /* This is a new message, so store the add activity */
                 activity_reply_message($message->id);
+                notify_new_message($message->id, get_user_id(), $message->parent_id);
             }
 
             $this->response($this->decorate_object($message));

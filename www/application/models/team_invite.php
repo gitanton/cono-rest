@@ -43,6 +43,7 @@ class Team_Invite extends MY_Model
 
         $data = array(
             'uuid' => $this->uuid->v4(),
+            'creator_id' => get_user_id(),
             'created' => timestamp_to_mysqldatetime(now())
         );
         return $data;
