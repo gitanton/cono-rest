@@ -512,12 +512,12 @@ class Users extends REST_Controller
      * @SWG\Operation(
      *    method="GET",
      *    type="User",
-     *    summary="Returns a user that matches the given uuid",
+     *    summary="Returns a user that matches the given uuid.  If no uuid is provided, it will return the currently logged in user",
      * @SWG\Parameter(
      *     name="uuid",
      *     description="The unique ID of the user",
      *     paramType="path",
-     *     required=true,
+     *     required=false,
      *     type="string"
      *     )
      *   ),
@@ -640,10 +640,10 @@ class Users extends REST_Controller
     {
         $this->validate_user();
         if (!$uuid) {
-            json_error('uuid is required');
-            exit;
+            $user = get_user();
+        } else {
+            $user = $this->User->load_by_uuid($uuid);
         }
-        $user = $this->User->load_by_uuid($uuid);
         if (!$user) {
             json_error('There is no user with that id');
             exit;

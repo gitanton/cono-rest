@@ -12,6 +12,7 @@ $msg .= '
 
 </td>
 </tr>
+</tbody>
 </table>
 
 
@@ -28,7 +29,6 @@ $msg .= '
 
                 You received this message because you have an account with ' . $CI->config->item('site_title') . '.
                 <a style="color: #1496cf" href="' . $CI->config->item('signin_url') . '">Click here to log in.</a>
-                </a>
             </p>
         </td>
     </tr>

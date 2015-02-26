@@ -120,6 +120,7 @@ class Meetings extends REST_Controller
     public function index_post()
     {
         $this->load->library('form_validation');
+        $this->load->helper('notification');
         $this->form_validation->set_rules('notes', 'Notes', 'trim|xss_clean');
         $this->form_validation->set_rules('name', 'Name', 'trim|required|xss_clean');
         $this->form_validation->set_rules('date', 'Date', 'trim|required|xss_clean');
@@ -148,7 +149,6 @@ class Meetings extends REST_Controller
 
             $meeting_id = $this->Meeting->add($data);
 
-            activity_add_meeting($meeting_id);
             /* Allow the attendees to be optional, if it isn't specified, all people on the project are invited */
             $attendees = $this->post('attendees', TRUE);
             if(!$attendees) {
@@ -170,6 +170,10 @@ class Meetings extends REST_Controller
                 }
             }
             $meeting = $this->Meeting->load($meeting_id);
+
+            activity_add_meeting($meeting_id);
+            notify_new_meeting($meeting_id, get_user_id());
+
             $this->response($this->decorate_object($meeting));
         }
     }

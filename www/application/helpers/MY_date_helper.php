@@ -8,11 +8,14 @@ function server_datetime($date, $time) {
     return $datetime;
 }
 
-function localize_datetime($date, $time) {
+function localize_datetime($date, $time, $user ='') {
+    if(!$user) {
+        $user = get_user();
+    }
     date_default_timezone_set(getenv('TZ'));
     $datetime = new DateTime($date." ".$time);
-    if(get_user()->timezone) {
-        $datetime->setTimezone(new DateTimeZone(get_user()->timezone));
+    if(isset($user->timezone)) {
+        $datetime->setTimezone(new DateTimeZone($user->timezone));
     }
     return $datetime;
 }

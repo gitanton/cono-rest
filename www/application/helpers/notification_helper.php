@@ -288,6 +288,57 @@ function notify_new_message($message_id, $sender_id, $parent_id=0) {
     ));
 }
 
+/** Send the contents of a new message to users on the project */
+function notify_new_meeting($meeting_id, $sender_id) {
+    $CI = & get_instance();
+    $CI->load->model(array('Project', 'Meeting'));
+
+    $meeting = $CI->Meeting->load($meeting_id);
+    $project = $CI->Project->load($meeting->project_id);
+    $subject = sprintf('(%s) New Meeting Scheduled', $project->name);
+
+    $attendees = $CI->User->get_for_meeting($meeting_id);
+    $recipient_names = '';
+
+    $i=0;
+    foreach($attendees as $recipient) {
+        if($i>0) {
+            $recipient_names.=",";
+        }
+        $recipient_names.=" ".$recipient->fullname;
+        $i++;
+    }
+    $sender = $CI->User->load($sender_id);
+
+    include(APPPATH . '/views/emails/new_meeting.php');
+
+    $mg = new Mailgun($CI->config->item('mailgun_key'));
+    $batchMsg = $mg->BatchMessage($CI->config->item('mailgun_domain'));
+    $batchMsg->setFromAddress($CI->config->item('notifications_email_from') . ' <' . $CI->config->item('notifications_email') . '>');
+    $batchMsg->setSubject($subject);
+    $batchMsg->setTextBody($msg_text);
+    $batchMsg->setHtmlBody($msg);
+    $batchMsg->setClickTracking(true);
+    $batchMsg->setOpenTracking(true);
+
+    foreach($attendees as $recipient) {
+        $datetime = localize_datetime($meeting->date, $meeting->time, $recipient);
+        $batchMsg->addToRecipient($recipient->email, array(
+            "time" => $datetime->format('h:i A'),
+            "date" => $datetime->format('F j, Y')
+        ));
+    }
+
+    $batchMsg->finalize();
+
+    loggly(array(
+        'text' => 'Sending notification of new meeting',
+        'method' => 'notification_helper.notify_new_meeting',
+        'sender_id' => $sender_id,
+        'meeting_id' => $meeting_id
+    ));
+}
+
 function notify_failed_charge($user, $card_last_four) {
     $CI = & get_instance();
 

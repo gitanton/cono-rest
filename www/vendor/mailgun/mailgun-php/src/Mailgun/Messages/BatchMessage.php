@@ -77,6 +77,7 @@ class BatchMessage extends MessageBuilder{
 		}
 		else{
 			$message["recipient-variables"] = json_encode($this->batchRecipientAttributes);
+            //array_print($message);
 			$response = $this->restClient->post($this->endpointUrl, $message, $files);
 			$this->batchRecipientAttributes = array();
 			$this->counters['recipients']['to'] = 0;
