@@ -31,11 +31,10 @@ $config['max_video_upload_size'] = 2000000;
 $config['video_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/videos/';
 $config['video_upload_types'] = 'mp4|mov|avi';
 
-$config['contact_email'] = 'info@conojo.com';
 
-$config['notifications_account'] = 'info';
+$config['notifications_email_from'] = 'Conojo';
 $config['notifications_email'] = 'info@conojo.com';
-$config['notifications_user'] = 'kali@conojo.com';
+$config['contact_email'] = 'info@conojo.com';
 
 $config['loggly_tag'] = 'conojo';
 $config['loggly_token'] = 'c51b721e-e3bb-4ea8-8210-68b59046fcc0';
@@ -48,6 +47,13 @@ $config['stripe_public_key'] = 'pk_test_qfSibHadzKvpVKdrPoBwHbGN';
 if (IS_TEST) {
     $config['domain_url'] = 'http://conojoapp.scmreview.com/rest';
     $config['base_url'] = 'http://conojoapp.scmreview.com/rest';
+
+    $config['stripe_private_key'] = 'sk_test_E6PXD0mPm8D0ugGrF5Z6ZYC3';
+    $config['stripe_public_key'] = 'pk_test_qfSibHadzKvpVKdrPoBwHbGN';
+
+    $config['notifications_email'] = 'info@reviewdev.com';
+    $config['mailgun_key'] = 'key-bd5e77e86054c14bba3e6f88c9dc31bf';
+    $config['mailgun_domain'] = 'reviewdev.com';
 }
 
 $config['twilio_phone'] = '+1 415-599-2671';

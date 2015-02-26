@@ -27,7 +27,7 @@ $msg .= '
                                   Arial, sans-serif;  text-shadow: 0 1px 0 #fff;">
 
                 You received this message because you have an account with ' . $CI->config->item('site_title') . '.
-                <a style="color: #9ac579" href="' . $CI->config->item('signin_url') . '">Click here to log in.</a>
+                <a style="color: #1496cf" href="' . $CI->config->item('signin_url') . '">Click here to log in.</a>
                 </a>
             </p>
         </td>
@@ -40,4 +40,7 @@ $msg .= '
 </table>
 </body>
 </html>';
+
+$msg_text.="\n\nYou received this message because you have an account with " . $CI->config->item('site_title')
+                .".\nLogin here:".$CI->config->item('signin_url');
 ?>

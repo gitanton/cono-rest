@@ -74,6 +74,14 @@ class MY_Model extends CI_Model
         return $this->after_load($query->row());
     }
 
+    function load_by_field($field, $value = '')
+    {
+        if ($value) {
+            $query = $this->db->get_where($this->get_scope(), array($field => $value));
+            return $this->after_load($query->row());
+        }
+    }
+
     function get_id($uuid = 0)
     {
         $this->db->select('id');

@@ -4,6 +4,7 @@
     },
     "require": {
         "zircote/swagger-php": "*",
-        "twilio/sdk" : "*"
+        "twilio/sdk" : "*",
+        "mailgun/mailgun-php" : "1.7.2"
     }
 }

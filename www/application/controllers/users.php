@@ -113,6 +113,7 @@ class Users extends REST_Controller
     public function index_post()
     {
         $this->load->model(array('Team', 'Team_Invite', 'Project_Invite', 'Project'));
+        $this->load->helper('notification');
 
         /* Validate add */
         $this->load->library('form_validation');
@@ -146,7 +147,8 @@ class Users extends REST_Controller
                 $this->process_invite($invite, $user);
             } else {
                 $team_id = $this->Team->add(array(
-                    'owner_id' => $user_id
+                    'owner_id' => $user_id,
+                    'name' => $user->fullname.'\'s Team'
                 ));
             }
 
@@ -156,6 +158,7 @@ class Users extends REST_Controller
                 $user->team_id = $team_id;
             }
 
+            notify_new_user($user->id, $this->post('password', TRUE));
             $this->response($this->decorate_object($user));
         }
     }
@@ -371,7 +374,7 @@ class Users extends REST_Controller
 
                         $this->Subscription->update($subscription->id, array(
                             'plan_id' => $plan_id,
-                            'expired' => 0,
+                            'failed' => 0,
                             'additional_users' => $additional_users
                         ));
 

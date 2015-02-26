@@ -27,7 +27,7 @@ $msg .= '
                                   Arial, sans-serif;  text-shadow: 0 1px 0 #fff;">
 
                 You received this message because you have been invited to join ' . $CI->config->item('site_title') . '.
-                <a style="color: #0370a2" href="' . $CI->config->item('signin_url') . '">Click here to find out more.</a>
+                <a style="color: #1496cf" href="' . $CI->config->item('signin_url') . '">Click here to find out more.</a>
                 </a>
             </p>
         </td>
