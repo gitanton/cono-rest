@@ -80,7 +80,8 @@ class User extends MY_Model
      * @param int $project_id
      * @return mixed
      */
-    function get_for_project($project_id = 0) {
+    function get_for_project($project_id = 0)
+    {
         $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
         $this->db->join('project_user', 'project_user.user_id = user.id');
         $this->db->where('project_user.project_id', $project_id);
@@ -93,7 +94,8 @@ class User extends MY_Model
      * @param int $message_id
      * @return mixed
      */
-    function get_for_message($message_id = 0) {
+    function get_for_message($message_id = 0)
+    {
         $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
         $this->db->join('message_user', 'message_user.user_id = user.id');
         $this->db->where('message_user.message_id', $message_id);
@@ -106,11 +108,12 @@ class User extends MY_Model
      * @param int $meeting_id
      * @return mixed
      */
-    function get_for_meeting($meeting_id = 0, $is_connected = false) {
+    function get_for_meeting($meeting_id = 0, $is_connected = false)
+    {
         $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
         $this->db->join('meeting_user', 'meeting_user.user_id = user.id');
         $this->db->where('meeting_user.meeting_id', $meeting_id);
-        if($is_connected) {
+        if ($is_connected) {
             $this->db->where('meeting_user.connected', 1);
         }
         $query = $this->db->get($this->get_scope());
@@ -122,12 +125,27 @@ class User extends MY_Model
      * @param int $team_id
      * @return mixed
      */
-    function get_for_team($team_id = 0) {
+    function get_for_team($team_id = 0)
+    {
         $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
         $this->db->join('team_user', 'team_user.user_id = user.id');
         $this->db->where('team_user.team_id', $team_id);
         $query = $this->db->get($this->get_scope());
         return $query->result();
+    }
+
+    function get_for_teams_owner($owner_id = 0)
+    {
+        $this->db->distinct();
+        $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
+        $this->db->join('team_user', 'team_user.user_id = user.id');
+        $this->db->join('team', 'team.id = team_user.team_id');
+        $this->db->where('team.owner_id', $owner_id);
+        /* Include the current user in the list of users */
+        //$this->db->where('user.id <>', $owner_id);
+        $query = $this->db->get($this->get_scope());
+        return $query->result();
+
     }
 
     /**
@@ -136,14 +154,15 @@ class User extends MY_Model
      * @param int $user_id
      * @return bool
      */
-    function is_on_project($project_id = 0, $user_id = 0) {
-        if($project_id > 0 && $user_id > 0) {
+    function is_on_project($project_id = 0, $user_id = 0)
+    {
+        if ($project_id > 0 && $user_id > 0) {
             $this->db->join('project_user', 'project_user.user_id = user.id');
             $this->db->where('project_user.project_id', $project_id);
             $this->db->where('project_user.user_id', $user_id);
             $query = $this->db->get($this->get_scope());
             $row = $query->row();
-            if($row) {
+            if ($row) {
                 return true;
             }
         }
@@ -156,14 +175,15 @@ class User extends MY_Model
      * @param int $user_id
      * @return bool
      */
-    function is_on_team($team_id = 0, $user_id = 0) {
-        if($team_id > 0 && $user_id > 0) {
+    function is_on_team($team_id = 0, $user_id = 0)
+    {
+        if ($team_id > 0 && $user_id > 0) {
             $this->db->join('team_user', 'team_user.user_id = user.id');
             $this->db->where('team_user.team_id', $team_id);
             $this->db->where('team_user.user_id', $user_id);
             $query = $this->db->get($this->get_scope());
             $row = $query->row();
-            if($row) {
+            if ($row) {
                 return true;
             }
         }
@@ -176,14 +196,15 @@ class User extends MY_Model
      * @param int $user_id
      * @return bool
      */
-    function is_on_message($message_id = 0, $user_id = 0) {
-        if($message_id > 0 && $user_id > 0) {
+    function is_on_message($message_id = 0, $user_id = 0)
+    {
+        if ($message_id > 0 && $user_id > 0) {
             $this->db->join('message_user', 'message_user.user_id = user.id');
             $this->db->where('message_user.message_id', $message_id);
             $this->db->where('message_user.user_id', $user_id);
             $query = $this->db->get($this->get_scope());
             $row = $query->row();
-            if($row) {
+            if ($row) {
                 return true;
             }
         }
@@ -196,14 +217,15 @@ class User extends MY_Model
      * @param int $user_id
      * @return bool
      */
-    function is_on_meeting($meeting_id = 0, $user_id = 0) {
-        if($meeting_id > 0 && $user_id > 0) {
+    function is_on_meeting($meeting_id = 0, $user_id = 0)
+    {
+        if ($meeting_id > 0 && $user_id > 0) {
             $this->db->join('meeting_user', 'meeting_user.user_id = user.id');
             $this->db->where('meeting_user.meeting_id', $meeting_id);
             $this->db->where('meeting_user.user_id', $user_id);
             $query = $this->db->get($this->get_scope());
             $row = $query->row();
-            if($row) {
+            if ($row) {
                 return true;
             }
         }

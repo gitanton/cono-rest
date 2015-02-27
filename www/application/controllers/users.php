@@ -747,6 +747,7 @@ class Users extends REST_Controller
 
     private function validate_invite($user_id = 0)
     {
+        $this->load->model(array('Team', 'Project'));
         $invite = null;
 
         $invite_key = $this->post('invite_key', TRUE);
@@ -756,10 +757,18 @@ class Users extends REST_Controller
             if ($invite_type == INVITE_TYPE_TEAM) {
                 $invite = $this->Team_Invite->load_by_key($invite_key);
                 validate_invite($invite);
+                /* Validate that there is room to join the team */
+                $team = $this->Team->load_fields($invite->team_id, 'owner_id');
+                validate_user_add($team->owner_id);
             } /* Project Invite */
             else {
                 $invite = $this->Project_Invite->load_by_key($invite_key);
                 validate_invite($invite, $user_id);
+
+                /* Validate that there is room to join the team */
+                $project = $this->Project->load($invite->project_id);
+                $team = $this->Team->load_fields($project->team_id, 'owner_id');
+                validate_user_add($team->owner_id);
             }
         }
 
@@ -772,9 +781,11 @@ class Users extends REST_Controller
         /* Process Invites */
         $invite_key = $this->post('invite_key', TRUE);
         $invite_type = $this->post('invite_type', TRUE);
+
         if ($invite_key && $invite_type && $invite) {
             /* Team Invite */
             if ($invite_type == INVITE_TYPE_TEAM) {
+
                 /* Add the user to the team */
                 $this->Team->add_user($invite->team_id, $user->id);
 
@@ -787,11 +798,12 @@ class Users extends REST_Controller
                 notify_team_invite_accepted($invite->id);
             } /* Project Invite */
             else {
+                $project = $this->Project->load($invite->project_id);
+
                 /* Add the user to the project */
                 $this->Project->add_user($invite->project_id, $user->id);
 
                 /* Look up the project to see if the user is already on the team, if not add them */
-                $project = $this->Project->load($invite->project_id);
                 if (!$this->User->is_on_team($project->team_id, $user->id)) {
                     $this->Team->add_user($project->team_id, $user->id);
                     activity_user_join_team($project->team_id, $user->id);

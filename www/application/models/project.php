@@ -51,6 +51,16 @@ class Project extends MY_Model
         return $query->result();
     }
 
+    /**
+     * Returns the list of projects owned by a specific user (that aren't archived)
+     * @param $user_id
+     */
+    function get_owned_by_user($user_id) {
+        $this->db->where(array('creator_id' => $user_id, 'archived' => 0, 'deleted' => 0));
+        $query = $this->db->get($this->get_scope());
+        return $query->result();
+    }
+
     function get_for_user_team($user_id = 0, $team_id = 0, $archived = 0) {
         $sql = "SELECT p.*, pu.ordering from ".$this->get_scope()." p, project_user pu where p.id = pu.project_id and "
             ." pu.user_id = ? and p.deleted = 0 and p.team_id = ?";

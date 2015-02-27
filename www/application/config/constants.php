@@ -9,6 +9,8 @@ define("SESS_TEAM_ID", "team_id");
 define("SESS_SUBSCRIPTION_ID", "subscription_id");
 
 define("FREE_TRIAL_LENGTH", 30);
+define("FREE_TRIAL_PROJECTS", 1);
+define("FREE_TRIAL_USERS", 1);
 
 define("USER_TYPE_ADMIN", 99);
 define("USER_TYPE_USER", 1);

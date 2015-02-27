@@ -247,7 +247,7 @@ function convert_field($value, $datatype = '')
  * @param string $uuid
  * @return mixed
  */
-function validate_project_uuid($uuid = '')
+function validate_project_uuid($uuid = '', $validate_own = false)
 {
     $CI =& get_instance();
     $CI->load->model('Project');
@@ -263,6 +263,11 @@ function validate_project_uuid($uuid = '')
     /* Validate that the user is on the project */
     if (!$CI->User->is_on_project($project->id, get_user_id())) {
         json_error('You are not authorized to access this project.', null, 403);
+        exit;
+    }
+    /* Validate that the user is the message sender */
+    if ($validate_own && get_user_id() != $project->creator_id) {
+        json_error('Only the project owner can perform that action.', null, 403);
         exit;
     }
 
@@ -340,7 +345,7 @@ function validate_video_uuid($uuid = '')
 function validate_hotspot_uuid($uuid = '')
 {
     $CI =& get_instance();
-    $CI->load->model(array('Hotspot','Screen'));
+    $CI->load->model(array('Hotspot', 'Screen'));
     if (!$uuid) {
         json_error('uuid is required');
         exit;
@@ -396,15 +401,16 @@ function validate_team_uuid($uuid = '', $validate_own = false)
     return $team;
 }
 
-function validate_team_owner($team_id=0, $user_id) {
+function validate_team_owner($team_id = 0, $user_id)
+{
     $CI =& get_instance();
     $CI->load->model('Team');
     $team = $CI->Team->load_fields($team_id, 'owner_id');
-    if($team->owner_id==$user_id) {
+    if ($team->owner_id == $user_id) {
         return true;
     }
 
-    json_error('Only the team editor can perform this action.', null, 403);
+    json_error('Only the team owner can perform this action.', null, 403);
     exit;
 }
 
@@ -415,14 +421,15 @@ function validate_team_owner($team_id=0, $user_id) {
  * Looks at the creator of the team and sees if they are a free trial user or have a valid
  * subscription
  */
-function validate_team_read($team_id=0) {
+function validate_team_read($team_id = 0)
+{
     $CI =& get_instance();
-    $CI->load->model(array('Team','Subscription'));
+    $CI->load->model(array('Team', 'Subscription'));
     $team = $CI->Team->load_fields($team_id, 'owner_id');
 
     /* If the team owner has a valid subscription, return true */
     $subscription = $CI->Subscription->load_by_field('user_id', $team->owner_id);
-    if($subscription && !$subscription->failed) {
+    if ($subscription && !$subscription->failed) {
         return true;
     }
 
@@ -430,16 +437,101 @@ function validate_team_read($team_id=0) {
 
     /* See if their free trial has expired */
     $expiration = add_day(FREE_TRIAL_LENGTH, $owner->created);
-    if($expiration > now()) {
+    if ($expiration > now()) {
         return true;
     }
 
-    if(get_user_id()==$team->owner_id) {
+    if (get_user_id() == $team->owner_id) {
         json_error('Free trial has expired.', null, 403);
         exit;
     } else {
         json_error('The owner of this team does not have a valid subscription', null, 403);
         exit;
+    }
+}
+
+/**
+ * Validates that the person can add a project to their account
+ * - A free trial user can only add one project
+ * - A user with a subscription can only add up to the number of projects that are available in their plan
+ * @param $user_id
+ */
+function validate_project_add($user_id)
+{
+    $CI =& get_instance();
+    $CI->load->model(array('Team', 'Subscription', 'Project', 'Plan'));
+    $subscription = $CI->Subscription->load_by_field('user_id', $user_id);
+    $user = $CI->User->load_fields($user_id, 'created');
+    if ($subscription) {
+        $plan = $CI->Plan->load($subscription->plan_id);
+        $projects = $CI->Project->get_owned_by_user($user_id);
+
+        if(sizeof($projects)>=$plan->projects) {
+            json_error(sprintf('You cannot create anymore projects.  Your plan allows you to create up to %d projects.',
+                $plan->projects), null, 403);
+            exit;
+        }
+    } /* Otherwise, they are still in a free trial */
+    else {
+        $expiration = add_day(FREE_TRIAL_LENGTH, $user->created);
+        if ($expiration < now()) {
+            json_error('Free Trial Expired', null, 403);
+            exit;
+        } else {
+            $projects = $CI->Project->get_owned_by_user($user_id);
+            if(sizeof($projects)>=FREE_TRIAL_PROJECTS) {
+                json_error('You cannot create anymore projects during your free trial.', null, 403);
+                exit;
+            }
+        }
+    }
+}
+
+/**
+ * Validates that a user can invite/add users to their projects
+ * @param $user_id
+ */
+function validate_user_add($user_id) {
+    $CI =& get_instance();
+    $CI->load->model(array('Team', 'Subscription', 'Project', 'Plan'));
+    $subscription = $CI->Subscription->load_by_field('user_id', $user_id);
+    $user = $CI->User->load_fields($user_id, 'created');
+    if ($subscription) {
+        $plan = $CI->Plan->load($subscription->plan_id);
+        $users = $CI->User->get_for_teams_owner($user_id);
+        $max_users = $plan->team_members + $subscription->additional_users;
+
+        if(sizeof($users)>=$max_users) {
+            if($user_id == get_user_id()) {
+                json_error(sprintf('You cannot invite any more users to your team.  Your plan allows you to invite up to %d users.',
+                    $max_users), null, 403);
+            } else {
+                json_error('You cannot accept this invite since the team owner does not have room for any more users on their plan.',
+                    null, 403);
+            }
+            exit;
+        }
+
+    } /* Otherwise, they are still in a free trial */
+    else {
+        $expiration = add_day(FREE_TRIAL_LENGTH, $user->created);
+        if ($expiration < now()) {
+            json_error('Free Trial Expired', null, 403);
+            exit;
+        } else {
+            $users = $CI->User->get_for_teams_owner($user_id);
+            //array_print($users);
+            if(sizeof($users)>=FREE_TRIAL_USERS) {
+
+                if($user_id == get_user_id()) {
+                    json_error('You cannot invite any more users during your free trial.', null, 403);
+                } else {
+                    json_error('You cannot accept this invite since the team owner does not have room for any more users on their plan.',
+                        null, 403);
+                }
+                exit;
+            }
+        }
     }
 }
 
@@ -581,7 +673,8 @@ function validate_invite($invite, $user_id = 0)
     }
 }
 
-function session_clear() {
+function session_clear()
+{
 
     $CI =& get_instance();
     $CI->session->unset_userdata(SESS_USER_ID);

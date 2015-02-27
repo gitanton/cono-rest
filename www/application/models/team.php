@@ -36,12 +36,19 @@ class Team extends MY_Model
     }
 
     /**
-     * Returns the first team in the user's list
+     * Returns the first team that the user owns.  If it doesn't find that, it returns just the first
+     * team it can find that the user belongs to.
      * @param int $user_id
      * @return mixed
      */
     function get_active_for_user($user_id = 0)
     {
+        $this->db->where('owner_id', $user_id);
+        $query = $this->db->get($this->get_scope());
+        if($query->num_rows()>0) {
+            return $query->row();
+        }
+
         $sql = "SELECT t.* from " . $this->get_scope() . " t, team_user tu where t.id = tu.team_id and "
             . " tu.user_id = ? and t.deleted = 0";
         $query_params = array(intval($user_id));
@@ -64,6 +71,16 @@ class Team extends MY_Model
         $sql .= " ORDER by t.id ASC";
 
         $query = $this->db->query($sql, $query_params);
+        return $query->result();
+    }
+
+    /**
+     * Returns the list of teams owned by a specific user (that aren't archived)
+     * @param $user_id
+     */
+    function get_owned_by_user($user_id) {
+        $this->db->where(array('owner_id' => $user_id, 'deleted' => 0));
+        $query = $this->db->get($this->get_scope());
         return $query->result();
     }
 

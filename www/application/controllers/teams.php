@@ -188,6 +188,12 @@ class Teams extends REST_Controller
         $team = validate_team_uuid($uuid, true);
         validate_team_read($team->id);
 
+        /* Validate that they are the team owner */
+        validate_team_owner($team->id, get_user_id());
+
+        /* Validate that they have a valid subscription and can add a team */
+        validate_user_add(get_user_id());
+
         $this->form_validation->set_rules('email', 'Email', 'required|trim|xss_clean|valid_email');
 
         if ($this->form_validation->run() == FALSE) {

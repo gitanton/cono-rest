@@ -89,6 +89,8 @@ class Projects extends REST_Controller
     {
         /* Validate that they are the team owner */
         validate_team_owner(get_team_id(), get_user_id());
+        /* Validate that they have a valid subscription and can add a project */
+        validate_project_add(get_user_id());
 
         /* Validate add */
         $this->load->library('form_validation');
@@ -98,9 +100,6 @@ class Projects extends REST_Controller
         if ($this->form_validation->run() == FALSE) {
             json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
         } else {
-            /* Validate that they can do what they want to do */
-            $this->validate_write();
-
             $data = array(
                 'name' => $this->post('name', TRUE),
                 'type_id' => intval($this->post('type_id', TRUE)),
@@ -182,6 +181,8 @@ class Projects extends REST_Controller
             json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
         } else {
             $project = validate_project_uuid($uuid);
+            /* Validate that they are the team owner */
+            validate_team_owner($project->team_id, get_user_id());
 
             $data = $this->get_put_fields($this->Project->get_fields());
             $this->Project->update_by_uuid($uuid, $data);
@@ -275,6 +276,8 @@ class Projects extends REST_Controller
         validate_team_read($project->team_id);
         /* Validate that they are the team owner */
         validate_team_owner($project->team_id, get_user_id());
+        /* Validate that they have a valid subscription and can add a project */
+        validate_project_add(get_user_id());
 
         $duplicate_id = $this->Project->duplicate($project, get_user_id(), trim($this->post('name', TRUE)));
         $duplicate = $this->Project->load($duplicate_id);
@@ -328,6 +331,9 @@ class Projects extends REST_Controller
 
         /* Validate that they are the team owner */
         validate_team_owner($project->team_id, get_user_id());
+
+        /* Validate that they have a valid subscription and can add a project */
+        validate_user_add(get_user_id());
 
         $user_uuid = $this->post('user_uuid', TRUE);
         $email = $this->post('email', TRUE);
@@ -394,10 +400,6 @@ class Projects extends REST_Controller
         }
         $this->form_validation->set_message('validate_project_type', 'The %s is an invalid type.');
         return FALSE;
-    }
-
-    private function validate_write() {
-
     }
 
     protected function decorate_object($object)
