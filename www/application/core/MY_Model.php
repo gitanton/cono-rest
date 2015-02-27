@@ -57,6 +57,17 @@ class MY_Model extends CI_Model
         }
     }
 
+    function load_fields($id = 0, $fields)
+    {
+        if (intval($id)) {
+            $this->db->select($fields);
+            $query = $this->db->get_where($this->get_scope(), array("id" => $id));
+            return $this->after_load($query->row());
+        } else {
+            return $this->blank();
+        }
+    }
+
     function load_by_uuid($uuid = '')
     {
         if ($uuid) {

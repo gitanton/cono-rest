@@ -68,6 +68,7 @@ class Activities extends REST_Controller
         } else {
             $team = $this->Team->load(get_team_id());
         }
+        validate_team_read($team->id);
         $activities = $this->Activity->get_for_team($team->id, $this->get('page', TRUE), $this->get('limit', TRUE));
         $this->response($this->decorate_objects($activities));
     }
@@ -108,6 +109,7 @@ class Activities extends REST_Controller
     public function project_get($uuid = '')
     {
         $project = validate_project_uuid($uuid);
+        validate_team_read(get_team_id());
         $activities = $this->Activity->get_for_project($project->id, $this->get('page', TRUE), $this->get('limit', TRUE));
         $this->response($this->decorate_objects($activities));
     }

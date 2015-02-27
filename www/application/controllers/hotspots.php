@@ -84,6 +84,7 @@ class Hotspots extends REST_Controller
      */
     public function hotspot_get($uuid = '')
     {
+        validate_team_read(get_team_id());
         $hotspot = validate_hotspot_uuid($uuid);
         $this->response($this->decorate_object($hotspot));
     }
@@ -111,6 +112,7 @@ class Hotspots extends REST_Controller
      */
     public function hotspot_delete($uuid = '')
     {
+        validate_team_read(get_team_id());
         $hotspot = validate_hotspot_uuid($uuid);
         activity_delete_hotspot($hotspot->id);
         $this->Hotspot->delete($hotspot->id);

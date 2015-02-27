@@ -44,6 +44,8 @@ class Users extends REST_Controller
      */
     public function index_get()
     {
+        json_error('You do not have permission for this.', null, 403);
+        exit;
         $users = $this->User->get_all();
 
         $this->response($this->decorate_objects($users));
@@ -205,7 +207,7 @@ class Users extends REST_Controller
      */
     public function login_post()
     {
-        $this->load->model(array('Team', 'Team_Invite', 'Project_Invite', 'Project'));
+        $this->load->model(array('Team', 'Team_Invite', 'Project_Invite', 'Project', 'Subscription'));
 
         $this->load->library('form_validation');
         $this->form_validation->set_rules('username', 'Username', 'trim|required|min_length[5]|xss_clean');
@@ -217,11 +219,12 @@ class Users extends REST_Controller
             json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
             exit;
         } else {
+
             $username = $this->post('username', TRUE);
             $password = $this->post('password', TRUE);
             $user = $this->User->login($username, $password);
             if ($user && $user->id) {
-
+                session_clear();
                 $invite = $this->validate_invite($user->id);
                 if ($invite) {
                     $this->process_invite($invite, $user);
@@ -232,11 +235,20 @@ class Users extends REST_Controller
                 if ($team) {
                     $this->session->set_userdata(SESS_TEAM_ID, $team->id);
                 }
+                $subscription = $this->Subscription->load_by_field('user_id', $user->id);
+                if ($subscription && !$subscription->failed) {
+                    $this->session->set_userdata(SESS_SUBSCRIPTION_ID, $subscription->id);
+                }
 
                 log_message('info', 'Login - User ID: ' . $user->id . ', Username: ' . $user->username);
 
                 $this->User->record_login($user->id);
+
+                /* Decorate the user with their free trial */
+                $user->free_trial_expired = !get_subscription_id() && (add_day(FREE_TRIAL_LENGTH, $user->created) < now());
                 $user = $this->decorate_object($user);
+
+
                 $this->response($user);
                 exit;
             }

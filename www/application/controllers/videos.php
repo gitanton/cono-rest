@@ -306,7 +306,6 @@ class Videos extends REST_Controller
     private function add_hotspot($video)
     {
         $this->load->library('form_validation');
-        $this->form_validation->set_rules('data', 'Data', 'trim|required|xss_clean');
         $this->form_validation->set_rules('time', 'Time', 'trim|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
@@ -333,7 +332,6 @@ class Videos extends REST_Controller
     {
         $this->load->library('form_validation');
         $this->form_validation->set_rules('content', 'Content', 'trim|required|xss_clean');
-        $this->form_validation->set_rules('data', 'Data', 'trim|xss_clean');
         $this->form_validation->set_rules('time', 'Time', 'trim|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {

@@ -64,6 +64,7 @@ class Messages extends REST_Controller
      */
     public function index_get()
     {
+        validate_team_read(get_team_id());
         $project_uuid = $this->get('project_uuid');
         $project_id = 0;
         if($project_uuid) {
@@ -230,6 +231,7 @@ class Messages extends REST_Controller
      */
     public function message_get($uuid = '')
     {
+        validate_team_read(get_team_id());
         $message = validate_message_uuid($uuid);
 
         $this->response($this->decorate_object($message));

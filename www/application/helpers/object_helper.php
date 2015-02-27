@@ -98,6 +98,7 @@ function clean_user($user)
     unset($user->created);
     unset($user->deleted);
     unset($user->inactive);
+
     return $user;
 }
 
@@ -120,6 +121,12 @@ function get_team_id()
 {
     $CI =& get_instance();
     return $CI->session->userdata(SESS_TEAM_ID);
+}
+
+function get_subscription_id()
+{
+    $CI =& get_instance();
+    return $CI->session->userdata(SESS_SUBSCRIPTION_ID);
 }
 
 function get_user_email()
@@ -389,6 +396,53 @@ function validate_team_uuid($uuid = '', $validate_own = false)
     return $team;
 }
 
+function validate_team_owner($team_id=0, $user_id) {
+    $CI =& get_instance();
+    $CI->load->model('Team');
+    $team = $CI->Team->load_fields($team_id, 'owner_id');
+    if($team->owner_id==$user_id) {
+        return true;
+    }
+
+    json_error('Only the team editor can perform this action.', null, 403);
+    exit;
+}
+
+/**
+ * Validates that the user can read from the team based on either being part of a free trial
+ * or being a member of a team that is owned by someone else.
+ *
+ * Looks at the creator of the team and sees if they are a free trial user or have a valid
+ * subscription
+ */
+function validate_team_read($team_id=0) {
+    $CI =& get_instance();
+    $CI->load->model(array('Team','Subscription'));
+    $team = $CI->Team->load_fields($team_id, 'owner_id');
+
+    /* If the team owner has a valid subscription, return true */
+    $subscription = $CI->Subscription->load_by_field('user_id', $team->owner_id);
+    if($subscription && !$subscription->failed) {
+        return true;
+    }
+
+    $owner = $CI->User->load_fields($team->owner_id, 'created');
+
+    /* See if their free trial has expired */
+    $expiration = add_day(FREE_TRIAL_LENGTH, $owner->created);
+    if($expiration > now()) {
+        return true;
+    }
+
+    if(get_user_id()==$team->owner_id) {
+        json_error('Free trial has expired.', null, 403);
+        exit;
+    } else {
+        json_error('The owner of this team does not have a valid subscription', null, 403);
+        exit;
+    }
+}
+
 
 /**
  * Validates that:
@@ -525,6 +579,14 @@ function validate_invite($invite, $user_id = 0)
             exit;
         }
     }
+}
+
+function session_clear() {
+
+    $CI =& get_instance();
+    $CI->session->unset_userdata(SESS_USER_ID);
+    $CI->session->unset_userdata(SESS_TEAM_ID);
+    $CI->session->unset_userdata(SESS_SUBSCRIPTION_ID);
 }
 
 ?>

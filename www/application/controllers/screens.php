@@ -84,6 +84,7 @@ class Screens extends REST_Controller
      */
     public function project_get($project_uuid = '')
     {
+        validate_team_read(get_team_id());
         $project = validate_project_uuid($project_uuid);
         $screens = $this->Screen->get_for_project($project->id);
         $this->response($this->decorate_objects($screens));
@@ -154,7 +155,7 @@ class Screens extends REST_Controller
      */
     public function screen_get($uuid = '', $action = '')
     {
-        $this->validate_user();
+        validate_team_read(get_team_id());
         $screen = validate_screen_uuid($uuid);
         if ($action && $action === 'hotspots') {
             $hotspots = $this->Hotspot->get_for_screen($screen->id);
@@ -170,7 +171,6 @@ class Screens extends REST_Controller
      */
     public function screen_delete($uuid = '')
     {
-        $this->validate_user();
         $screen = validate_screen_uuid($uuid);
 
         /* Add the activity item to indicate that a screen was deleted */
@@ -235,7 +235,6 @@ class Screens extends REST_Controller
     private function add_hotspot($screen)
     {
         $this->load->library('form_validation');
-        $this->form_validation->set_rules('data', 'Data', 'trim|required|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
             json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));

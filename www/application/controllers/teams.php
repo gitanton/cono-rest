@@ -186,6 +186,7 @@ class Teams extends REST_Controller
 
         /* Only the team owner can invite people */
         $team = validate_team_uuid($uuid, true);
+        validate_team_read($team->id);
 
         $this->form_validation->set_rules('email', 'Email', 'required|trim|xss_clean|valid_email');
 

@@ -218,6 +218,7 @@ class Meetings extends REST_Controller
      */
     public function meeting_get($uuid = '', $action = '')
     {
+        validate_team_read(get_team_id());
         if($action) {
             if ($action == 'chat') {
                 return $this->meeting_chat_get($uuid);

@@ -54,6 +54,7 @@ class Projects extends REST_Controller
      */
     public function index_get()
     {
+        validate_team_read(get_team_id());
         $projects = $this->Project->get_for_user_team(get_user_id(), get_team_id());
         $this->response($this->decorate_objects($projects));
     }
@@ -86,7 +87,9 @@ class Projects extends REST_Controller
      */
     public function index_post()
     {
-        $this->validate_user();
+        /* Validate that they are the team owner */
+        validate_team_owner(get_team_id(), get_user_id());
+
         /* Validate add */
         $this->load->library('form_validation');
         $this->form_validation->set_rules('name', 'Project Name', 'trim|required|xss_clean');
@@ -95,6 +98,9 @@ class Projects extends REST_Controller
         if ($this->form_validation->run() == FALSE) {
             json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
         } else {
+            /* Validate that they can do what they want to do */
+            $this->validate_write();
+
             $data = array(
                 'name' => $this->post('name', TRUE),
                 'type_id' => intval($this->post('type_id', TRUE)),
@@ -192,6 +198,7 @@ class Projects extends REST_Controller
     public function project_get($uuid = '')
     {
         $this->validate_user();
+        validate_team_read(get_team_id());
         $project = validate_project_uuid($uuid);
         $this->response($this->decorate_object($project));
     }
@@ -204,6 +211,10 @@ class Projects extends REST_Controller
     {
         $this->validate_user();
         $project = validate_project_uuid($uuid);
+
+        validate_team_read($project->team_id);
+        /* Validate that they are the team owner */
+        validate_team_owner($project->team_id, get_user_id());
 
         /* Add the activity item to indicate that a project was updated */
         activity_delete_project($project->id, get_user_id());
@@ -261,6 +272,9 @@ class Projects extends REST_Controller
     private function project_duplicate($uuid = '')
     {
         $project = validate_project_uuid($uuid);
+        validate_team_read($project->team_id);
+        /* Validate that they are the team owner */
+        validate_team_owner($project->team_id, get_user_id());
 
         $duplicate_id = $this->Project->duplicate($project, get_user_id(), trim($this->post('name', TRUE)));
         $duplicate = $this->Project->load($duplicate_id);
@@ -307,8 +321,14 @@ class Projects extends REST_Controller
     private function project_invite($uuid = '')
     {
         $this->load->helper('notification');
-
         $project = validate_project_uuid($uuid);
+
+        /* Validate that the team owner has a valid subscription or free trial */
+        validate_team_read($project->team_id);
+
+        /* Validate that they are the team owner */
+        validate_team_owner($project->team_id, get_user_id());
+
         $user_uuid = $this->post('user_uuid', TRUE);
         $email = $this->post('email', TRUE);
 
@@ -374,6 +394,10 @@ class Projects extends REST_Controller
         }
         $this->form_validation->set_message('validate_project_type', 'The %s is an invalid type.');
         return FALSE;
+    }
+
+    private function validate_write() {
+
     }
 
     protected function decorate_object($object)
