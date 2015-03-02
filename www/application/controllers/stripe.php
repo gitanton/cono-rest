@@ -80,7 +80,6 @@ class Stripe extends CI_Controller
         $customer_id = $event->data->object->customer;
         $card_last_four = $event->data->object->card->last4;
         $amount = round($event->data->object->amount / 100,2);
-        $customer_id = 'cus_5gaaPI7kwqb24W';
 
         $subscription = $this->Subscription->load_by_field('stripe_customer_id', $customer_id);
         if($subscription) {

@@ -1,4 +1,5 @@
 <?
+require_once($_SERVER['DOCUMENT_ROOT'] . '/rest/vendor/autoload.php');
 use Swagger\Annotations as SWG;
 
 /**
@@ -309,8 +310,7 @@ class Users extends REST_Controller
             json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
             exit;
         } else {
-            include_once(APPPATH . 'libraries/stripe-php-1.18.0/lib/Stripe.php');
-            Stripe::setApiKey($this->config->item('stripe_private_key'));
+            \Stripe\Stripe::setApiKey($this->config->item('stripe_private_key'));
             $plan_id = $this->post('plan_id', TRUE);
             $token = $this->post('token', TRUE);
             $additional_users = intval($this->post('additional_users', TRUE));
@@ -330,8 +330,8 @@ class Users extends REST_Controller
                             exit;
                         }
 
-                        $stripe_customer = Stripe_Customer::create(array(
-                            "card" => $token,
+                        $stripe_customer = \Stripe\Customer::create(array(
+                            "source" => $token,
                             "email" => $user->email
                         ));
                         $stripe_subscription = $stripe_customer->subscriptions->create(array(
@@ -375,12 +375,12 @@ class Users extends REST_Controller
                 } else {
                     /* If they have an existing subscription, retrieve the customer and the subscription and update it */
                     try {
-                        $stripe_customer = Stripe_Customer::retrieve($subscription->stripe_customer_id);
+                        $stripe_customer = \Stripe\Customer::retrieve($subscription->stripe_customer_id);
                         $stripe_subscription = $stripe_customer->subscriptions->retrieve($subscription->stripe_subscription_id);
                         $stripe_subscription->plan = $plan->stripe_plan_id;
                         $stripe_subscription->prorate = false;
                         if ($token) {
-                            $stripe_subscription->card = $token;
+                            $stripe_subscription->source = $token;
                         }
                         $stripe_subscription->save();
 
@@ -444,18 +444,18 @@ class Users extends REST_Controller
     public function subscription_delete() {
         $this->validate_user();
         $this->load->model(array('Plan', 'Subscription'));
-
-        include_once(APPPATH . 'libraries/stripe-php-1.18.0/lib/Stripe.php');
-        Stripe::setApiKey($this->config->item('stripe_private_key'));
+        $this->load->helper('notification');
+        \Stripe\Stripe::setApiKey($this->config->item('stripe_private_key'));
         $subscription = $this->Subscription->load_by_user_id(get_user_id());
 
         /* We are deleting the customer and subscription */
         if ($subscription) {
             try {
-                $stripe_customer = Stripe_Customer::retrieve($subscription->stripe_customer_id);
+                $stripe_customer = \Stripe\Customer::retrieve($subscription->stripe_customer_id);
                 $stripe_customer->delete();
 
                 $this->Subscription->delete($subscription->id);
+                notify_subscription_cancelled(get_user());
                 json_success('Subscription successfully deleted!');
                 exit;
             } catch (Exception $e) {
@@ -662,14 +662,6 @@ class Users extends REST_Controller
         } else {
             $this->response($this->decorate_object($user));
         }
-    }
-
-    /**
-     * Cancel's a user's account.
-     * - Deletes the user's teams, projects, screens, etc...
-     */
-    public function cancel_post() {
-
     }
 
     /**

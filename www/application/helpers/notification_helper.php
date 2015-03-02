@@ -367,6 +367,34 @@ function notify_failed_charge($user, $card_last_four) {
     ));
 }
 
+function notify_subscription_cancelled($user) {
+    $CI = & get_instance();
+
+    include(APPPATH . '/views/emails/subscription_cancelled.php');
+
+    $subject = sprintf('[%s] Subscription Cancelled', $CI->config->item('site_title'));
+
+    $mg = new Mailgun($CI->config->item('mailgun_key'));
+    $response = $mg->sendMessage($CI->config->item('mailgun_domain'),
+        array('from' => $CI->config->item('notifications_email_from') . ' <' . $CI->config->item('notifications_email') . '>',
+            'to' => $user->email,
+            'subject' => $subject,
+            'html' => $msg,
+            'text' => $msg_text,
+            'o:tracking' => 'yes',
+            'o:tracking-clicks' => 'yes',
+            'o:tracking-opens' => 'yes'));
+
+    $log_text = sprintf('[Subscription Cancelled] Sending notice: [%s] to %s', $subject, $user->email);
+    log_message('info', $log_text);
+    loggly(array(
+        'text' => $log_text,
+        'method' => 'notification_helper.notify_subscription_cancelled',
+        'user' => $user,
+        'response' => $response
+    ));
+}
+
 function notify_successful_charge($user, $card_last_four='', $amount='') {
     $CI = & get_instance();
 
