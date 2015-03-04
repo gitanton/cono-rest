@@ -5,7 +5,12 @@ class Comment extends MY_Model
     protected static $fields = array(
         'comment' => 'string',
         'data' => 'string',
-        'time' => 'string'
+        'time' => 'string',
+        'begin_x' => 'int',
+        'begin_y' => 'int',
+        'end_x' => 'int',
+        'end_y' => 'int',
+        'left_x' => 'string'
     );
 
     function get_scope()

@@ -21,6 +21,11 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="video_uuid",type="string",description="The uuid of the video for whom the comment is provided")
  * @SWG\Property(name="ordering",type="integer",description="The ordering of how the comment should be displayed in the list of comments")
  * @SWG\Property(name="content",type="string",description="The content of the comment")
+ * @SWG\Property(name="begin_x",type="integer",description="The begin x property")
+ * @SWG\Property(name="begin_y",type="integer",description="The begin y property")
+ * @SWG\Property(name="end_x",type="integer",description="The end x property")
+ * @SWG\Property(name="end_y",type="integer",description="The end y property")
+ * @SWG\Property(name="left_x",type="string",description="The left x to property")
  * @SWG\Property(name="time",type="string",format="time",description="The time of the video for this comment")
  * @SWG\Property(name="data",type="string",description="The json data for the html5 canvas object")
  * @SWG\Property(name="creator_uuid",type="string",description="The id of the user who created the comment")
@@ -225,6 +230,41 @@ class Videos extends REST_Controller
      *     type="string"
      *     ),
      * @SWG\Parameter(
+     *     name="begin_x",
+     *     description="The begin x property",
+     *     paramType="form",
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="begin_y",
+     *     description="The begin y property",
+     *     paramType="form",
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="end_x",
+     *     description="The end x property",
+     *     paramType="form",
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="end_y",
+     *     description="The end y property",
+     *     paramType="form",
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="link_to",
+     *     description="The link to property",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
      *     name="data",
      *     description="The hotspot json data in string form",
      *     paramType="form",
@@ -275,6 +315,41 @@ class Videos extends REST_Controller
      * @SWG\Parameter(
      *     name="time",
      *     description="The time of the video that the comment was added",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="begin_x",
+     *     description="The begin x property",
+     *     paramType="form",
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="begin_y",
+     *     description="The begin y property",
+     *     paramType="form",
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="end_x",
+     *     description="The end x property",
+     *     paramType="form",
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="end_y",
+     *     description="The end y property",
+     *     paramType="form",
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="left_x",
+     *     description="The left x property",
      *     paramType="form",
      *     required=false,
      *     type="string"

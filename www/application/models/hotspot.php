@@ -4,7 +4,12 @@ class Hotspot extends MY_Model
 
     protected static $fields = array(
         'data' => 'string',
-        'time' => 'string'
+        'time' => 'string',
+        'begin_x' => 'int',
+        'begin_y' => 'int',
+        'end_x' => 'int',
+        'end_y' => 'int',
+        'link_to' => 'string',
     );
 
     function get_scope()

@@ -211,6 +211,41 @@ class Screens extends REST_Controller
      *     type="string"
      *     ),
      * @SWG\Parameter(
+     *     name="begin_x",
+     *     description="The begin x property",
+     *     paramType="form",
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="begin_y",
+     *     description="The begin y property",
+     *     paramType="form",
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="end_x",
+     *     description="The end x property",
+     *     paramType="form",
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="end_y",
+     *     description="The end y property",
+     *     paramType="form",
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="link_to",
+     *     description="The link to property",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
      *     name="data",
      *     description="The hotspot json data in string form",
      *     paramType="form",
