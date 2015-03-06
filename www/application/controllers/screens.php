@@ -270,6 +270,12 @@ class Screens extends REST_Controller
     private function add_hotspot($screen)
     {
         $this->load->library('form_validation');
+        $this->form_validation->set_rules('time', 'Time', 'trim|xss_clean');
+        $this->form_validation->set_rules('begin_x', 'Begin X', 'trim|xss_clean');
+        $this->form_validation->set_rules('begin_y', 'Begin Y', 'trim|xss_clean');
+        $this->form_validation->set_rules('end_x', 'End X', 'trim|xss_clean');
+        $this->form_validation->set_rules('end_y', 'End Y', 'trim|xss_clean');
+        $this->form_validation->set_rules('link_to', 'Link To', 'trim|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
             json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
@@ -278,6 +284,12 @@ class Screens extends REST_Controller
                 'screen_id' => $screen->id,
                 'ordering' => $this->Hotspot->get_max_ordering_for_screen($screen->id) + 1,
                 'creator_id' => get_user_id(),
+                'time' => $this->post('time', TRUE),
+                'begin_x' => $this->post('begin_x', TRUE),
+                'begin_y' => $this->post('begin_x', TRUE),
+                'end_x' => $this->post('end_x', TRUE),
+                'end_y' => $this->post('end_y', TRUE),
+                'link_to' => $this->post('link_to', TRUE),
                 'data' => $this->post('data', TRUE)
             ));
             activity_add_hotspot_screen($hotspot_id);
