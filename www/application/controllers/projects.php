@@ -284,6 +284,44 @@ class Projects extends REST_Controller
         $this->response($this->decorate_object($duplicate));
     }
 
+    /**
+     *
+     * @SWG\Api(
+     *   path="/ordering",
+     *   description="API for project actions",
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="Response",
+     *    summary="Order a list of projects",
+     * @SWG\Parameter(
+     *     name="uuids",
+     *     description="Ordered uuids of the projects as they have been ordered",
+     *     paramType="form",
+     *     required=true,
+     *     type="string"
+     *     )
+     *   )
+     * )
+     *
+     * Reorders the list of projects for a user
+     */
+    public function ordering_post() {
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('uuids', 'Project Ids', 'trim|required|xss_clean');
+
+        $uuids = json_decode($this->post('uuid', TRUE));
+        if($uuids) {
+            $i = 0;
+            foreach($uuids as $uuid) {
+                $project_id = $this->Project->get_id($uuid);
+                if($project_id) {
+                    $this->Project->update_ordering(get_user_id(), $project_id, $i++);
+                }
+            }
+        }
+        json_success('Projects ordered successfully');
+    }
+
 
     /**
      *

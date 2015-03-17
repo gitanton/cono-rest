@@ -664,6 +664,54 @@ class Users extends REST_Controller
         }
     }
 
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/forgot_password",
+     *   description="API for user actions",
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="Response",
+     *    summary="Send an email with a new password to a user",
+     * @SWG\Parameter(
+     *     name="email",
+     *     description="The email of the user to reset the password for",
+     *     paramType="form",
+     *     required=true,
+     *     type="string"
+     *     )
+     *   )
+     * )
+     *
+     * Reorders the list of projects for a user
+     */
+    public function forgot_password_post() {
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('email', 'Email', 'trim|required|xss_clean|valid_email');
+        if ($this->form_validation->run() != FALSE) {
+            $email = $this->input->post('email', TRUE);
+
+            /** First try to load the account by username **/
+            $user = $this->User->load_by_email($email);
+
+            if (!$user) {
+
+                json_error('There was no account found with that username/email address.  Please try again.');
+                exit;
+            }
+
+            $new_password = $this->User->reset_password($user->id);
+            $this->load->helper('notification');
+            notify_reset_password($user, $new_password);
+
+            log_message('info', '[Forgot Password] Sending Username/Password to ' . $user->username . ' <' . $user->email . '>');
+            json_success('Your password has been reset and emailed to your email address.  You should receive it shortly.');
+            exit;
+        }
+        json_error('Invalid email address');
+    }
+
     /**
      * Deletes a user by its uuid
      * @param string $uuid

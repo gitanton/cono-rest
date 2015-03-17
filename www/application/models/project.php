@@ -6,8 +6,7 @@ class Project extends MY_Model
         'name' => 'string',
         'user_id' => 'int',
         'archived' => 'int',
-        'type_id' => 'int',
-        'ordering' => 'int'
+        'type_id' => 'int'
     );
 
     function get_scope()
@@ -94,6 +93,11 @@ class Project extends MY_Model
         $query = $this->db->get('project_user');
         $row = $query->row();
         return $row->ordering;
+    }
+
+    function update_ordering($user_id, $project_id, $ordering) {
+        $this->db->where(array('user_id' => $user_id, 'project_id' => $project_id));
+        $this->db->update('project_user', array('ordering' => $ordering));
     }
 
     /**
