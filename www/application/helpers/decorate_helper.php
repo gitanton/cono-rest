@@ -48,6 +48,10 @@ function decorate_project($object)
         $object->team_uuid = $CI->Team->get_uuid($object->team_id);
     }
 
+    $object->ordering = intval($object->ordering);
+    $object->archived = ci_boolval($object->archived);
+    $object->type_id = intval($object->type_id);
+
     unset($object->deleted, $object->team_id, $object->id, $object->creator_id);
     return $object;
 }
@@ -90,6 +94,10 @@ function decorate_meeting($object)
         $object->moderator_uuid = $CI->User->get_uuid($object->moderator_id);
     }
 
+    if (isset($object->creator_id)) {
+        $object->creator_uuid = $CI->User->get_uuid($object->creator_id);
+    }
+
     $users = $CI->User->get_for_meeting($object->id);
     $object->recipients = decorate_users($users);
     $datetime = localize_datetime($object->date, $object->time);
@@ -97,7 +105,7 @@ function decorate_meeting($object)
     $object->time = $datetime->format('H:i');
     $object->phone = $CI->config->item('twilio_phone');
 
-    unset($object->deleted, $object->moderator_id, $object->id);
+    unset($object->deleted, $object->moderator_id, $object->creator_id, $object->project_id, $object->id);
     return $object;
 }
 
@@ -163,7 +171,12 @@ function decorate_hotspot($object)
     if (isset($object->creator_id)) {
         $object->creator_uuid = $CI->User->get_uuid($object->creator_id);
     }
-    unset($object->deleted, $object->screen_id, $object->id, $object->creator_id, $object->video_i);
+    $object->ordering = intval($object->ordering);
+    $object->begin_x = isset($object->begin_x) ? intval($object->begin_x) : null;
+    $object->begin_y = isset($object->begin_y) ? intval($object->begin_y) : null;
+    $object->end_x = isset($object->end_x) ? intval($object->end_x) : null;
+    $object->end_y = isset($object->end_y) ? intval($object->end_y) : null;
+    unset($object->deleted, $object->screen_id, $object->video_id, $object->id, $object->creator_id, $object->video_i);
     return $object;
 }
 
@@ -177,21 +190,38 @@ function decorate_activity($object)
     if (isset($object->team_id)) {
         $object->team_uuid = $CI->Team->get_uuid($object->team_id);
     }
-    unset($object->deleted, $object->id, $object->creator_id, $object->team_id);
+    if (isset($object->project_id)) {
+        $object->project_uuid = $CI->Project->get_uuid($object->project_id);
+    }
+    unset($object->deleted, $object->id, $object->creator_id, $object->team_id, $object->project_id);
+    $object->activity_type_id = intval($object->activity_type_id);
+    $object->object_id = intval($object->object_id);
     return $object;
 }
 
 function decorate_comment($object)
 {
     $CI =& get_instance();
-    $CI->load->model(array('Video'));
+    $CI->load->model(array('Video', 'Screen'));
     if (isset($object->video_id)) {
         $object->video_uuid = $CI->Video->get_uuid($object->video_id);
+    }
+    if (isset($object->screen_id)) {
+        $object->screen_uuid = $CI->Screen->get_uuid($object->screen_id);
     }
 
     if (isset($object->creator_id)) {
         $object->creator_uuid = $CI->User->get_uuid($object->creator_id);
     }
+
+    // cast the numbers to integers
+    $object->ordering = intval($object->ordering);
+    $object->project_id = intval($object->project_id);
+    $object->begin_x = isset($object->begin_x) ? intval($object->begin_x) : null;
+    $object->begin_y = isset($object->begin_y) ? intval($object->begin_y) : null;
+    $object->end_x = isset($object->end_x) ? intval($object->end_x) : null;
+    $object->end_y = isset($object->end_y) ? intval($object->end_y) : null;
+    $object->left_x = isset($object->left_x) ? intval($object->left_x) : null;
     unset($object->deleted, $object->screen_id, $object->id, $object->creator_id, $object->video_id);
     return $object;
 }
@@ -217,7 +247,7 @@ function decorate_comments($objects)
 function decorate_screen($object)
 {
     $CI =& get_instance();
-    $CI->load->model(array('Project', 'Hotspot'));
+    $CI->load->model(array('Project', 'Hotspot', 'Comment'));
 
     if (isset($object->project_id)) {
         $object->project_uuid = $CI->Project->get_uuid($object->project_id);
@@ -232,6 +262,13 @@ function decorate_screen($object)
     $hospots = $CI->Hotspot->get_for_screen($object->id);
     $object->hotspots = decorate_hotspots($hospots);
 
+    $comments = $CI->Comment->get_for_screen($object->id);
+    $object->comments = decorate_comments($comments);
+
+    $object->ordering = intval($object->ordering);
+    $object->image_width = intval($object->image_width);
+    $object->image_height = intval($object->image_height);
+    $object->file_size = floatval($object->file_size);
     unset($object->deleted, $object->project_id, $object->id, $object->creator_id);
     return $object;
 }
@@ -257,6 +294,8 @@ function decorate_video($object)
     $comments = $CI->Comment->get_for_video($object->id);
     $object->comments = decorate_comments($comments);
 
+    $object->ordering = intval($object->ordering);
+    $object->file_size = floatval($object->file_size);
     unset($object->deleted, $object->project_id, $object->id, $object->creator_id);
     return $object;
 }

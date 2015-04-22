@@ -17,19 +17,26 @@ use Swagger\Annotations as SWG;
  *
  * @SWG\Model(id="Comment",required="uuid")
  * @SWG\Property(name="uuid",type="string",description="The unique ID of the Comment (for public consumption)")
- * @SWG\Property(name="screen_uuid",type="string",description="The uuid of the screen for whom the comment is provided")
  * @SWG\Property(name="video_uuid",type="string",description="The uuid of the video for whom the comment is provided")
+ * @SWG\Property(name="screen_uuid",type="string",description="The uuid of the screen for whom the comment is provided")
  * @SWG\Property(name="ordering",type="integer",description="The ordering of how the comment should be displayed in the list of comments")
  * @SWG\Property(name="content",type="string",description="The content of the comment")
  * @SWG\Property(name="begin_x",type="integer",description="The begin x property")
  * @SWG\Property(name="begin_y",type="integer",description="The begin y property")
  * @SWG\Property(name="end_x",type="integer",description="The end x property")
  * @SWG\Property(name="end_y",type="integer",description="The end y property")
- * @SWG\Property(name="left_x",type="string",description="The left x to property")
+ * @SWG\Property(name="left_x",type="string",description="The left x property")
  * @SWG\Property(name="time",type="string",format="time",description="The time of the video for this comment")
  * @SWG\Property(name="data",type="string",description="The json data for the html5 canvas object")
  * @SWG\Property(name="creator_uuid",type="string",description="The id of the user who created the comment")
  * @SWG\Property(name="created",type="string",format="date",description="The date/time that this comment was created")
+ *
+ * @SWG\Model(id="CommentFilter")
+ * @SWG\Property(name="begin_x",type="integer",description="The begin x property")
+ * @SWG\Property(name="begin_y",type="integer",description="The begin y property")
+ * @SWG\Property(name="end_x",type="integer",description="The end x property")
+ * @SWG\Property(name="end_y",type="integer",description="The end y property")
+ * @SWG\Property(name="left_x",type="string",description="The left x property")
  *
  *
  * @SWG\Resource(
@@ -364,13 +371,48 @@ class Videos extends REST_Controller
      *   )
      * )
      */
-    public function video_post($uuid = '', $action = '')
+
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/video/{video_uuid}/comments/search",
+     *   description="API for video actions",        *
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="Comments",
+     *    nickname="Search Comments",
+     *    summary="Search a list of comments",
+     * @SWG\Parameter(
+     *     name="video_uuid",
+     *     description="The unique ID of the video",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="filter",
+     *     description="The filter (represented as an object) with terms to search for",
+     *     paramType="form",
+     *     required=true,
+     *     type="CommentFilter"
+     *     )
+     *   )
+     * )
+     */
+    public function video_post($uuid = '', $action = '', $action2 = '')
     {
         $video = validate_video_uuid($uuid);
         if ($action && $action === 'hotspots') {
             $this->add_hotspot($video);
         } else if ($action && $action === 'comments') {
-            $this->add_comment($video);
+            if($action2=='search') {
+                $this->search_comments($video);
+            } else {
+                $this->add_comment($video);
+            }
+        } else {
+            json_error('Invalid request, action \''.$action.'\' is not supported', null, 405);
         }
     }
 
@@ -441,9 +483,28 @@ class Videos extends REST_Controller
                 'left_x' => $this->post('left_x', TRUE),
                 'content' => $this->post('content', TRUE)
             ));
-            activity_add_comment($comment_id);
+            activity_add_comment_video($comment_id);
             $comment = decorate_comment($this->Comment->load($comment_id));
             $this->response($comment);
+        }
+    }
+
+    /**
+     * Provides the ability to search for a list of comments on a given screen
+     * @param $screen
+     */
+    private function search_comments($video)
+    {
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('filter', 'Filter', 'trim|required|xss_clean');
+
+        if ($this->form_validation->run() == FALSE) {
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+        } else {
+            $filter = json_decode($this->post('filter', TRUE));
+            $filter->video_id = $video->id;
+            $comments = decorate_comments($this->Comment->search($filter));
+            $this->response($comments);
         }
     }
 

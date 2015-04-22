@@ -210,7 +210,7 @@ function activity_delete_hotspot($hotspot_id) {
  * Comment
  **********************************************/
 
-function activity_add_comment($comment_id) {
+function activity_add_comment_video($comment_id) {
     $CI =& get_instance();
     $CI->load->model(array('Comment', 'Project'));
 
@@ -218,6 +218,17 @@ function activity_add_comment($comment_id) {
     $user = $CI->User->load($comment->creator_id);
     $project = $CI->Project->load($comment->project_id);
     $title = $user->fullname." added a comment to a video on the '".$project->name."' Project.";
+    activity_add($user->id, $project->team_id, $project->id, $comment->id, ACTIVITY_TYPE_COMMENT_ADD, $title);
+}
+
+function activity_add_comment_screen($comment_id) {
+    $CI =& get_instance();
+    $CI->load->model(array('Comment', 'Project'));
+
+    $comment = $CI->Comment->load($comment_id);
+    $user = $CI->User->load($comment->creator_id);
+    $project = $CI->Project->load($comment->project_id);
+    $title = $user->fullname." added a comment to a screen on the '".$project->name."' Project.";
     activity_add($user->id, $project->team_id, $project->id, $comment->id, ACTIVITY_TYPE_COMMENT_ADD, $title);
 }
 

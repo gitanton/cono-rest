@@ -270,4 +270,8 @@ function log_echo($string)
     log_message('info', $string);
 }
 
+function ci_boolval($string) {
+    return intval($string) > 0 ? true : false;
+}
+
 ?>

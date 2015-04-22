@@ -262,7 +262,11 @@ class Meetings extends REST_Controller
                 return $this->meeting_start($uuid);
             } else if ($action === 'end') {
                 return $this->meeting_end($uuid);
+            } else {
+                json_error('Invalid request, action \''.$action.'\' is not supported', null, 405);
             }
+        } else {
+            json_error('Invalid request, action must be supplied', null, 405);
         }
     }
 

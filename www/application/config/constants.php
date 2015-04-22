@@ -50,6 +50,9 @@ define("ACTIVITY_TYPE_COMMENT_ADD", 17);
 define("ACTIVITY_TYPE_MEETING_ADD", 18);
 define("ACTIVITY_TYPE_MEETING_DELETE", 19);
 
+define("USER_SIGNUP_ERROR_EMAIL_LEVEL", 1);
+define("USER_SIGNUP_ERROR_USERNAME_LEVEL", 2);
+define("USER_SIGNUP_ERROR_USERNAME_EMAIL_LEVEL", 3);
 
 /*
 |--------------------------------------------------------------------------

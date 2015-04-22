@@ -40,7 +40,7 @@ class Comment extends MY_Model
     }
 
     /**
-     * Returns the list of hotspots for the current video
+     * Returns the list of comments for the current video
      * @param int $screen_id
      * @return mixed
      */
@@ -65,6 +65,41 @@ class Comment extends MY_Model
         $query = $this->db->get($this->get_scope());
         $row = $query->row();
         return $row->ordering;
+    }
+
+    /**
+     * Returns the list of comments for the current video
+     * @param int $screen_id
+     * @return mixed
+     */
+    function get_for_screen($screen_id = 0)
+    {
+        $sql = "SELECT c.* from " . $this->get_scope() . " c where c.screen_id = ? and c.deleted = 0";
+        $query_params = array(intval($screen_id));
+        $sql .= " ORDER by c.ordering ASC";
+
+        $query = $this->db->query($sql, $query_params);
+        return $query->result();
+    }
+
+    /**
+     * Find the max ordering for comments for the current screen (used when creating new screens)
+     * @param $screen_id
+     * @return mixed
+     */
+    function get_max_ordering_for_screen($screen_id = 0) {
+        $this->db->select_max('ordering');
+        $this->db->where(array('screen_id' => $screen_id));
+        $query = $this->db->get($this->get_scope());
+        $row = $query->row();
+        return $row->ordering;
+    }
+
+    function search($filter) {
+        $this->db->where('deleted', 0);
+        $this->db->where((array)$filter);
+        $query = $this->db->get($this->get_scope());
+        return $query->result();
     }
 
     function add_data()

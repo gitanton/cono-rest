@@ -127,7 +127,15 @@ class Users extends REST_Controller
         $this->form_validation->set_rules('email', 'Email', 'trim|xss_clean|valid_email|required|is_unique[user.email]');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+            $data = array();
+            if(form_error('email') && form_error('username')) {
+                $data['level'] = USER_SIGNUP_ERROR_USERNAME_EMAIL_LEVEL;
+            } else if(form_error('email')) {
+                $data['level'] = USER_SIGNUP_ERROR_EMAIL_LEVEL;
+            } else if(form_error('username')) {
+                $data['level'] = USER_SIGNUP_ERROR_USERNAME_LEVEL;
+            }
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '), $data);
         } else {
             $data = array(
                 'fullname' => $this->post('fullname', TRUE),

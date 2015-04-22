@@ -237,7 +237,11 @@ class Projects extends REST_Controller
                 return $this->project_duplicate($uuid);
             } else if ($action == 'invite') {
                 return $this->project_invite($uuid);
+            }  else {
+                json_error('Invalid request, action \''.$action.'\' is not supported', null, 405);
             }
+        }  else {
+            json_error('Invalid request, action must be supplied', null, 405);
         }
     }
 

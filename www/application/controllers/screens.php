@@ -14,6 +14,7 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="url",type="string",description="The url of the screenshot image")
  * @SWG\Property(name="file_type",type="string",description="The file type of the screenshot image")
  * @SWG\Property(name="project_uuid",type="string",description="The uuid of the project for whom the screen is provided")
+ * @SWG\Property(name="comments",type="array",@SWG\Items("Comment"),description="The comments assigned to this screen")
  * @SWG\Property(name="hotspots",type="array",@SWG\Items("Hotspot"),description="The hotspots assigned to this screen")
  *
  *
@@ -32,7 +33,7 @@ class Screens extends REST_Controller
         parent::__construct();
         $this->validate_user();
         $this->load->helper('json');
-        $this->load->model(array('Project', 'Screen', 'Hotspot'));
+        $this->load->model(array('Project', 'Screen', 'Comment', 'Hotspot'));
     }
 
     /**
@@ -255,11 +256,137 @@ class Screens extends REST_Controller
      *   )
      * )
      */
-    public function screen_post($uuid = '', $action = '')
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/screen/{screen_uuid}/comments/",
+     *   description="API for screen actions",
+     * @SWG\Operation(
+     *    method="GET",
+     *    nickname="List Comments",
+     *    type="array[Comment]",
+     *    summary="Returns a list of comments for the specified screen",
+     * @SWG\Parameter(
+     *     name="screen_uuid",
+     *     description="The unique ID of the screen",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     )
+     *   ),
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="Comments",
+     *    nickname="Add Comments",
+     *    summary="Create a new comment for the given screen",
+     * @SWG\Parameter(
+     *     name="screen_uuid",
+     *     description="The unique ID of the screen",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="content",
+     *     description="The comment content for the screen",
+     *     paramType="form",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="time",
+     *     description="The time of the screen that the comment was added",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="begin_x",
+     *     description="The begin x property",
+     *     paramType="form",
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="begin_y",
+     *     description="The begin y property",
+     *     paramType="form",
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="end_x",
+     *     description="The end x property",
+     *     paramType="form",
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="end_y",
+     *     description="The end y property",
+     *     paramType="form",
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="left_x",
+     *     description="The left x property",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="data",
+     *     description="The hotspot json data in string form",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
+     *     )
+     *   )
+     * )
+     */
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/screen/{screen_uuid}/comments/search",
+     *   description="API for screen actions",        *
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="Comments",
+     *    nickname="Search Comments",
+     *    summary="Search a list of comments",
+     * @SWG\Parameter(
+     *     name="screen_uuid",
+     *     description="The unique ID of the screen",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="filter",
+     *     description="The filter (represented as an object) with terms to search for",
+     *     paramType="form",
+     *     required=true,
+     *     type="CommentFilter"
+     *     )
+     *   )
+     * )
+     */
+    public function screen_post($uuid = '', $action = '', $action2 = '')
     {
         $screen = validate_screen_uuid($uuid);
         if ($action && $action === 'hotspots') {
             $this->add_hotspot($screen);
+        } else if ($action && $action === 'comments') {
+            if($action2=='search') {
+                $this->search_comments($screen);
+            } else {
+                $this->add_comment($screen);
+            }
+        } else {
+            json_error('Invalid request, action \''.$action.'\' is not supported', null, 405);
         }
     }
 
@@ -295,6 +422,63 @@ class Screens extends REST_Controller
             activity_add_hotspot_screen($hotspot_id);
             $hotspot = decorate_hotspot($this->Hotspot->load($hotspot_id));
             $this->response($hotspot);
+        }
+    }
+
+    /**
+     * Creates a new comment on the screen
+     * @param $screen
+     */
+    private function add_comment($screen)
+    {
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('content', 'Content', 'trim|required|xss_clean');
+        $this->form_validation->set_rules('time', 'Time', 'trim|xss_clean');
+        $this->form_validation->set_rules('begin_x', 'Begin X', 'trim|xss_clean');
+        $this->form_validation->set_rules('begin_y', 'Begin Y', 'trim|xss_clean');
+        $this->form_validation->set_rules('end_x', 'End X', 'trim|xss_clean');
+        $this->form_validation->set_rules('end_y', 'End Y', 'trim|xss_clean');
+        $this->form_validation->set_rules('left_x', 'Left X', 'trim|xss_clean');
+
+        if ($this->form_validation->run() == FALSE) {
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+        } else {
+            $comment_id = $this->Comment->add(array(
+                'screen_id' => $screen->id,
+                'project_id' => $screen->project_id,
+                'data' => $this->post('data',TRUE),
+                'ordering' => $this->Comment->get_max_ordering_for_screen($screen->id) + 1,
+                'creator_id' => get_user_id(),
+                'time' => $this->post('time', TRUE),
+                'begin_x' => $this->post('begin_x', TRUE),
+                'begin_y' => $this->post('begin_x', TRUE),
+                'end_x' => $this->post('end_x', TRUE),
+                'end_y' => $this->post('end_y', TRUE),
+                'left_x' => $this->post('left_x', TRUE),
+                'content' => $this->post('content', TRUE)
+            ));
+            activity_add_comment_screen($comment_id);
+            $comment = decorate_comment($this->Comment->load($comment_id));
+            $this->response($comment);
+        }
+    }
+
+    /**
+     * Provides the ability to search for a list of comments on a given screen
+     * @param $screen
+     */
+    private function search_comments($screen)
+    {
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('filter', 'Filter', 'trim|required|xss_clean');
+
+        if ($this->form_validation->run() == FALSE) {
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+        } else {
+            $filter = json_decode($this->post('filter', TRUE));
+            $filter->screen_id = $screen->id;
+            $comments = decorate_comments($this->Comment->search($filter));
+            $this->response($comments);
         }
     }
 

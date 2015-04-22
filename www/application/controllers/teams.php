@@ -146,7 +146,11 @@ class Teams extends REST_Controller
         if ($action) {
             if ($action == 'invite') {
                 return $this->team_invite($uuid);
+            }  else {
+                json_error('Invalid request, action \''.$action.'\' is not supported', null, 405);
             }
+        } else {
+            json_error('Invalid request, action must be supplied', null, 405);
         }
     }
 
