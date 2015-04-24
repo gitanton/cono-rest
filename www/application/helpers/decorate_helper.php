@@ -266,8 +266,8 @@ function decorate_screen($object)
     $object->comments = decorate_comments($comments);
 
     $object->ordering = intval($object->ordering);
-    $object->image_width = intval($object->image_width);
-    $object->image_height = intval($object->image_height);
+    $object->image_width = floatval($object->image_width);
+    $object->image_height = floatval($object->image_height);
     $object->file_size = floatval($object->file_size);
     unset($object->deleted, $object->project_id, $object->id, $object->creator_id);
     return $object;
@@ -297,6 +297,25 @@ function decorate_video($object)
     $object->ordering = intval($object->ordering);
     $object->file_size = floatval($object->file_size);
     unset($object->deleted, $object->project_id, $object->id, $object->creator_id);
+    return $object;
+}
+
+function decorate_template($object)
+{
+    $CI =& get_instance();
+    $CI->load->model(array('Template'));
+
+    if (isset($object->creator_id)) {
+        $object->creator_uuid = $CI->User->get_uuid($object->creator_id);
+    }
+
+    $object->url = file_url($object->url, FILE_TYPE_TEMPLATE);
+
+    $object->ordering = intval($object->ordering);
+    $object->image_width = floatval($object->image_width);
+    $object->image_height = floatval($object->image_height);
+    $object->file_size = floatval($object->file_size);
+    unset($object->deleted, $object->id, $object->creator_id);
     return $object;
 }
 

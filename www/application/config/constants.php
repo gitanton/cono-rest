@@ -24,6 +24,7 @@ define("INVITE_TYPE_TEAM", 'team');
 
 define("FILE_TYPE_SCREEN", 1);
 define("FILE_TYPE_VIDEO", 2);
+define("FILE_TYPE_TEMPLATE", 3);
 
 define("DEFAULT_LIMIT", 20);
 define("DEFAULT_PAGE", 0);

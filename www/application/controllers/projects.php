@@ -37,7 +37,7 @@ class Projects extends REST_Controller
         parent::__construct();
         $this->validate_user();
         $this->load->helper('json');
-        $this->load->model(array('Project', 'Project_Invite'));
+        $this->load->model(array('Project', 'Project_Invite', 'Template', 'Screen'));
     }
 
     /**
@@ -81,6 +81,13 @@ class Projects extends REST_Controller
      *     paramType="form",
      *     required=true,
      *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="templates",
+     *     description="A comma-separated list of template uuids that have been chosen as screens for this project",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
      *     )
      *   )
      * )
@@ -96,6 +103,7 @@ class Projects extends REST_Controller
         $this->load->library('form_validation');
         $this->form_validation->set_rules('name', 'Project Name', 'trim|required|xss_clean');
         $this->form_validation->set_rules('type_id', 'Type ID', 'trim|required|integer|xss_clean|callback_validate_project_type');
+        $this->form_validation->set_rules('templates', 'Templates', 'trim|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
             json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
@@ -106,6 +114,42 @@ class Projects extends REST_Controller
                 'team_id' => get_team_id()
             );
             $project_id = $this->Project->add($data);
+
+            $templates = $this->post('templates', TRUE);
+
+            /* If this is a template project, add the templates to the project that they've chose */
+            if($templates) {
+                $this->load->library('upload');
+
+                $template_ids = explode(",", $templates);
+                foreach($template_ids as $template_id) {
+                    $template = $this->Template->load_by_uuid(trim($template_id));
+                    if($template) {
+
+                        // Copy the template file to the screens directory so we can link to it
+                        $file = file_get_contents(file_url($template->url, FILE_TYPE_TEMPLATE));
+                        $file_ext = $this->upload->get_extension($template->url);
+                        if($file) {
+                            $file_name = md5(uniqid(mt_rand())).$file_ext;
+                            $full_path = $this->config->item('screen_upload_dir').$file_name;
+                            file_put_contents($full_path, $file);
+
+
+                            $this->Screen->add(array(
+                                'creator_id' => get_user_id(),
+                                'project_id' => $project_id,
+                                'ordering' => $this->Screen->get_max_ordering_for_project($project_id) + 1,
+                                'url' => $file_name,
+                                'file_type' => $template->file_type,
+                                'file_size' => $template->file_size,
+                                'image_height' => $template->image_height,
+                                'image_width' => $template->image_width
+                            ));
+                        }
+                    }
+                }
+            }
+
             /* Add the activity item to indicate that a project was added */
             activity_add_project($project_id, get_user_id());
             $project = $this->decorate_object($this->Project->load($project_id));

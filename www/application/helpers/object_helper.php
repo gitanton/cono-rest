@@ -239,6 +239,12 @@ function convert_field($value, $datatype = '')
 
 /* Object Validation */
 
+function validate_admin() {
+    if(!get_user_type_id()==USER_TYPE_ADMIN) {
+        json_error('You are not authorized to perform this action.', null, 403);
+    }
+}
+
 /**
  * Validates that:
  *   - a project exists with the specified uuid

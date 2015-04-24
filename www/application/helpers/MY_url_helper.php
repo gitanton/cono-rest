@@ -116,9 +116,11 @@ function page_url($page_id)
 
 function file_url($url, $file_type = 1)
 {
-    if($file_type==1) {
+    if($file_type==FILE_TYPE_SCREEN) {
         return app_url('assets/uploads/screens/' . $url);
-    } else {
+    } else if($file_type==FILE_TYPE_TEMPLATE){
+        return app_url('assets/uploads/templates/' . $url);
+    }else {
         return app_url('assets/uploads/videos/' . $url);
     }
 }
