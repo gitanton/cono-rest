@@ -1,13 +1,15 @@
 <?
 function json_error($message, $data = array(), $response_code = 400)
 {
+    header('Content-Type: application/json');
     http_response_code($response_code);
-    echo json_encode(array('status'=> false, 'error'=> $message, 'data'=> $data));
+    exit(json_encode(array('status'=> 'error', 'message'=> $message, 'data'=> $data)));
 }
 
 function json_success($message = '', $data = array())
 {
-    echo json_encode(array('status'=> 'success', 'message'=> $message, 'data'=> $data));
+    header('Content-Type: application/json');
+    exit(json_encode(array('status'=> 'success', 'message'=> $message, 'data'=> $data)));
 }
 
 function jsonp_success($message = '', $data = array())
