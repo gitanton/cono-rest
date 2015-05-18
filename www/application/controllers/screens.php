@@ -161,6 +161,9 @@ class Screens extends REST_Controller
         if ($action && $action === 'hotspots') {
             $hotspots = $this->Hotspot->get_for_screen($screen->id);
             $this->response(decorate_hotspots($hotspots));
+        } else if ($action && $action === 'comments') {
+            $comments = $this->Comment->get_for_screen($screen->id);
+            $this->response(decorate_comments($comments));
         } else {
             $this->response($this->decorate_object($screen));
         }

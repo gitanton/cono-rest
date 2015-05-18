@@ -470,9 +470,10 @@ function validate_project_add($user_id)
     $user = $CI->User->load_fields($user_id, 'created');
     if ($subscription) {
         $plan = $CI->Plan->load($subscription->plan_id);
+
         $projects = $CI->Project->get_owned_by_user($user_id);
 
-        if(sizeof($projects)>=$plan->projects) {
+        if($plan->projects > 0 && sizeof($projects)>=$plan->projects) {
             json_error(sprintf('You cannot create anymore projects.  Your plan allows you to create up to %d projects.',
                 $plan->projects), null, 403);
             exit;

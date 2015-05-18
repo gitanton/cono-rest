@@ -37,7 +37,7 @@ class Projects extends REST_Controller
         parent::__construct();
         $this->validate_user();
         $this->load->helper('json');
-        $this->load->model(array('Project', 'Project_Invite', 'Template', 'Screen'));
+        $this->load->model(array('Project', 'Project_Invite', 'Template', 'Screen', 'Comment'));
     }
 
     /**
@@ -237,15 +237,19 @@ class Projects extends REST_Controller
     }
 
     /**
-     * Returns a single user referenced by their uuid
+     * Returns a single project referenced by their uuid
      * @param string $uuid
      */
-    public function project_get($uuid = '')
+    public function project_get($uuid = '', $action = '')
     {
-        $this->validate_user();
         validate_team_read(get_team_id());
         $project = validate_project_uuid($uuid);
-        $this->response($this->decorate_object($project));
+        if ($action && $action === 'comments') {
+            $comments = $this->Comment->get_for_project($project->id);
+            $this->response(decorate_comments($comments));
+        } else {
+            $this->response($this->decorate_object($project));
+        }
     }
 
     /**
@@ -475,6 +479,27 @@ class Projects extends REST_Controller
 
         json_error("You must provide either a user id or an email address to invite to this project.");
     }
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/projects/{project_uuid}/comments/",
+     *   description="API for project actions",
+     * @SWG\Operation(
+     *    method="GET",
+     *    nickname="List Comments",
+     *    type="array[Comment]",
+     *    summary="Returns a list of comments for the specified project",
+     * @SWG\Parameter(
+     *     name="project_uuid",
+     *     description="The unique ID of the project",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     )
+     *   )
+     * )
+     */
 
     public function validate_project_type($type_id = 0)
     {
