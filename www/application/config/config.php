@@ -405,9 +405,10 @@ $config['proxy_ips'] = '';
 
 /* End of file config.php */
 /* Location: ./application/config/config.php */
-function __autoload($class)
+function my_autoloader($class)
 {
     if ($class == "User_Controller" || $class == "REST_Controller" || $class == "Admin_Controller") {
         @include_once(APPPATH . 'core/' . $class . EXT);
     }
 }
+spl_autoload_register('my_autoloader');
