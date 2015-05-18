@@ -1,4 +1,4 @@
-<?
+<?php
 require_once($_SERVER['DOCUMENT_ROOT'] . '/rest/vendor/autoload.php');
 use Mailgun\Mailgun;
 /**

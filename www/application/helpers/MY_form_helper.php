@@ -1,4 +1,4 @@
-<?
+<?php
 function form_states_multi($name, $value = '', $include_blank = FALSE)
 {
     $state_list = array('AL'=> "Alabama",

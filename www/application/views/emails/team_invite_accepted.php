@@ -1,4 +1,4 @@
-<?
+<?php
 include (APPPATH . '/views/emails/header.php');
 $msg .=
   '<p>'.$invitee->fullname.' has successfully accepted your invite to join your '.$CI->config->item('site_title')

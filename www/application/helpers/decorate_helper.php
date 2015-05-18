@@ -1,4 +1,4 @@
-<?
+<?php
 /**
  * These are a set of decorators that can be used by the REST endpoints to add and remove attributes from
  * objects after they are pulled out of the database and sent down.  Useful for doing things like removing the

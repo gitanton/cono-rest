@@ -1,4 +1,4 @@
-<?
+<?php
 function base_detect_url($uri = '')
 {
     $url = base_url($uri);

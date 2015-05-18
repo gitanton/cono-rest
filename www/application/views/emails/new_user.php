@@ -1,4 +1,4 @@
-<?
+<?php
 include(APPPATH.'/views/emails/header.php');
 $msg .=
     '<p>You have successfully created a new account with '.$CI->config->item('site_title').'. Go ahead and login when you get some time.</p>

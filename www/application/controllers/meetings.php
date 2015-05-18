@@ -1,4 +1,4 @@
-<?
+<?php
 use Swagger\Annotations as SWG;
 
 /** *

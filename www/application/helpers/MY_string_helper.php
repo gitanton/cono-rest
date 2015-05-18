@@ -1,4 +1,4 @@
-<?
+<?php
 function query_param($name)
 {
     $params = array();

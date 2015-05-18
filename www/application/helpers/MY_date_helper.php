@@ -1,4 +1,4 @@
-<?
+<?php
 function server_datetime($date, $time) {
     if(get_user()->timezone) {
         date_default_timezone_set(get_user()->timezone);

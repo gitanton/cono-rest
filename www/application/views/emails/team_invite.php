@@ -1,4 +1,4 @@
-<?
+<?php
 include (APPPATH . '/views/emails/header.php');
 $msg .=
   '<p>'.$user->fullname.' has invited you to join a '.$CI->config->item('site_title').' team. To accept the invitation, click the "Accept Invitation" link below.  If you do not have an account, you will be prompted to create one.</p>

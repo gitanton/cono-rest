@@ -1,4 +1,4 @@
-<?
+<?php
 include (APPPATH . '/views/emails/header.php');
 $msg .=
   '<p>You are receiving this email because we have successfully cancelled your subscription.  Your card will no longer be charged.</p>

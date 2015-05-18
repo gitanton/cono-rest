@@ -1,4 +1,4 @@
-<?
+<?php
 if(IS_TEST) {
     define("VERSION", date("Ymd"));
 } else {

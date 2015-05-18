@@ -1,4 +1,4 @@
-<?
+<?php
 include (APPPATH . '/views/emails/header.php');
 $msg .=
 '<p style="font-size:12px; color: #1496cf; border-bottom: 1px #ccc solid">'

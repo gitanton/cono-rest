@@ -1,4 +1,4 @@
-<?
+<?php
 class MY_log extends CI_Log
 {
 

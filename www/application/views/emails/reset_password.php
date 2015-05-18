@@ -1,4 +1,4 @@
-<?
+<?php
 include (APPPATH . '/views/emails/header.php');
 $msg .=
   '<p>You are receiving this email because you recently requested that your '.$CI->config->item('site_title')

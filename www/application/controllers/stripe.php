@@ -1,4 +1,4 @@
-<?
+<?php
 /**
  * Webhooks for stripe to notify us that a user's card is bad or expired or something failed.
  * Class Stripe

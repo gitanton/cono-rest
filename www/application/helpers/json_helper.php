@@ -1,4 +1,4 @@
-<?
+<?php
 function json_error($message, $data = array(), $response_code = 400)
 {
     header('Content-Type: application/json');

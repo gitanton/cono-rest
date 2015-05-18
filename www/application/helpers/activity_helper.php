@@ -1,4 +1,4 @@
-<?
+<?php
 /**
  * Helper for creating activities for various object actions
  */

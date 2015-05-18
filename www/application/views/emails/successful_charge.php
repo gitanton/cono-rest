@@ -1,4 +1,4 @@
-<?
+<?php
 include (APPPATH . '/views/emails/header.php');
 $msg .=
   '<p>You are receiving this email because we successfully charged your card with the last four digits of '.$card_last_four
