@@ -7,4 +7,5 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Stripe\\' => array($vendorDir . '/stripe/stripe-php/lib'),
+    'Phinx\\' => array($vendorDir . '/robmorgan/phinx/src/Phinx'),
 );

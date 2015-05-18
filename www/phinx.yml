@@ -1,0 +1,14 @@
+paths:
+    migrations: %%PHINX_CONFIG_DIR%%/migrations
+
+environments:
+    default_migration_table: phinxlog
+    default_database: development
+    development:
+        adapter: mysql
+        host: 'schimpstaging.ctge10i8cpn4.us-east-1.rds.amazonaws.com'
+        name: 'staging_conojoapp'
+        user: 'schimpstaging'
+        pass: 'JcqT6k&luE^L9p%'
+        port: 3306
+        charset: utf8
