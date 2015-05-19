@@ -1,5 +1,5 @@
 <?php
-require_once($_SERVER['DOCUMENT_ROOT'] . '/rest/vendor/autoload.php');
+require_once(AUTOLOAD_PATH.'autoload.php');
 use Swagger\Annotations as SWG;
 
 /**
