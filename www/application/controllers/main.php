@@ -9,7 +9,7 @@ class Main extends User_Controller
     }
 
     public function index() {
-
+        $this->response(array());
     }
 
 }
