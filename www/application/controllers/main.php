@@ -1,6 +1,6 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed');
 
-class Main extends User_Controller
+class Main extends REST_Controller
 {
 
     public function __construct()
@@ -8,7 +8,7 @@ class Main extends User_Controller
         parent::__construct();
     }
 
-    public function index() {
+    public function index_get() {
         $this->response(array());
     }
 
