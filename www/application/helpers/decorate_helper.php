@@ -214,6 +214,10 @@ function decorate_comment($object)
         $object->creator_uuid = $CI->User->get_uuid($object->creator_id);
     }
 
+    if (isset($object->assignee_id)) {
+        $object->assignee_uuid = $CI->User->get_uuid($object->assignee_id);
+    }
+
     // cast the numbers to integers
     $object->ordering = intval($object->ordering);
     $object->project_id = intval($object->project_id);
@@ -222,7 +226,7 @@ function decorate_comment($object)
     $object->end_x = isset($object->end_x) ? intval($object->end_x) : null;
     $object->end_y = isset($object->end_y) ? intval($object->end_y) : null;
     $object->left_x = isset($object->left_x) ? intval($object->left_x) : null;
-    unset($object->deleted, $object->screen_id, $object->id, $object->creator_id, $object->video_id);
+    unset($object->deleted, $object->screen_id, $object->id, $object->creator_id, $object->video_id, $object->assignee_id);
     return $object;
 }
 

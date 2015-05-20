@@ -422,11 +422,11 @@ class Projects extends REST_Controller
         /* Validate that they are the team owner */
         validate_team_owner($project->team_id, get_user_id());
 
-        /* Validate that they have a valid subscription and can add a project */
-        validate_user_add(get_user_id());
-
         $user_uuid = $this->post('user_uuid', TRUE);
         $email = $this->post('email', TRUE);
+
+        /* Validate that they have a valid subscription and can add a project */
+        validate_user_add(get_user_id(), $user_uuid);
 
         if ($email) {
             /** Look to see if there is an existing invite and resend it */

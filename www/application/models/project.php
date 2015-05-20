@@ -110,7 +110,9 @@ class Project extends MY_Model
             $this->db->where(array('user_id' => get_user_id(), 'project_id' => $project->id));
             $query = $this->db->get('project_user');
             $row = $query->row();
-            $project->ordering = $row->ordering;
+            if($row) {
+                $project->ordering = $row->ordering;
+            }
         }
         return $project;
     }

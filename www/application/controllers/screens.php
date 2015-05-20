@@ -300,6 +300,20 @@ class Screens extends REST_Controller
      *     type="string"
      *     ),
      * @SWG\Parameter(
+     *     name="is_task",
+     *     description="Whether this comment should be assigned as a task or not",
+     *     paramType="form",
+     *     required=true,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="assignee_uuid",
+     *     description="The uuid of the user this task should be assigned to",
+     *     paramType="form",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
      *     name="time",
      *     description="The time of the screen that the comment was added",
      *     paramType="form",
@@ -385,7 +399,7 @@ class Screens extends REST_Controller
         if ($action && $action === 'hotspots') {
             $this->add_hotspot($screen);
         } else if ($action && $action === 'comments') {
-            if($action2=='search') {
+            if ($action2 == 'search') {
                 $this->search_comments($screen);
             } else {
                 $this->add_comment($screen);
@@ -410,7 +424,7 @@ class Screens extends REST_Controller
         $this->form_validation->set_rules('link_to', 'Link To', 'trim|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
         } else {
             $hotspot_id = $this->Hotspot->add(array(
                 'screen_id' => $screen->id,
@@ -444,14 +458,17 @@ class Screens extends REST_Controller
         $this->form_validation->set_rules('end_x', 'End X', 'trim|xss_clean');
         $this->form_validation->set_rules('end_y', 'End Y', 'trim|xss_clean');
         $this->form_validation->set_rules('left_x', 'Left X', 'trim|xss_clean');
+        $this->form_validation->set_rules('is_task', 'Is Task', 'trim|integer|xss_clean');
+        $this->form_validation->set_rules('assignee_uuid', 'Assignee', 'trim|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
         } else {
-            $comment_id = $this->Comment->add(array(
+            $data = array(
                 'screen_id' => $screen->id,
                 'project_id' => $screen->project_id,
-                'data' => $this->post('data',TRUE),
+                'is_task' => intval($this->post('is_task', TRUE)),
+                'data' => $this->post('data', TRUE),
                 'ordering' => $this->Comment->get_max_ordering_for_screen($screen->id) + 1,
                 'creator_id' => get_user_id(),
                 'time' => $this->post('time', TRUE),
@@ -461,7 +478,28 @@ class Screens extends REST_Controller
                 'end_y' => $this->post('end_y', TRUE),
                 'left_x' => $this->post('left_x', TRUE),
                 'content' => $this->post('content', TRUE)
-            ));
+            );
+
+            $assignee_uuid = $this->post('assignee_uuid', TRUE);
+            if ($assignee_uuid) {
+                $assignee_id = $this->User->get_id($assignee_uuid);
+
+                if (!$assignee_id) {
+                    json_error('There is no user with that id to assign this task to');
+                    return;
+
+                }
+
+                if (!$this->User->is_on_project($screen->project_id, $assignee_id)) {
+                    json_error('You cannot assign a task to a user who is not assigned to this project');
+                    return;
+                }
+
+                $data['assignee_id'] = $assignee_id;
+                $data['is_task'] = 1;
+            }
+
+            $comment_id = $this->Comment->add($data);
             activity_add_comment_screen($comment_id);
             $comment = decorate_comment($this->Comment->load($comment_id));
             $this->response($comment);
@@ -478,7 +516,7 @@ class Screens extends REST_Controller
         $this->form_validation->set_rules('filter', 'Filter', 'trim|required|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
         } else {
             $filter = json_decode($this->post('filter', TRUE));
             $filter->screen_id = $screen->id;
@@ -516,7 +554,7 @@ class Screens extends REST_Controller
             );
             $screen = $this->Screen->load($this->Screen->add($insert));
             return $screen;
-        }  else {
+        } else {
             json_error($this->upload->display_errors());
             exit;
         }
@@ -532,16 +570,16 @@ class Screens extends REST_Controller
         /* encrypt the filename */
 
         $file_ext = $this->upload->get_extension($this->post('url'));
-        if(!in_array(str_replace(".", "", $file_ext), explode("|", $this->config->item('screen_upload_types')))) {
+        if (!in_array(str_replace(".", "", $file_ext), explode("|", $this->config->item('screen_upload_types')))) {
             json_error("The image url is invalid.  Only ".implode(", ", explode("|", $this->config->item('screen_upload_types')))." are allowed.");
             exit;
         }
         $file = file_get_contents($this->post('url'));
-        if($file) {
+        if ($file) {
             $file_name = md5(uniqid(mt_rand())).$file_ext;
             $full_path = $this->config->item('screen_upload_dir').$file_name;
             file_put_contents($full_path, $file);
-            $file_size = filesize($full_path)/1000;
+            $file_size = filesize($full_path) / 1000;
             $file_dimensions = getimagesize($full_path);
 
             $insert = array(

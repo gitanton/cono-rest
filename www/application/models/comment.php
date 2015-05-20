@@ -10,7 +10,9 @@ class Comment extends MY_Model
         'begin_y' => 'int',
         'end_x' => 'int',
         'end_y' => 'int',
-        'left_x' => 'string'
+        'left_x' => 'string',
+        'is_task' => 'int',
+        'assignee_id' => 'int'
     );
 
     function get_scope()

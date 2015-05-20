@@ -3,3 +3,6 @@
 *.iml
 *.iws
 *.sass-cache/
+
+
+www/vendor

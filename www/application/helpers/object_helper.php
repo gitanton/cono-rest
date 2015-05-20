@@ -498,7 +498,7 @@ function validate_project_add($user_id)
  * Validates that a user can invite/add users to their projects
  * @param $user_id
  */
-function validate_user_add($user_id) {
+function validate_user_add($user_id, $invitee_uuid='') {
     $CI =& get_instance();
     $CI->load->model(array('Team', 'Subscription', 'Project', 'Plan'));
     $subscription = $CI->Subscription->load_by_field('user_id', $user_id);
@@ -506,6 +506,16 @@ function validate_user_add($user_id) {
     if ($subscription) {
         $plan = $CI->Plan->load($subscription->plan_id);
         $users = $CI->User->get_for_teams_owner($user_id);
+
+        /** All the user to be invited to projects if they are already on the team */
+        if($invitee_uuid) {
+            foreach($users as $user) {
+                if($invitee_uuid === $user->uuid) {
+                    return true;
+                }
+            }
+        }
+
         $max_users = $plan->team_members + $subscription->additional_users;
 
         if(sizeof($users)>=$max_users) {

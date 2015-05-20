@@ -26,6 +26,8 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="end_x",type="integer",description="The end x property")
  * @SWG\Property(name="end_y",type="integer",description="The end y property")
  * @SWG\Property(name="left_x",type="string",description="The left x property")
+ * @SWG\Property(name="is_task",type="integer",description="Whether this is a task or not")
+ * @SWG\Property(name="assignee_uuid",type="integer",description="Who the task is assigned to")
  * @SWG\Property(name="time",type="string",format="time",description="The time of the video for this comment")
  * @SWG\Property(name="data",type="string",description="The json data for the html5 canvas object")
  * @SWG\Property(name="creator_uuid",type="string",description="The id of the user who created the comment")
@@ -315,6 +317,20 @@ class Videos extends REST_Controller
      * @SWG\Parameter(
      *     name="content",
      *     description="The comment content for the video",
+     *     paramType="form",
+     *     required=true,
+     *     type="string"
+     *     ),
+     * @SWG\Parameter(
+     *     name="is_task",
+     *     description="Whether this comment should be assigned as a task or not",
+     *     paramType="form",
+     *     required=true,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="assignee_uuid",
+     *     description="The uuid of the user this task should be assigned to",
      *     paramType="form",
      *     required=true,
      *     type="string"

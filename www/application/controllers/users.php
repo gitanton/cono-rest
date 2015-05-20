@@ -234,7 +234,7 @@ class Users extends REST_Controller
             $user = $this->User->login($username, $password);
             if ($user && $user->id) {
                 session_clear();
-                $invite = $this->validate_invite($user->id);
+                $invite = $this->validate_invite($user);
                 if ($invite) {
                     $this->process_invite($invite, $user);
                 }
@@ -793,10 +793,17 @@ class Users extends REST_Controller
         return TRUE;
     }
 
-    private function validate_invite($user_id = 0)
+    private function validate_invite($user = '')
     {
         $this->load->model(array('Team', 'Project'));
         $invite = null;
+        $user_uuid = '';
+        $user_id = '';
+
+        if($user) {
+            $user_uuid = $user->uuid;
+            $user_id = $user->id;
+        }
 
         $invite_key = $this->post('invite_key', TRUE);
         $invite_type = $this->post('invite_type', TRUE);
@@ -816,7 +823,7 @@ class Users extends REST_Controller
                 /* Validate that there is room to join the team */
                 $project = $this->Project->load($invite->project_id);
                 $team = $this->Team->load_fields($project->team_id, 'owner_id');
-                validate_user_add($team->owner_id);
+                validate_user_add($team->owner_id, $user_uuid);
             }
         }
 

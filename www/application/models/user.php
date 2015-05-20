@@ -6,7 +6,10 @@ class User extends MY_Model
         'fullname' => 'string',
         'username' => 'username',
         'email' => 'email',
-        'timezone' => 'string'
+        'timezone' => 'string',
+        'phone' => 'string',
+        'skype' => 'string',
+        'website' => 'string'
     );
 
     function get_scope()
