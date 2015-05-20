@@ -106,11 +106,13 @@ class Screens extends REST_Controller
             json_error('You must provide either a url or uploaded file for the screenshot.');
             exit;
         }
+
+
         /* Add the activity item to indicate that a screen was added */
         activity_add_screen($screen->id, get_user_id());
 
         /* Handle the download situation */
-        $this->response($screen);
+        $this->response($this->decorate_object($screen));
     }
 
 
@@ -512,7 +514,7 @@ class Screens extends REST_Controller
                 'image_height' => $data['image_height'],
                 'image_width' => $data['image_width']
             );
-            $screen = $this->decorate_object($this->Screen->load($this->Screen->add($insert)));
+            $screen = $this->Screen->load($this->Screen->add($insert));
             return $screen;
         }  else {
             json_error($this->upload->display_errors());
@@ -551,7 +553,7 @@ class Screens extends REST_Controller
                 'image_height' => $file_dimensions[1],
                 'image_width' => $file_dimensions[0]
             );
-            $screen = $this->decorate_object($this->Screen->load($this->Screen->add($insert)));
+            $screen = $this->Screen->load($this->Screen->add($insert));
             return $screen;
         }
     }
