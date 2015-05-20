@@ -481,13 +481,16 @@ class Videos extends REST_Controller
         $this->form_validation->set_rules('end_x', 'End X', 'trim|xss_clean');
         $this->form_validation->set_rules('end_y', 'End Y', 'trim|xss_clean');
         $this->form_validation->set_rules('left_x', 'Left X', 'trim|xss_clean');
+        $this->form_validation->set_rules('is_task', 'Is Task', 'trim|integer|xss_clean');
+        $this->form_validation->set_rules('assignee_uuid', 'Assignee', 'trim|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
             json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
         } else {
-            $comment_id = $this->Comment->add(array(
+            $data = array(
                 'video_id' => $video->id,
-                'project_id' => $video->project_id,
+                'project_id' => $video->project_id,   ,
+                'is_task' => intval($this->post('is_task', TRUE)),
                 'data' => $this->post('data',TRUE),
                 'ordering' => $this->Comment->get_max_ordering_for_video($video->id) + 1,
                 'creator_id' => get_user_id(),
@@ -498,7 +501,26 @@ class Videos extends REST_Controller
                 'end_y' => $this->post('end_y', TRUE),
                 'left_x' => $this->post('left_x', TRUE),
                 'content' => $this->post('content', TRUE)
-            ));
+            );
+            $assignee_uuid = $this->post('assignee_uuid', TRUE);
+            if ($assignee_uuid) {
+                $assignee_id = $this->User->get_id($assignee_uuid);
+
+                if (!$assignee_id) {
+                    json_error('There is no user with that id to assign this task to');
+                    return;
+
+                }
+
+                if (!$this->User->is_on_project($screen->project_id, $assignee_id)) {
+                    json_error('You cannot assign a task to a user who is not assigned to this project');
+                    return;
+                }
+
+                $data['assignee_id'] = $assignee_id;
+                $data['is_task'] = 1;
+            }
+            $comment_id = $this->Comment->add($data);
             activity_add_comment_video($comment_id);
             $comment = decorate_comment($this->Comment->load($comment_id));
             $this->response($comment);
