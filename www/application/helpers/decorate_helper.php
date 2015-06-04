@@ -226,6 +226,8 @@ function decorate_comment($object)
     $object->end_x = isset($object->end_x) ? intval($object->end_x) : null;
     $object->end_y = isset($object->end_y) ? intval($object->end_y) : null;
     $object->left_x = isset($object->left_x) ? intval($object->left_x) : null;
+    $object->is_task = isset($object->is_task) ? intval($object->is_task) : null;
+    $object->marker = isset($object->marker) ? intval($object->marker) : null;
     unset($object->deleted, $object->screen_id, $object->id, $object->creator_id, $object->video_id, $object->assignee_id);
     return $object;
 }

@@ -12,6 +12,7 @@ class Comment extends MY_Model
         'end_y' => 'int',
         'left_x' => 'string',
         'is_task' => 'int',
+        'marker' => 'int',
         'assignee_id' => 'int'
     );
 

@@ -303,7 +303,14 @@ class Screens extends REST_Controller
      *     name="is_task",
      *     description="Whether this comment should be assigned as a task or not",
      *     paramType="form",
-     *     required=true,
+     *     required=false,
+     *     type="integer"
+     *     ),
+     * @SWG\Parameter(
+     *     name="marker",
+     *     description="Whether this comment should be marked as important or not",
+     *     paramType="form",
+     *     required=false,
      *     type="integer"
      *     ),
      * @SWG\Parameter(
@@ -459,6 +466,7 @@ class Screens extends REST_Controller
         $this->form_validation->set_rules('end_y', 'End Y', 'trim|xss_clean');
         $this->form_validation->set_rules('left_x', 'Left X', 'trim|xss_clean');
         $this->form_validation->set_rules('is_task', 'Is Task', 'trim|integer|xss_clean');
+        $this->form_validation->set_rules('marker', 'Marker', 'trim|integer|xss_clean');
         $this->form_validation->set_rules('assignee_uuid', 'Assignee', 'trim|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
@@ -468,6 +476,7 @@ class Screens extends REST_Controller
                 'screen_id' => $screen->id,
                 'project_id' => $screen->project_id,
                 'is_task' => intval($this->post('is_task', TRUE)),
+                'marker' => intval($this->post('marker', TRUE)),
                 'data' => $this->post('data', TRUE),
                 'ordering' => $this->Comment->get_max_ordering_for_screen($screen->id) + 1,
                 'creator_id' => get_user_id(),
