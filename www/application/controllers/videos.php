@@ -489,7 +489,7 @@ class Videos extends REST_Controller
         } else {
             $data = array(
                 'video_id' => $video->id,
-                'project_id' => $video->project_id,   ,
+                'project_id' => $video->project_id,
                 'is_task' => intval($this->post('is_task', TRUE)),
                 'data' => $this->post('data',TRUE),
                 'ordering' => $this->Comment->get_max_ordering_for_video($video->id) + 1,
@@ -512,7 +512,7 @@ class Videos extends REST_Controller
 
                 }
 
-                if (!$this->User->is_on_project($screen->project_id, $assignee_id)) {
+                if (!$this->User->is_on_project($video->project_id, $assignee_id)) {
                     json_error('You cannot assign a task to a user who is not assigned to this project');
                     return;
                 }
