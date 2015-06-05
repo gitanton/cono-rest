@@ -32,7 +32,7 @@ $config['video_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/vi
 $config['video_upload_types'] = 'mp4|mov|avi';
 
 $config['notifications_email_from'] = 'Conojo';
-$config['notifications_email'] = 'info@conojo.com';
+$config['notifications_email'] = 'noreply@conojo.com';
 $config['contact_email'] = 'info@conojo.com';
 
 $config['loggly_tag'] = 'conojo';
@@ -40,16 +40,16 @@ $config['loggly_token'] = 'c51b721e-e3bb-4ea8-8210-68b59046fcc0';
 
 $config['google_api_key'] = 'AIzaSyDnGoUa_UuPqYMAvFLiRUZyHVcHOAIXIWM';
 
-$config['stripe_private_key'] = 'sk_test_E6PXD0mPm8D0ugGrF5Z6ZYC3';
-$config['stripe_public_key'] = 'pk_test_qfSibHadzKvpVKdrPoBwHbGN';
+$config['stripe_private_key'] = 'sk_live_pEUPGAHt5btqMIoZ266ohBb1';
+$config['stripe_public_key'] = 'pk_live_sIshH4GDlRkHyhGpUhjwKNZJ';
 
-$config['mailgun_key'] = 'key-bd5e77e86054c14bba3e6f88c9dc31bf';
-$config['mailgun_domain'] = 'reviewdev.com';
+$config['mailgun_key'] = 'key-cc329f94abb41f6809d3c73f99953e91';
+$config['mailgun_domain'] = 'conojo.com';
 
-$config['twilio_phone'] = '+1 415-599-2671';
-$config['twilio_app_sid'] = 'AP07d1a612c9206dfdae2b7e5e2abe64fd';
-$config['twilio_auth_token'] = 'cf35bb56f52ee86283c81ff65b713943';
-$config['twilio_account_sid'] = 'AC49956886473a6038c7f014ac68b4a8f2';
+$config['twilio_phone'] = '+1 415-493-9235';
+$config['twilio_app_sid'] = 'PN13c0c86cfafdd76754bddaff9193a80e';
+$config['twilio_auth_token'] = '91ba3c2c2ef61c364b59e19a7aa9f173';
+$config['twilio_account_sid'] = 'AC293f9098f5845a2a1d3a4937e2ae0a23';
 
 $config['s3_bucket'] = 'conojoapp';
 $config['s3_access_key_id'] = 'AKIAIEGUE5LXSVPHIPYQ';
@@ -62,8 +62,8 @@ if (IS_TEST) {
     $config['domain_url'] = 'http://conojoapp.scmreview.com/rest';
     $config['base_url'] = 'http://conojoapp.scmreview.com/rest';
 
-    $config['stripe_private_key'] = 'sk_test_E6PXD0mPm8D0ugGrF5Z6ZYC3';
-    $config['stripe_public_key'] = 'pk_test_qfSibHadzKvpVKdrPoBwHbGN';
+    $config['stripe_private_key'] = 'sk_test_wsP0hBt1APFWkNdOq4xtL7VH';
+    $config['stripe_public_key'] = 'pk_test_Ch4vFXIXXtpOJxV29t030Hdd';
 
     $config['notifications_email'] = 'info@reviewdev.com';
     $config['mailgun_key'] = 'key-bd5e77e86054c14bba3e6f88c9dc31bf';
