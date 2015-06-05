@@ -1,5 +1,6 @@
 <?php
 use Swagger\Annotations as SWG;
+use Aws\S3\S3Client;
 
 /**
  * @SWG\Model(id="Response")
@@ -12,6 +13,7 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="fullname",type="string",description="The full name of the User")
  * @SWG\Property(name="email",type="string",description="The email address of the User")
  * @SWG\Property(name="username",type="string",description="The username of the User")
+ * @SWG\Property(name="avatar",type="string",description="The avatar of the User")
  * @SWG\Property(name="last_login",type="string",format="date",description="The date/time of the last login of the user")
  * @SWG\Property(name="timezone",type="string",format="date",description="The timezone that the user belongs to")
  *
@@ -870,6 +872,74 @@ class Users extends REST_Controller
                 activity_user_join_project($project->id, $user->id);
                 notify_project_invite_accepted($invite->id);
             }
+        }
+    }
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/avatar",
+     *   description="API for user actions",
+     * @SWG\Operation(
+     *    method="POST",
+     *    nickname="Upload avatar",
+     *    type="Screen",
+     *    summary="Set the avatar for the current user",
+     * @SWG\Parameter(
+     *     name="file",
+     *     description="File Upload of the avatar",
+     *     paramType="form",
+     *     required=false,
+     *     type="file"
+     *     )
+     *   )
+     * )
+     */
+    public function avatar_post()
+    {
+        $config = array(
+            'upload_path' => $this->config->item('screen_upload_dir'),
+            'allowed_types' => $this->config->item('screen_upload_types'),
+            'max_size' => $this->config->item('max_screen_upload_size'),
+            'encrypt_name' => true
+        );
+
+        /* Handle the file upload */
+        $this->load->library('upload', $config);
+        if ($this->upload->do_upload('file')) {
+            $data = $this->upload->data();
+
+            /* Upload to s3 */
+            $client = S3Client::factory(array(
+                'credentials' => array(
+                    'key' => $this->config->item('s3_access_key_id'),
+                    'secret' => $this->config->item('s3_secret')
+                ),
+                'region' => $this->config->item('s3_region'),
+                'version' => $this->config->item('s3_version')
+            ));
+            $object = array(
+                'Bucket' => $this->config->item('s3_bucket'),
+                'Key' => $data['file_name'],
+                'SourceFile' => $data['full_path'],
+                'ACL' => 'public-read'
+            );
+            $result = $client->putObject($object);
+
+            if($result['ObjectURL']) {
+                $this->User->update(get_user_id(), array(
+                    'avatar' => $data['file_name']
+                ));
+                unlink($data['full_path']);
+                $user = $this->decorate_object(get_user());
+                $this->response($user);
+            } else {
+                log_message('info', '[File Add] putObject Result: ' . print_r($result, TRUE));
+                return json_error('File Upload to S3 Failed: ', $result);
+            }
+        } else {
+            json_error($this->upload->display_errors());
+            exit;
         }
     }
 }
