@@ -33,7 +33,7 @@ class Screens extends REST_Controller
         parent::__construct();
         $this->validate_user();
         $this->load->helper('json');
-        $this->load->model(array('Project', 'Screen', 'Comment', 'Hotspot'));
+        $this->load->model(array('Project', 'Screen', 'Comment', 'Hotspot', 'Project_Statistic'));
     }
 
     /**
@@ -510,6 +510,7 @@ class Screens extends REST_Controller
 
             $comment_id = $this->Comment->add($data);
             activity_add_comment_screen($comment_id);
+            $this->Project_Statistic->comment_project($screen->project_id);
             $comment = decorate_comment($this->Comment->load($comment_id));
             $this->response($comment);
         }

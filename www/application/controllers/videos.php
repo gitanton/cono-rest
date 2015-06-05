@@ -57,7 +57,7 @@ class Videos extends REST_Controller
         parent::__construct();
         $this->validate_user();
         $this->load->helper('json');
-        $this->load->model(array('Project', 'Video', 'Comment', 'Hotspot'));
+        $this->load->model(array('Project', 'Video', 'Comment', 'Hotspot', 'Project_Statistic'));
     }
 
     /**
@@ -532,6 +532,7 @@ class Videos extends REST_Controller
             }
             $comment_id = $this->Comment->add($data);
             activity_add_comment_video($comment_id);
+            $this->Project_Statistic->comment_project($video->project_id);
             $comment = decorate_comment($this->Comment->load($comment_id));
             $this->response($comment);
         }

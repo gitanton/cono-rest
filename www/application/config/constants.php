@@ -61,6 +61,9 @@ define("USER_SIGNUP_ERROR_EMAIL_LEVEL", 1);
 define("USER_SIGNUP_ERROR_USERNAME_LEVEL", 2);
 define("USER_SIGNUP_ERROR_USERNAME_EMAIL_LEVEL", 3);
 
+define("PROJECT_STATISTICS_TYPE_VIEW", 1);
+define("PROJECT_STATISTICS_TYPE_COMMENT", 2);
+
 /*
 |--------------------------------------------------------------------------
 | File and Directory Modes

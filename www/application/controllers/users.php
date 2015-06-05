@@ -257,7 +257,6 @@ class Users extends REST_Controller
                 $user->free_trial_expired = !get_subscription_id() && (add_day(FREE_TRIAL_LENGTH, $user->created) < now());
                 $user = $this->decorate_object($user);
 
-
                 $this->response($user);
                 exit;
             }

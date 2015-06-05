@@ -22,6 +22,13 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="created",type="string",format="date",description="The date/time that this invite was created")
  * @SWG\Property(name="used",type="string",format="date",description="The date/time that this invite was used")
  *
+ * @SWG\Model(id="ProjectHistory",required="project_id")
+ * @SWG\Property(name="total_views",type="integer",description="The total number of views for this project")
+ * @SWG\Property(name="total_comments",type="integer",description="The total number of comments for this project")
+ * @SWG\Property(name="total_viewers",type="integer",description="The total number of unique viewers for this project")
+ * @SWG\Property(name="project_id",type="integer",description="The id of the project for whom the invite is provided")
+ * @SWG\Property(name="view_days",type="array",description="An ordered array of the number of views for each day on this project")
+ *
  * @SWG\Resource(
  *     apiVersion="1.0",
  *     swaggerVersion="2.0",
@@ -37,7 +44,7 @@ class Projects extends REST_Controller
         parent::__construct();
         $this->validate_user();
         $this->load->helper('json');
-        $this->load->model(array('Project', 'Project_Invite', 'Template', 'Screen', 'Comment'));
+        $this->load->model(array('Project', 'Project_Invite', 'Template', 'Screen', 'Comment', 'Project_Statistic'));
     }
 
     /**
@@ -106,7 +113,7 @@ class Projects extends REST_Controller
         $this->form_validation->set_rules('templates', 'Templates', 'trim|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
         } else {
             $data = array(
                 'name' => $this->post('name', TRUE),
@@ -118,18 +125,18 @@ class Projects extends REST_Controller
             $templates = $this->post('templates', TRUE);
 
             /* If this is a template project, add the templates to the project that they've chose */
-            if($templates) {
+            if ($templates) {
                 $this->load->library('upload');
 
                 $template_ids = explode(",", $templates);
-                foreach($template_ids as $template_id) {
+                foreach ($template_ids as $template_id) {
                     $template = $this->Template->load_by_uuid(trim($template_id));
-                    if($template) {
+                    if ($template) {
 
                         // Copy the template file to the screens directory so we can link to it
                         $file = file_get_contents(file_url($template->url, FILE_TYPE_TEMPLATE));
                         $file_ext = $this->upload->get_extension($template->url);
-                        if($file) {
+                        if ($file) {
                             $file_name = md5(uniqid(mt_rand())).$file_ext;
                             $full_path = $this->config->item('screen_upload_dir').$file_name;
                             file_put_contents($full_path, $file);
@@ -222,7 +229,7 @@ class Projects extends REST_Controller
         $this->form_validation->set_rules('type_id', 'Type ID', 'trim|integer|xss_clean|callback_validate_project_type');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
         } else {
             $project = validate_project_uuid($uuid);
             /* Validate that they are the team owner */
@@ -247,7 +254,10 @@ class Projects extends REST_Controller
         if ($action && $action === 'comments') {
             $comments = $this->Comment->get_for_project($project->id);
             $this->response(decorate_comments($comments));
+        } else if ($action === 'history') {
+            $this->get_project_history($uuid);
         } else {
+            $this->Project_Statistic->view_project($project->id);
             $this->response($this->decorate_object($project));
         }
     }
@@ -285,10 +295,10 @@ class Projects extends REST_Controller
                 return $this->project_duplicate($uuid);
             } else if ($action == 'invite') {
                 return $this->project_invite($uuid);
-            }  else {
+            } else {
                 json_error('Invalid request, action \''.$action.'\' is not supported', null, 405);
             }
-        }  else {
+        } else {
             json_error('Invalid request, action must be supplied', null, 405);
         }
     }
@@ -357,16 +367,17 @@ class Projects extends REST_Controller
      *
      * Reorders the list of projects for a user
      */
-    public function ordering_post() {
+    public function ordering_post()
+    {
         $this->load->library('form_validation');
         $this->form_validation->set_rules('uuids', 'Project Ids', 'trim|required|xss_clean');
 
         $uuids = json_decode($this->post('uuid', TRUE));
-        if($uuids) {
+        if ($uuids) {
             $i = 0;
-            foreach($uuids as $uuid) {
+            foreach ($uuids as $uuid) {
                 $project_id = $this->Project->get_id($uuid);
-                if($project_id) {
+                if ($project_id) {
                     $this->Project->update_ordering(get_user_id(), $project_id, $i++);
                 }
             }
@@ -500,6 +511,33 @@ class Projects extends REST_Controller
      *   )
      * )
      */
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/projects/{project_uuid}/history/",
+     *   description="API for project actions",
+     * @SWG\Operation(
+     *    method="GET",
+     *    nickname="Project History",
+     *    type="ProjectHistory",
+     *    summary="Returns the history of a project",
+     * @SWG\Parameter(
+     *     name="project_uuid",
+     *     description="The unique ID of the project",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     )
+     *   )
+     * )
+     */
+    private function get_project_history($uuid) {
+        validate_team_read(get_team_id());
+        $project = validate_project_uuid($uuid);
+        $project_history = $this->Project_Statistic->get_project_history($project->id);
+        $this->response($project_history);
+    }
 
     public function validate_project_type($type_id = 0)
     {

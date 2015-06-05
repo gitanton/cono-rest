@@ -162,7 +162,6 @@ class Project extends MY_Model
                 $this->db->query($this->db->insert_string('project_user', $data));
             }
         }
-
     }
 
     /**
