@@ -14,9 +14,9 @@
 | path to your installation.
 |
 */
-$config['base_url'] = 'http://conojoapp.scmreview.com/rest/';
-$config['webapp_url'] = 'http://conojoapp.scmreview.com/';
-$config['signin_url'] = 'http://conojoapp.scmreview.com/';
+$config['base_url'] = 'http://rest.conojo.com/';
+$config['webapp_url'] = 'http://app.conojo.com/';
+$config['signin_url'] = 'http://app.conojo.com/';
 
 $config['site_title'] = 'Conojo';
 
@@ -26,12 +26,10 @@ $config['screen_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/s
 $config['template_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/templates/';
 $config['screen_upload_types'] = 'jpg|png|gif|jpeg';
 
-
 /* 2G max video upload size */
 $config['max_video_upload_size'] = 2000000;
 $config['video_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/videos/';
 $config['video_upload_types'] = 'mp4|mov|avi';
-
 
 $config['notifications_email_from'] = 'Conojo';
 $config['notifications_email'] = 'info@conojo.com';
@@ -45,6 +43,14 @@ $config['google_api_key'] = 'AIzaSyDnGoUa_UuPqYMAvFLiRUZyHVcHOAIXIWM';
 $config['stripe_private_key'] = 'sk_test_E6PXD0mPm8D0ugGrF5Z6ZYC3';
 $config['stripe_public_key'] = 'pk_test_qfSibHadzKvpVKdrPoBwHbGN';
 
+$config['mailgun_key'] = 'key-bd5e77e86054c14bba3e6f88c9dc31bf';
+$config['mailgun_domain'] = 'reviewdev.com';
+
+$config['twilio_phone'] = '+1 415-599-2671';
+$config['twilio_app_sid'] = 'AP07d1a612c9206dfdae2b7e5e2abe64fd';
+$config['twilio_auth_token'] = 'cf35bb56f52ee86283c81ff65b713943';
+$config['twilio_account_sid'] = 'AC49956886473a6038c7f014ac68b4a8f2';
+
 if (IS_TEST) {
     $config['domain_url'] = 'http://conojoapp.scmreview.com/rest';
     $config['base_url'] = 'http://conojoapp.scmreview.com/rest';
@@ -55,12 +61,12 @@ if (IS_TEST) {
     $config['notifications_email'] = 'info@reviewdev.com';
     $config['mailgun_key'] = 'key-bd5e77e86054c14bba3e6f88c9dc31bf';
     $config['mailgun_domain'] = 'reviewdev.com';
-}
 
-$config['twilio_phone'] = '+1 415-599-2671';
-$config['twilio_app_sid'] = 'AP07d1a612c9206dfdae2b7e5e2abe64fd';
-$config['twilio_auth_token'] = 'cf35bb56f52ee86283c81ff65b713943';
-$config['twilio_account_sid'] = 'AC49956886473a6038c7f014ac68b4a8f2';
+    $config['twilio_phone'] = '+1 415-599-2671';
+    $config['twilio_app_sid'] = 'AP07d1a612c9206dfdae2b7e5e2abe64fd';
+    $config['twilio_auth_token'] = 'cf35bb56f52ee86283c81ff65b713943';
+    $config['twilio_account_sid'] = 'AC49956886473a6038c7f014ac68b4a8f2';
+}
 /*
 |--------------------------------------------------------------------------
 | Index File
