@@ -80,7 +80,7 @@ $autoload['helper'] = array('url', 'string', 'date', 'form', 'text', 'object', '
 |
 */
 
-$autoload['config'] = array('s3');
+$autoload['config'] = array();
 
 
 /*

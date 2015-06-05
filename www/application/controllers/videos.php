@@ -574,16 +574,41 @@ class Videos extends REST_Controller
         $this->load->library('upload', $config);
         if ($this->upload->do_upload('file')) {
             $data = $this->upload->data();
-            $insert = array(
-                'creator_id' => get_user_id(),
-                'project_id' => $project->id,
-                'ordering' => $this->Video->get_max_ordering_for_project($project->id) + 1,
-                'url' => $data['file_name'],
-                'file_type' => $data['file_type'],
-                'file_size' => $data['file_size']
+
+            /* Upload to s3 */
+            $client = S3Client::factory(array(
+                'credentials' => array(
+                    'key' => $this->config->item('s3_access_key_id'),
+                    'secret' => $this->config->item('s3_secret')
+                ),
+                'region' => $this->config->item('s3_region'),
+                'version' => $this->config->item('s3_version')
+            ));
+            $object = array(
+                'Bucket' => $this->config->item('s3_bucket'),
+                'Key' => $data['file_name'],
+                'SourceFile' => $data['full_path'],
+                'ACL' => 'public-read'
             );
-            $video = $this->decorate_object($this->Video->load($this->Video->add($insert)));
-            return $video;
+            $result = $client->putObject($object);
+
+            if($result['ObjectURL']) {
+
+                $insert = array(
+                    'creator_id' => get_user_id(),
+                    'project_id' => $project->id,
+                    'ordering' => $this->Video->get_max_ordering_for_project($project->id) + 1,
+                    'url' => $data['file_name'],
+                    'file_type' => $data['file_type'],
+                    'file_size' => $data['file_size']
+                );
+                $video = $this->decorate_object($this->Video->load($this->Video->add($insert)));
+                unlink($data['full_path']);
+                return $video;
+            } else {
+                log_message('info', '[File Add] putObject Result: ' . print_r($result, TRUE));
+                return json_error('File Upload to S3 Failed: ', $result);
+            }
         } else {
             json_error($this->upload->display_errors());
             exit;
@@ -610,16 +635,38 @@ class Videos extends REST_Controller
             $full_path = $this->config->item('video_upload_dir') . $file_name;
             file_put_contents($full_path, $file);
             $file_size = filesize($full_path) / 1000;
-
-            $insert = array(
-                'creator_id' => get_user_id(),
-                'project_id' => $project->id,
-                'ordering' => $this->Video->get_max_ordering_for_project($project->id) + 1,
-                'url' => $file_name,
-                'file_size' => $file_size
+            /* Upload to s3 */
+            $client = S3Client::factory(array(
+                'credentials' => array(
+                    'key' => $this->config->item('s3_access_key_id'),
+                    'secret' => $this->config->item('s3_secret')
+                ),
+                'region' => $this->config->item('s3_region'),
+                'version' => $this->config->item('s3_version')
+            ));
+            $object = array(
+                'Bucket' => $this->config->item('s3_bucket'),
+                'Key' => $file_name,
+                'SourceFile' => $full_path,
+                'ACL' => 'public-read'
             );
-            $video = $this->decorate_object($this->Video->load($this->Video->add($insert)));
-            return $video;
+            $result = $client->putObject($object);
+
+            if($result['ObjectURL']) {
+                $insert = array(
+                    'creator_id' => get_user_id(),
+                    'project_id' => $project->id,
+                    'ordering' => $this->Video->get_max_ordering_for_project($project->id) + 1,
+                    'url' => $file_name,
+                    'file_size' => $file_size
+                );
+                $video = $this->decorate_object($this->Video->load($this->Video->add($insert)));
+                unlink($full_path);
+                return $video;
+            }else {
+                log_message('info', '[File Add] putObject Result: ' . print_r($result, TRUE));
+                return json_error('File Upload to S3 Failed: ', $result);
+            }
         }
     }
 

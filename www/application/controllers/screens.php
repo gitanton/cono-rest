@@ -1,5 +1,6 @@
 <?php
 use Swagger\Annotations as SWG;
+use Aws\S3\S3Client;
 
 /**
  *
@@ -107,9 +108,10 @@ class Screens extends REST_Controller
             exit;
         }
 
-
-        /* Add the activity item to indicate that a screen was added */
-        activity_add_screen($screen->id, get_user_id());
+        if($screen) {
+            /* Add the activity item to indicate that a screen was added */
+            activity_add_screen($screen->id, get_user_id());
+        }
 
         /* Handle the download situation */
         $this->response($this->decorate_object($screen));
@@ -552,18 +554,42 @@ class Screens extends REST_Controller
         $this->load->library('upload', $config);
         if ($this->upload->do_upload('file')) {
             $data = $this->upload->data();
-            $insert = array(
-                'creator_id' => get_user_id(),
-                'project_id' => $project->id,
-                'ordering' => $this->Screen->get_max_ordering_for_project($project->id) + 1,
-                'url' => $data['file_name'],
-                'file_type' => $data['file_type'],
-                'file_size' => $data['file_size'],
-                'image_height' => $data['image_height'],
-                'image_width' => $data['image_width']
+
+            /* Upload to s3 */
+            $client = S3Client::factory(array(
+                'credentials' => array(
+                    'key' => $this->config->item('s3_access_key_id'),
+                    'secret' => $this->config->item('s3_secret')
+                ),
+                'region' => $this->config->item('s3_region'),
+                'version' => $this->config->item('s3_version')
+            ));
+            $object = array(
+                'Bucket' => $this->config->item('s3_bucket'),
+                'Key' => $data['file_name'],
+                'SourceFile' => $data['full_path'],
+                'ACL' => 'public-read'
             );
-            $screen = $this->Screen->load($this->Screen->add($insert));
-            return $screen;
+            $result = $client->putObject($object);
+
+            if($result['ObjectURL']) {
+                $insert = array(
+                    'creator_id' => get_user_id(),
+                    'project_id' => $project->id,
+                    'ordering' => $this->Screen->get_max_ordering_for_project($project->id) + 1,
+                    'url' => $data['file_name'],
+                    'file_type' => $data['file_type'],
+                    'file_size' => $data['file_size'],
+                    'image_height' => $data['image_height'],
+                    'image_width' => $data['image_width']
+                );
+                $screen = $this->Screen->load($this->Screen->add($insert));
+                unlink($data['full_path']);
+                return $screen;
+            } else {
+                log_message('info', '[File Add] putObject Result: ' . print_r($result, TRUE));
+                return json_error('File Upload to S3 Failed: ', $result);
+            }
         } else {
             json_error($this->upload->display_errors());
             exit;
@@ -592,17 +618,40 @@ class Screens extends REST_Controller
             $file_size = filesize($full_path) / 1000;
             $file_dimensions = getimagesize($full_path);
 
-            $insert = array(
-                'creator_id' => get_user_id(),
-                'project_id' => $project->id,
-                'ordering' => $this->Screen->get_max_ordering_for_project($project->id) + 1,
-                'url' => $file_name,
-                'file_size' => $file_size,
-                'image_height' => $file_dimensions[1],
-                'image_width' => $file_dimensions[0]
+            /* Upload to s3 */
+            $client = S3Client::factory(array(
+                'credentials' => array(
+                    'key' => $this->config->item('s3_access_key_id'),
+                    'secret' => $this->config->item('s3_secret')
+                ),
+                'region' => $this->config->item('s3_region'),
+                'version' => $this->config->item('s3_version')
+            ));
+            $object = array(
+                'Bucket' => $this->config->item('s3_bucket'),
+                'Key' => $file_name,
+                'SourceFile' => $full_path,
+                'ACL' => 'public-read'
             );
-            $screen = $this->Screen->load($this->Screen->add($insert));
-            return $screen;
+            $result = $client->putObject($object);
+
+            if($result['ObjectURL']) {
+                $insert = array(
+                    'creator_id' => get_user_id(),
+                    'project_id' => $project->id,
+                    'ordering' => $this->Screen->get_max_ordering_for_project($project->id) + 1,
+                    'url' => $file_name,
+                    'file_size' => $file_size,
+                    'image_height' => $file_dimensions[1],
+                    'image_width' => $file_dimensions[0]
+                );
+                unlink($full_path);
+                $screen = $this->Screen->load($this->Screen->add($insert));
+                return $screen;
+            }else {
+                log_message('info', '[File Add] putObject Result: ' . print_r($result, TRUE));
+                return json_error('File Upload to S3 Failed: ', $result);
+            }
         }
     }
 

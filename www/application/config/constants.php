@@ -1,12 +1,5 @@
 <?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-define("IS_TEST", strpos($_SERVER['SERVER_NAME'], 'scmreview') > 0);
-if(IS_TEST) {
-    define("AUTOLOAD_PATH", $_SERVER['DOCUMENT_ROOT'] . '/rest/vendor/');
-} else {
-    define("AUTOLOAD_PATH", $_SERVER['DOCUMENT_ROOT'] . '/vendor/');
-
-}
 include_once(APPPATH.'version.php');
 
 define("SESS_ADMIN_USER_ID", "admin_user_id");

@@ -66,6 +66,13 @@ if (IS_TEST) {
     $config['twilio_app_sid'] = 'AP07d1a612c9206dfdae2b7e5e2abe64fd';
     $config['twilio_auth_token'] = 'cf35bb56f52ee86283c81ff65b713943';
     $config['twilio_account_sid'] = 'AC49956886473a6038c7f014ac68b4a8f2';
+
+    $config['s3_bucket'] = 'conojostaging';
+    $config['s3_access_key_id'] = 'AKIAI5LC747NGPWZJTQQ';
+    $config['s3_secret'] = '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';
+    $config['s3_url'] = 'https://s3.amazonaws.com/conojostaging/';
+    $config['s3_version'] = '2006-03-01';
+    $config['s3_region'] = 'us-east-1';
 }
 /*
 |--------------------------------------------------------------------------

@@ -1,5 +1,4 @@
 <?php
-require_once(AUTOLOAD_PATH.'autoload.php');
 use Swagger\Annotations as SWG;
 
 /**

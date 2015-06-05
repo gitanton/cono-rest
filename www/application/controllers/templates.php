@@ -96,20 +96,43 @@ class Templates extends REST_Controller
             $this->load->library('upload', $config);
             if ($this->upload->do_upload('file')) {
                 $data = $this->upload->data();
-                $insert = array(
-                    'creator_id' => get_user_id(),
-                    'name' => $this->post('name', TRUE),
-                    'ordering' => $this->Template->get_max_ordering() + 1,
-                    'url' => $data['file_name'],
-                    'file_type' => $data['file_type'],
-                    'file_size' => $data['file_size'],
-                    'image_height' => $data['image_height'],
-                    'image_width' => $data['image_width']
-                );
-                $template = $this->decorate_object($this->Template->load($this->Template->add($insert)));
 
-                /* Handle the download situation */
-                $this->response($template);
+                /* Upload to s3 */
+                $client = S3Client::factory(array(
+                    'credentials' => array(
+                        'key' => $this->config->item('s3_access_key_id'),
+                        'secret' => $this->config->item('s3_secret')
+                    ),
+                    'region' => $this->config->item('s3_region'),
+                    'version' => $this->config->item('s3_version')
+                ));
+                $object = array(
+                    'Bucket' => $this->config->item('s3_bucket'),
+                    'Key' => $data['file_name'],
+                    'SourceFile' => $data['full_path'],
+                    'ACL' => 'public-read'
+                );
+                $result = $client->putObject($object);
+
+                if($result['ObjectURL']) {
+                    $insert = array(
+                        'creator_id' => get_user_id(),
+                        'name' => $this->post('name', TRUE),
+                        'ordering' => $this->Template->get_max_ordering() + 1,
+                        'url' => $data['file_name'],
+                        'file_type' => $data['file_type'],
+                        'file_size' => $data['file_size'],
+                        'image_height' => $data['image_height'],
+                        'image_width' => $data['image_width']
+                    );
+                    $template = $this->decorate_object($this->Template->load($this->Template->add($insert)));
+                    unlink($data['full_path']);
+                    /* Handle the download situation */
+                    $this->response($template);
+                } else {
+                    log_message('info', '[File Add] putObject Result: ' . print_r($result, TRUE));
+                    return json_error('File Upload to S3 Failed: ', $result);
+                }
             }  else {
                 json_error($this->upload->display_errors());
                 exit;

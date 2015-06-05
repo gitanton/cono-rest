@@ -32,9 +32,11 @@ function activity_add_project($project_id, $user_id) {
     $CI->load->model('Project');
 
     $project = $CI->Project->load($project_id);
-    $user = $CI->User->load($user_id);
-    $title = $user->fullname." created a the '".$project->name."' project.";
-    activity_add($user->id, $project->team_id, $project->id, $project->id, ACTIVITY_TYPE_PROJECT_ADD, $title);
+    if($project && $project->team_id) {
+        $user = $CI->User->load($user_id);
+        $title = $user->fullname." created a the '".$project->name."' project.";
+        activity_add($user->id, $project->team_id, $project->id, $project->id, ACTIVITY_TYPE_PROJECT_ADD, $title);
+    }
 }
 
 function activity_update_project($project_id, $user_id) {
@@ -43,9 +45,11 @@ function activity_update_project($project_id, $user_id) {
     $CI->load->model('Project');
 
     $project = $CI->Project->load($project_id);
-    $user = $CI->User->load($user_id);
-    $title = $user->fullname." updated the '".$project->name."' project.";
-    activity_add($user->id, $project->team_id, $project->id, $project->id, ACTIVITY_TYPE_PROJECT_UPDATE, $title);
+    if($project && $project->team_id) {
+        $user = $CI->User->load($user_id);
+        $title = $user->fullname." updated the '".$project->name."' project.";
+        activity_add($user->id, $project->team_id, $project->id, $project->id, ACTIVITY_TYPE_PROJECT_UPDATE, $title);
+    }
 }
 
 function activity_delete_project($project_id, $user_id) {
@@ -54,9 +58,11 @@ function activity_delete_project($project_id, $user_id) {
     $CI->load->model('Project');
 
     $project = $CI->Project->load($project_id);
-    $user = $CI->User->load($user_id);
-    $title = $user->fullname." deleted the '".$project->name."' project.";
-    activity_add($user->id, $project->team_id, $project->id, $project->id, ACTIVITY_TYPE_PROJECT_DELETE, $title);
+    if($project && $project->team_id) {
+        $user = $CI->User->load($user_id);
+        $title = $user->fullname." deleted the '".$project->name."' project.";
+        activity_add($user->id, $project->team_id, $project->id, $project->id, ACTIVITY_TYPE_PROJECT_DELETE, $title);
+    }
 }
 
 /**********************************************
@@ -69,9 +75,11 @@ function activity_add_screen($screen_id, $user_id) {
 
     $screen = $CI->Screen->load($screen_id);
     $project = $CI->Project->load($screen->project_id);
-    $user = $CI->User->load($user_id);
-    $title = $user->fullname." uploaded a new screen to the '".$project->name."' project.";
-    activity_add($user->id, $project->team_id, $project->id, $screen_id, ACTIVITY_TYPE_SCREEN_ADD, $title);
+    if($project && $project->team_id) {
+        $user = $CI->User->load($user_id);
+        $title = $user->fullname." uploaded a new screen to the '".$project->name."' project.";
+        activity_add($user->id, $project->team_id, $project->id, $screen_id, ACTIVITY_TYPE_SCREEN_ADD, $title);
+    }
 }
 
 function activity_update_screen($screen_id, $user_id) {
@@ -81,9 +89,11 @@ function activity_update_screen($screen_id, $user_id) {
 
     $screen = $CI->Screen->load($screen_id);
     $project = $CI->Project->load($screen->project_id);
-    $user = $CI->User->load($user_id);
-    $title = $user->fullname." updated a screen on the '".$project->name."' project.";
-    activity_add($user->id, $project->team_id, $project->id, $screen_id, ACTIVITY_TYPE_SCREEN_UPDATE, $title);
+    if($project && $project->team_id) {
+        $user = $CI->User->load($user_id);
+        $title = $user->fullname." updated a screen on the '".$project->name."' project.";
+        activity_add($user->id, $project->team_id, $project->id, $screen_id, ACTIVITY_TYPE_SCREEN_UPDATE, $title);
+    }
 }
 
 function activity_delete_screen($screen_id, $user_id) {
@@ -93,9 +103,11 @@ function activity_delete_screen($screen_id, $user_id) {
 
     $screen = $CI->Screen->load($screen_id);
     $project = $CI->Project->load($screen->project_id);
-    $user = $CI->User->load($user_id);
-    $title = $user->fullname." deleted a screen from the '".$project->name."' project.";
-    activity_add($user->id, $project->team_id, $project->id, $screen_id, ACTIVITY_TYPE_SCREEN_DELETE, $title);
+    if($project && $project->team_id) {
+        $user = $CI->User->load($user_id);
+        $title = $user->fullname." deleted a screen from the '".$project->name."' project.";
+        activity_add($user->id, $project->team_id, $project->id, $screen_id, ACTIVITY_TYPE_SCREEN_DELETE, $title);
+    }
 }
 
 
@@ -140,8 +152,10 @@ function activity_add_message($message_id) {
     $message = $CI->Message->load($message_id);
     $user = $CI->User->load($message->sender_id);
     $project = $CI->Project->load($message->project_id);
-    $title = $user->fullname." has sent a new message on the '".$project->name."' Project.";
-    activity_add($user->id, $project->team_id, $project->id, $message->id, ACTIVITY_TYPE_MESSAGE_ADD, $title);
+    if($project && $project->team_id) {
+        $title = $user->fullname." has sent a new message on the '".$project->name."' Project.";
+        activity_add($user->id, $project->team_id, $project->id, $message->id, ACTIVITY_TYPE_MESSAGE_ADD, $title);
+    }
 }
 
 function activity_reply_message($message_id) {
@@ -151,8 +165,10 @@ function activity_reply_message($message_id) {
     $message = $CI->Message->load($message_id);
     $user = $CI->User->load($message->sender_id);
     $project = $CI->Project->load($message->project_id);
-    $title = $user->fullname." has sent a new reply on the '".$project->name."' Project.";
-    activity_add($user->id, $project->team_id, $project->id, $message->id, ACTIVITY_TYPE_MESSAGE_REPLY, $title);
+    if($project && $project->team_id) {
+        $title = $user->fullname." has sent a new reply on the '".$project->name."' Project.";
+        activity_add($user->id, $project->team_id, $project->id, $message->id, ACTIVITY_TYPE_MESSAGE_REPLY, $title);
+    }
 }
 
 function activity_delete_message($message_id) {
@@ -162,8 +178,10 @@ function activity_delete_message($message_id) {
     $message = $CI->Message->load($message_id);
     $user = $CI->User->load($message->sender_id);
     $project = $CI->Project->load($message->project_id);
-    $title = $user->fullname." deleted a message on the '".$project->name."' Project.";
-    activity_add($user->id, $project->team_id, $project->id, $message->id, ACTIVITY_TYPE_MESSAGE_DELETE, $title);
+    if($project && $project->team_id) {
+        $title = $user->fullname." deleted a message on the '".$project->name."' Project.";
+        activity_add($user->id, $project->team_id, $project->id, $message->id, ACTIVITY_TYPE_MESSAGE_DELETE, $title);
+    }
 }
 
 /**********************************************
@@ -178,8 +196,11 @@ function activity_add_hotspot_video($hotspot_id) {
     $user = $CI->User->load($hotspot->creator_id);
     $video = $CI->Video->load($hotspot->video_id);
     $project = $CI->Project->load($video->project_id);
-    $title = $user->fullname." added a hotspot to a video on the '".$project->name."' Project.";
-    activity_add($user->id, $project->team_id, $project->id, $hotspot->id, ACTIVITY_TYPE_HOTSPOT_VIDEO_ADD, $title);
+
+    if($project && $project->team_id) {
+        $title = $user->fullname." added a hotspot to a video on the '".$project->name."' Project.";
+        activity_add($user->id, $project->team_id, $project->id, $hotspot->id, ACTIVITY_TYPE_HOTSPOT_VIDEO_ADD, $title);
+    }
 }
 
 function activity_add_hotspot_screen($hotspot_id) {
@@ -202,8 +223,11 @@ function activity_delete_hotspot($hotspot_id) {
     $user = $CI->User->load($hotspot->creator_id);
     $screen = $CI->Screen->load($hotspot->screen_id);
     $project = $CI->Project->load($screen->project_id);
-    $title = $user->fullname." deleted a hotspot on the '".$project->name."' Project.";
-    activity_add($user->id, $project->team_id, $project->id, $hotspot->id, ACTIVITY_TYPE_HOTSPOT_SCREEN_ADD, $title);
+
+    if($project && $project->team_id) {
+        $title = $user->fullname." deleted a hotspot on the '".$project->name."' Project.";
+        activity_add($user->id, $project->team_id, $project->id, $hotspot->id, ACTIVITY_TYPE_HOTSPOT_SCREEN_ADD, $title);
+    }
 }
 
 /**********************************************
@@ -217,8 +241,11 @@ function activity_add_comment_video($comment_id) {
     $comment = $CI->Comment->load($comment_id);
     $user = $CI->User->load($comment->creator_id);
     $project = $CI->Project->load($comment->project_id);
-    $title = $user->fullname." added a comment to a video on the '".$project->name."' Project.";
-    activity_add($user->id, $project->team_id, $project->id, $comment->id, ACTIVITY_TYPE_COMMENT_ADD, $title);
+
+    if($project && $project->team_id) {
+        $title = $user->fullname." added a comment to a video on the '".$project->name."' Project.";
+        activity_add($user->id, $project->team_id, $project->id, $comment->id, ACTIVITY_TYPE_COMMENT_ADD, $title);
+    }
 }
 
 function activity_add_comment_screen($comment_id) {
@@ -228,8 +255,11 @@ function activity_add_comment_screen($comment_id) {
     $comment = $CI->Comment->load($comment_id);
     $user = $CI->User->load($comment->creator_id);
     $project = $CI->Project->load($comment->project_id);
-    $title = $user->fullname." added a comment to a screen on the '".$project->name."' Project.";
-    activity_add($user->id, $project->team_id, $project->id, $comment->id, ACTIVITY_TYPE_COMMENT_ADD, $title);
+
+    if($project && $project->team_id) {
+        $title = $user->fullname." added a comment to a screen on the '".$project->name."' Project.";
+        activity_add($user->id, $project->team_id, $project->id, $comment->id, ACTIVITY_TYPE_COMMENT_ADD, $title);
+    }
 }
 
 /**********************************************
@@ -243,8 +273,11 @@ function activity_add_meeting($meeting_id) {
     $meeting = $CI->Meeting->load($meeting_id);
     $user = $CI->User->load($meeting->creator_id);
     $project = $CI->Project->load($meeting->project_id);
-    $title = $user->fullname." scheduled a meeting on the '".$project->name."' Project.";
-    activity_add($user->id, $project->team_id, $project->id, $meeting->id, ACTIVITY_TYPE_MEETING_ADD, $title);
+
+    if($project && $project->team_id) {
+        $title = $user->fullname." scheduled a meeting on the '".$project->name."' Project.";
+        activity_add($user->id, $project->team_id, $project->id, $meeting->id, ACTIVITY_TYPE_MEETING_ADD, $title);
+    }
 }
 
 function activity_delete_meeting($meeting_id) {
@@ -256,7 +289,10 @@ function activity_delete_meeting($meeting_id) {
     $meeting = $CI->Meeting->load($meeting_id);
     $user = $CI->User->load($meeting->creator_id);
     $project = $CI->Project->load($meeting->project_id);
-    $title = $user->fullname." deleted a hotspot on the '".$project->name."' Project.";
-    activity_add($user->id, $project->team_id, $project->id, $meeting->id, ACTIVITY_TYPE_MEETING_DELETE, $title);
+
+    if($project && $project->team_id) {
+        $title = $user->fullname." deleted a hotspot on the '".$project->name."' Project.";
+        activity_add($user->id, $project->team_id, $project->id, $meeting->id, ACTIVITY_TYPE_MEETING_DELETE, $title);
+    }
 }
 ?>
