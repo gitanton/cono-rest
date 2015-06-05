@@ -25,7 +25,8 @@ if(IS_TEST) {
     define('ENVIRONMENT', 'development');
     define("AUTOLOAD_PATH", $_SERVER['DOCUMENT_ROOT'] . '/rest/vendor/');
 } else {
-    define('ENVIRONMENT', 'production');
+    //define('ENVIRONMENT', 'production');
+    define('ENVIRONMENT', 'development');
     define("AUTOLOAD_PATH", $_SERVER['DOCUMENT_ROOT'] . '/vendor/');
 }
 require_once(AUTOLOAD_PATH.'autoload.php');
