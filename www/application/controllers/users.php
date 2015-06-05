@@ -170,7 +170,11 @@ class Users extends REST_Controller
                 $user->team_id = $team_id;
             }
 
-            notify_new_user($user->id, $this->post('password', TRUE));
+            try {
+                notify_new_user($user->id, $this->post('password', TRUE));
+            } catch(Exception $e) {
+                log_message('error', "Error while notifying new user: ".$e->getMessage());
+            }
             $this->response($this->decorate_object($user));
         }
     }
