@@ -27,7 +27,7 @@ if(IS_TEST) {
 } else {
     //define('ENVIRONMENT', 'production');
     define('ENVIRONMENT', 'development');
-    define("AUTOLOAD_PATH", $_SERVER['DOCUMENT_ROOT'] . '/vendor/');
+    define("AUTOLOAD_PATH", $_SERVER['DOCUMENT_ROOT'] . 'vendor/');
 }
 require_once(AUTOLOAD_PATH.'autoload.php');
 /*
