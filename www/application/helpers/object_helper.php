@@ -99,7 +99,9 @@ function clean_user($user)
     unset($user->deleted);
     unset($user->inactive);
 
-    $user->avatar = file_url($user->avatar);
+    if(isset($user->avatar)) {
+        $user->avatar = file_url($user->avatar);
+    }
 
     return $user;
 }
