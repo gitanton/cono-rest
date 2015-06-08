@@ -16,7 +16,7 @@ $msg = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
           style="border-spacing: 0; font-size: 100%; border: 0; margin: 0; padding: 0; border-spacing: 0; width: 580px; min-width: 370px;margin-top:20px" cellspacing="0">
           <tr>
             <td align="left">
-              <a href="' . $CI->config->item('signin_url') . '"><img src="' . site_url('assets/images/logo-account.png') . '" width="227" height="47"/></a>
+              <a href="' . $CI->config->item('signin_url') . '"><img src="' . site_url('assets/images/logo.png') . '" width="233" height="48"/></a>
             </td>
           </tr>
         </table>
