@@ -17,6 +17,19 @@ use Aws\S3\S3Client;
  * @SWG\Property(name="last_login",type="string",format="date",description="The date/time of the last login of the user")
  * @SWG\Property(name="timezone",type="string",format="date",description="The timezone that the user belongs to")
  *
+ * @SWG\Model(id="Invoice",required="date")
+ * @SWG\Property(name="date",type="string",format="date",description="The date of the invoice")
+ * @SWG\Property(name="period_start",type="string",format="date",description="The date of the start of the billing period")
+ * @SWG\Property(name="period_end",type="string",format="date",description="The date of the end of the billing period")
+ * @SWG\Property(name="subtotal",type="float",description="The subtotal of the invoice")
+ * @SWG\Property(name="total",type="float",description="The total of the invoice")
+ * @SWG\Property(name="paid",type="boolean",description="Whether the invoice was successful or not")
+ * @SWG\Property(name="attempt_count",type="integer",description="The number of times payment was attempted")
+ * @SWG\Property(name="amount_due",type="float",description="The total amount due for the billing cycle")
+ * @SWG\Property(name="discount",type="float",description="The amount of any discount applied to the invoice")
+ * @SWG\Property(name="tax_percent",type="string",description="The percent of tax applied to the invoice")
+ * @SWG\Property(name="tax",type="float",description="The amount of tax applied to the invoice")
+ *
  * @SWG\Resource(
  *     apiVersion="1.0",
  *     swaggerVersion="2.0",
@@ -484,6 +497,41 @@ class Users extends REST_Controller
             }
         }
         json_error('Unable to find subscription');
+    }
+
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/billing_history",
+     *   description="API for user actions",
+     * @SWG\Operation(
+     *    method="GET",
+     *    type="array[Invoice]",
+     *    summary="Retrieve a user's billing history",
+     *   )
+     * )
+     */
+    public function billing_history_get() {
+        $this->validate_user();
+        $this->load->model(array('Plan', 'Subscription'));
+        $this->load->helper('notification');
+        \Stripe\Stripe::setApiKey($this->config->item('stripe_private_key'));
+        $subscription = $this->Subscription->load_by_user_id(get_user_id());
+        if($subscription) {
+            try {
+                $invoices = \Stripe\Invoice::all(array("customer" => $subscription->stripe_customer_id, "limit" => 12));
+                //array_print($invoices);
+            } catch(Exception $e) {
+                log_message('error', 'Exception while retrieving billing history: '.$e->getMessage());
+                json_error('We experienced an error while retrieving your billing history: '.$e->getMessage());
+                return;
+            }
+            $this->response(decorate_invoices($invoices->data));
+        } else {
+            $this->response(array());
+        }
+
     }
 
 

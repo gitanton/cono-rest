@@ -325,4 +325,38 @@ function decorate_template($object)
     return $object;
 }
 
+/**
+ * Converts an array of stripe invoice objects into usable invoice objects for the billing history
+ * @param $objects
+ * @return array
+ */
+function decorate_invoices($objects) {
+    $updated = array();
+    foreach ($objects as $object) {
+        $updated[] = decorate_invoice($object);
+    }
+    return $updated;
+}
+
+/**
+ * Converts a stripe invoice into a friendlier json object
+ * @param $object
+ */
+function decorate_invoice($object) {
+    unset($object->id, $object->customer, $object->livemode, $object->webhooks_delivered_at, $object->charge,
+        $object->application_fee, $object->subscription, $object->attempted, $object->closed, $object->forgiven,
+        $object->lines, $object->object, $object->starting_balance, $object->ending_balance, $object->next_payment_attempt,
+        $object->metadata, $object->statement_descriptor, $object->description, $object->receipt_number);
+
+    $object->subtotal = $object->subtotal / 100;
+    $object->total = $object->total / 100;
+    $object->amount_due = $object->amount_due / 100;
+    $object->tax = $object->tax / 100;
+    $object->date = timestamp_to_mysqldatetime($object->date);
+    $object->period_start = timestamp_to_mysqldatetime($object->period_start);
+    $object->period_end = timestamp_to_mysqldatetime($object->period_end);
+
+    return $object->__toArray();
+}
+
 ?>

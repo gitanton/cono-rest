@@ -22,13 +22,25 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="created",type="string",format="date",description="The date/time that this invite was created")
  * @SWG\Property(name="used",type="string",format="date",description="The date/time that this invite was used")
  *
+ * @SWG\Model(id="ProjectHistoryViewer",required="uuid")
+ * @SWG\Property(name="uuid",type="string",description="The uuid of the user")
+ * @SWG\Property(name="avatar",type="string",description="The avatar of the user")
+ * @SWG\Property(name="fullname",type="string",description="The fullname of the user")
+ * @SWG\Property(name="email",type="string",description="The email of the user")
+ * @SWG\Property(name="username",type="string",description="The username of the user")
+ * @SWG\Property(name="created",type="string",format="date",description="The date that the user viewed the project")
+ *
+ * @SWG\Model(id="ProjectHistoryDay",required="count")
+ * @SWG\Property(name="created",type="string",format="date",description="The date that the project was viewed")
+ * @SWG\Property(name="count",type="integer",description="The number of times the project was viewed that day")
+ *
  * @SWG\Model(id="ProjectHistory",required="project_id")
  * @SWG\Property(name="total_views",type="integer",description="The total number of views for this project")
  * @SWG\Property(name="total_comments",type="integer",description="The total number of comments for this project")
  * @SWG\Property(name="total_viewers",type="integer",description="The total number of unique viewers for this project")
  * @SWG\Property(name="project_id",type="integer",description="The id of the project for whom the invite is provided")
- * @SWG\Property(name="view_days",type="array",description="An ordered array of the number of views for each day on this project")
- * @SWG\Property(name="viewers",type="array[User]",description="An ordered array of the viewers of this project")
+ * @SWG\Property(name="view_days",type="array",@SWG\Items("ProjectHistoryDay"),description="An ordered array of the number of views for each day on this project")
+ * @SWG\Property(name="viewers",type="array",@SWG\Items("ProjectHistoryViewer"),description="An ordered array of the viewers of this project")
  *
  * @SWG\Resource(
  *     apiVersion="1.0",

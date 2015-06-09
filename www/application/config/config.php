@@ -62,8 +62,8 @@ if (IS_TEST) {
     $config['domain_url'] = 'http://conojoapp.scmreview.com/rest';
     $config['base_url'] = 'http://conojoapp.scmreview.com/rest';
 
-    $config['stripe_private_key'] = 'sk_test_wsP0hBt1APFWkNdOq4xtL7VH';
-    $config['stripe_public_key'] = 'pk_test_Ch4vFXIXXtpOJxV29t030Hdd';
+    $config['stripe_private_key'] = 'sk_test_E6PXD0mPm8D0ugGrF5Z6ZYC3';
+    $config['stripe_public_key'] = 'pk_test_qfSibHadzKvpVKdrPoBwHbGN';
 
     $config['notifications_email'] = 'info@reviewdev.com';
     $config['mailgun_key'] = 'key-bd5e77e86054c14bba3e6f88c9dc31bf';
