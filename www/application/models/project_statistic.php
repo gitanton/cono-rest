@@ -17,7 +17,17 @@ class Project_Statistic extends MY_Model
         $project_history->total_comments = $this->get_project_total($project_id, PROJECT_STATISTICS_TYPE_COMMENT);
         $project_history->total_viewers = $this->get_project_total_viewers($project_id);
         $project_history->view_days = $this->get_project_view_days($project_id);
+        $project_history->viewers = $this->get_project_viewers($project_id);
         return $project_history;
+    }
+
+    function get_project_viewers($project_id=0) {
+        $sql = "SELECT u.uuid, u.avatar, u.fullname, u.email, u.username, ps.created from user u, ".$this->get_scope()
+            ." ps where ps.project_id = ? and ps.user_id = u.id "
+            ." order by ps.created desc limit 0, 100 ";
+        $query = $this->db->query($sql, array($project_id));
+        return $query->result();
+
     }
 
     /**

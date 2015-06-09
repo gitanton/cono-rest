@@ -28,6 +28,7 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="total_viewers",type="integer",description="The total number of unique viewers for this project")
  * @SWG\Property(name="project_id",type="integer",description="The id of the project for whom the invite is provided")
  * @SWG\Property(name="view_days",type="array",description="An ordered array of the number of views for each day on this project")
+ * @SWG\Property(name="viewers",type="array[User]",description="An ordered array of the viewers of this project")
  *
  * @SWG\Resource(
  *     apiVersion="1.0",

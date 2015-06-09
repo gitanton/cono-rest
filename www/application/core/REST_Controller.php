@@ -148,7 +148,7 @@ abstract class REST_Controller extends CI_Controller
         parent::__construct();
 
         $method = $_SERVER['REQUEST_METHOD'];
-        if($method == "OPTIONS") {
+        if ($method == "OPTIONS") {
             die();
         }
 
@@ -167,8 +167,8 @@ abstract class REST_Controller extends CI_Controller
         $this->request->method = $this->_detect_method();
 
         // Create argument container, if nonexistent
-        if (!isset($this->{'_' . $this->request->method . '_args'})) {
-            $this->{'_' . $this->request->method . '_args'} = array();
+        if (!isset($this->{'_'.$this->request->method.'_args'})) {
+            $this->{'_'.$this->request->method.'_args'} = array();
         }
 
         // Set up our GET variables
@@ -185,17 +185,17 @@ abstract class REST_Controller extends CI_Controller
         // Some Methods cant have a body
         $this->request->body = NULL;
 
-        $this->{'_parse_' . $this->request->method}();
+        $this->{'_parse_'.$this->request->method}();
 
         // Now we know all about our request, let's try and parse the body if it exists
         if ($this->request->format and $this->request->body) {
             $this->request->body = $this->format->factory($this->request->body, $this->request->format)->to_array();
             // Assign payload arguments to proper method container
-            $this->{'_' . $this->request->method . '_args'} = $this->request->body;
+            $this->{'_'.$this->request->method.'_args'} = $this->request->body;
         }
 
         // Merge both for one mega-args variable
-        $this->_args = array_merge($this->_get_args, $this->_put_args, $this->_post_args, $this->_delete_args, $this->{'_' . $this->request->method . '_args'});
+        $this->_args = array_merge($this->_get_args, $this->_put_args, $this->_post_args, $this->_delete_args, $this->{'_'.$this->request->method.'_args'});
 
         // Which format should the data be returned in?
         $this->response = new stdClass();
@@ -216,8 +216,7 @@ abstract class REST_Controller extends CI_Controller
                 $this->_prepare_basic_auth();
             } elseif ($this->config->item('rest_auth') == 'digest') {
                 $this->_prepare_digest_auth();
-            }
-            elseif ($this->config->item('rest_ip_whitelist_enabled')) {
+            } elseif ($this->config->item('rest_ip_whitelist_enabled')) {
                 $this->_check_whitelist_auth();
             }
         }
@@ -259,12 +258,12 @@ abstract class REST_Controller extends CI_Controller
             $this->response(array('status' => FALSE, 'error' => 'Unsupported protocol'), 403);
         }
 
-        $pattern = '/^(.*)\.(' . implode('|', array_keys($this->_supported_formats)) . ')$/';
+        $pattern = '/^(.*)\.('.implode('|', array_keys($this->_supported_formats)).')$/';
         if (preg_match($pattern, $object_called, $matches)) {
             $object_called = $matches[1];
         }
 
-        $controller_method = $object_called . '_' . $this->request->method;
+        $controller_method = $object_called.'_'.$this->request->method;
 
         // Do we want to log this method (if allowed by config)?
         $log_method = !(isset($this->methods[$controller_method]['log']) AND $this->methods[$controller_method]['log'] == FALSE);
@@ -363,32 +362,31 @@ abstract class REST_Controller extends CI_Controller
             is_numeric($http_code) OR $http_code = 200;
 
             // If the format method exists, call and return the output in that format
-            if (method_exists($this, '_format_' . $this->response->format)) {
+            if (method_exists($this, '_format_'.$this->response->format)) {
                 // Set the correct format header
-                header('Content-Type: ' . $this->_supported_formats[$this->response->format]);
+                header('Content-Type: '.$this->_supported_formats[$this->response->format]);
 
-                $output = $this->{'_format_' . $this->response->format}($data);
+                $output = $this->{'_format_'.$this->response->format}($data);
             } // If the format method exists, call and return the output in that format
-            elseif (method_exists($this->format, 'to_' . $this->response->format)) {
+            elseif (method_exists($this->format, 'to_'.$this->response->format)) {
                 // Set the correct format header
-                header('Content-Type: ' . $this->_supported_formats[$this->response->format]);
+                header('Content-Type: '.$this->_supported_formats[$this->response->format]);
 
-                $output = $this->format->factory($data)->{'to_' . $this->response->format}();
-            }
-
-            // Format not supported, output directly
+                $output = $this->format->factory($data)->{'to_'.$this->response->format}();
+            } // Format not supported, output directly
             else {
                 $output = $data;
             }
         }
 
-        header('HTTP/1.1: ' . $http_code);
-        header('Status: ' . $http_code);
+        header('HTTP/1.1: '.$http_code);
+        header('Status: '.$http_code);
 
-        $http_origin = $_SERVER['HTTP_ORIGIN'];
-        if ($http_origin == "http://localhost:9000" || $http_origin == "http://app.conojo.com" || $http_origin == "http://conojoapp.scmreview.com")
-        {
-            header("Access-Control-Allow-Origin: $http_origin");
+        if (isset($_SERVER['HTTP_ORIGIN'])) {
+            $http_origin = $_SERVER['HTTP_ORIGIN'];
+            if ($http_origin == "http://localhost:9000" || $http_origin == "http://app.conojo.com" || $http_origin == "http://conojoapp.scmreview.com") {
+                header("Access-Control-Allow-Origin: $http_origin");
+            }
         }
 
         // If zlib.output_compression is enabled it will compress the output,
@@ -396,7 +394,7 @@ abstract class REST_Controller extends CI_Controller
         // the reduction, causing the browser to hang waiting for more data.
         // We'll just skip content-length in those cases.
         if (!$this->_zlib_oc && !$CFG->item('compress_output')) {
-            header('Content-Length: ' . strlen($output));
+            header('Content-Length: '.strlen($output));
         }
 
         exit($output);
@@ -445,7 +443,7 @@ abstract class REST_Controller extends CI_Controller
      */
     protected function _detect_output_format()
     {
-        $pattern = '/\.(' . implode('|', array_keys($this->_supported_formats)) . ')$/';
+        $pattern = '/\.('.implode('|', array_keys($this->_supported_formats)).')$/';
 
         // Check if a file extension is used
         if (preg_match($pattern, $this->uri->uri_string(), $matches)) {
@@ -519,7 +517,7 @@ abstract class REST_Controller extends CI_Controller
             }
         }
 
-        if (in_array($method, $this->allowed_http_methods) && method_exists($this, '_parse_' . $method)) {
+        if (in_array($method, $this->allowed_http_methods) && method_exists($this, '_parse_'.$method)) {
             return $method;
         }
 
@@ -539,7 +537,7 @@ abstract class REST_Controller extends CI_Controller
         $api_key_variable = config_item('rest_key_name');
 
         // Work out the name of the SERVER entry based on config
-        $key_name = 'HTTP_' . strtoupper(str_replace('-', '_', $api_key_variable));
+        $key_name = 'HTTP_'.strtoupper(str_replace('-', '_', $api_key_variable));
 
         $this->rest->key = NULL;
         $this->rest->level = NULL;
@@ -914,7 +912,7 @@ abstract class REST_Controller extends CI_Controller
         $ldappass = $this->config->item('bindpw', 'ldap');
         $ldapbasedn = $this->config->item('basedn', 'ldap');
 
-        log_message('debug', 'LDAP Auth: Connect to ' . $ldaphost);
+        log_message('debug', 'LDAP Auth: Connect to '.$ldaphost);
 
         $ldapconfig['authrealm'] = $this->config->item('domain', 'ldap');
 
@@ -923,11 +921,11 @@ abstract class REST_Controller extends CI_Controller
 
         if ($ldapconn) {
 
-            log_message('debug', 'Setting timeout to ' . $ldaptimeout . ' seconds');
+            log_message('debug', 'Setting timeout to '.$ldaptimeout.' seconds');
 
             ldap_set_option($ldapconn, LDAP_OPT_NETWORK_TIMEOUT, $ldaptimeout);
 
-            log_message('debug', 'LDAP Auth: Binding to ' . $ldaphost . ' with dn ' . $ldaprdn);
+            log_message('debug', 'LDAP Auth: Binding to '.$ldaphost.' with dn '.$ldaprdn);
 
             // binding to ldap server
             $ldapbind = ldap_bind($ldapconn, $ldaprdn, $ldappass);
@@ -944,12 +942,12 @@ abstract class REST_Controller extends CI_Controller
 
         // search for user
         if (($res_id = ldap_search($ldapconn, $ldapbasedn, "uid=$username")) == FALSE) {
-            log_message('error', 'LDAP Auth: User ' . $username . ' not found in search');
+            log_message('error', 'LDAP Auth: User '.$username.' not found in search');
             return FALSE;
         }
 
         if (ldap_count_entries($ldapconn, $res_id) != 1) {
-            log_message('error', 'LDAP Auth: failure, username ' . $username . 'found more than once');
+            log_message('error', 'LDAP Auth: failure, username '.$username.'found more than once');
             return FALSE;
         }
 
@@ -965,11 +963,11 @@ abstract class REST_Controller extends CI_Controller
 
         // User found, could not authenticate as user
         if (($link_id = ldap_bind($ldapconn, $user_dn, $password)) == FALSE) {
-            log_message('error', 'LDAP Auth: failure, username/password did not match: ' . $user_dn);
+            log_message('error', 'LDAP Auth: failure, username/password did not match: '.$user_dn);
             return FALSE;
         }
 
-        log_message('debug', 'LDAP Auth: Success ' . $user_dn . ' authenticated successfully');
+        log_message('debug', 'LDAP Auth: Success '.$user_dn.' authenticated successfully');
 
         $this->_user_ldap_dn = $user_dn;
         ldap_close($ldapconn);
@@ -1056,8 +1054,7 @@ abstract class REST_Controller extends CI_Controller
             $digest_string = $this->input->server('PHP_AUTH_DIGEST');
         } elseif ($this->input->server('HTTP_AUTHORIZATION')) {
             $digest_string = $this->input->server('HTTP_AUTHORIZATION');
-        }
-        else {
+        } else {
             $digest_string = "";
         }
 
@@ -1079,9 +1076,9 @@ abstract class REST_Controller extends CI_Controller
         $valid_pass = $valid_logins[$digest['username']];
 
         // This is the valid response expected
-        $A1 = md5($digest['username'] . ':' . $this->config->item('rest_realm') . ':' . $valid_pass);
-        $A2 = md5(strtoupper($this->request->method) . ':' . $digest['uri']);
-        $valid_response = md5($A1 . ':' . $digest['nonce'] . ':' . $digest['nc'] . ':' . $digest['cnonce'] . ':' . $digest['qop'] . ':' . $A2);
+        $A1 = md5($digest['username'].':'.$this->config->item('rest_realm').':'.$valid_pass);
+        $A2 = md5(strtoupper($this->request->method).':'.$digest['uri']);
+        $valid_response = md5($A1.':'.$digest['nonce'].':'.$digest['nc'].':'.$digest['cnonce'].':'.$digest['qop'].':'.$A2);
 
         if ($digest['response'] != $valid_response) {
             header('HTTP/1.0 401 Unauthorized');
@@ -1116,9 +1113,9 @@ abstract class REST_Controller extends CI_Controller
     protected function _force_login($nonce = '')
     {
         if ($this->config->item('rest_auth') == 'basic') {
-            header('WWW-Authenticate: Basic realm="' . $this->config->item('rest_realm') . '"');
+            header('WWW-Authenticate: Basic realm="'.$this->config->item('rest_realm').'"');
         } elseif ($this->config->item('rest_auth') == 'digest') {
-            header('WWW-Authenticate: Digest realm="' . $this->config->item('rest_realm') . '", qop="auth", nonce="' . $nonce . '", opaque="' . md5($this->config->item('rest_realm')) . '"');
+            header('WWW-Authenticate: Digest realm="'.$this->config->item('rest_realm').'", qop="auth", nonce="'.$nonce.'", opaque="'.md5($this->config->item('rest_realm')).'"');
         }
 
         $this->response(array('status' => FALSE, 'error' => 'Not authorized'), 401);
@@ -1151,19 +1148,20 @@ abstract class REST_Controller extends CI_Controller
      */
     protected function _format_jsonp($data = array())
     {
-        return $this->get('callback') . '(' . json_encode($data) . ')';
+        return $this->get('callback').'('.json_encode($data).')';
     }
-
 
 
     /*** MY STUFF ****/
 
     /* Data Table Stuff */
-    protected function get_grid_filter() {
+    protected function get_grid_filter()
+    {
         return $this->post('sSearch');
     }
 
-    protected function get_grid_limit() {
+    protected function get_grid_limit()
+    {
         $limit = intval($this->post('iDisplayLength'));
         if (!$limit) {
             $limit = $this->config->item('page_size');
@@ -1171,7 +1169,8 @@ abstract class REST_Controller extends CI_Controller
         return $limit;
     }
 
-    protected function get_grid_ordering() {
+    protected function get_grid_ordering()
+    {
         $sort = $this->post('iSortCol_0');
         if ($sort || $sort === "0") {
             $ordering = array();
@@ -1190,14 +1189,15 @@ abstract class REST_Controller extends CI_Controller
         return intval($this->post('iDisplayStart'));
     }
 
-    protected function get_put_fields($fields) {
+    protected function get_put_fields($fields)
+    {
         $data = array();
-        foreach($fields as $field=>$datatype) {
+        foreach ($fields as $field => $datatype) {
             $xss_clean = true;
-            if($datatype==='raw') {
+            if ($datatype === 'raw') {
                 $xss_clean = false;
             }
-            if($this->put($field, $xss_clean)!==FALSE) {
+            if ($this->put($field, $xss_clean) !== FALSE) {
                 $data[$field] = convert_field($this->put($field, $xss_clean), $datatype);
             }
         }
@@ -1205,14 +1205,15 @@ abstract class REST_Controller extends CI_Controller
         return $data;
     }
 
-    protected function get_post_fields($fields) {
+    protected function get_post_fields($fields)
+    {
         $data = array();
-        foreach($fields as $field=>$datatype) {
+        foreach ($fields as $field => $datatype) {
             $xss_clean = true;
-            if($datatype==='raw') {
+            if ($datatype === 'raw') {
                 $xss_clean = false;
             }
-            if($this->post($field, $xss_clean)!==FALSE) {
+            if ($this->post($field, $xss_clean) !== FALSE) {
                 $data[$field] = convert_field($this->post($field, $xss_clean), $datatype);
             }
         }
@@ -1220,53 +1221,59 @@ abstract class REST_Controller extends CI_Controller
         return $data;
     }
 
-    protected function validate_admin() {
+    protected function validate_admin()
+    {
         $user_id = $this->session->userdata(SESS_ADMIN_USER_ID);
-        if(!intval($user_id)) {
+        if (!intval($user_id)) {
             http_response_code(401);
             exit;
         }
     }
 
-    protected function validate_user() {
+    protected function validate_user()
+    {
         $user_id = $this->session->userdata(SESS_USER_ID);
-        if(!intval($user_id)) {
+        if (!intval($user_id)) {
             http_response_code(401);
             exit;
         }
     }
 
-    protected function validate_customer_counselor($uuid = '', $customer_id = 0) {
+    protected function validate_customer_counselor($uuid = '', $customer_id = 0)
+    {
 
-        if(!$customer_id && $uuid) {
+        if (!$customer_id && $uuid) {
             $customer_id = $this->User->get_id($uuid);
         }
         $counselor_id = get_user_id();
 
         $user_counselor = $this->User->load_user_counselor($customer_id, $counselor_id);
-        if($user_counselor) {
+        if ($user_counselor) {
             return true;
         }
         http_response_code(403);
         exit;
     }
 
-    protected function validate_user_owner($object, $user_id) {
-        if($object->id && $object->user_id!=$user_id) {
+    protected function validate_user_owner($object, $user_id)
+    {
+        if ($object->id && $object->user_id != $user_id) {
             http_response_code(403);
             exit;
         }
     }
 
-    protected function decorate_objects($objects) {
+    protected function decorate_objects($objects)
+    {
         $updated = array();
-        foreach($objects as $object) {
+        foreach ($objects as $object) {
             $updated[] = $this->decorate_object($object);
         }
         return $updated;
     }
 
-    protected function decorate_object($object) {
+    protected function decorate_object($object)
+    {
         return $object;
     }
 
