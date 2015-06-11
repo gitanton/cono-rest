@@ -226,7 +226,7 @@ function activity_delete_hotspot($hotspot_id) {
 
     if($project && $project->team_id) {
         $title = $user->fullname." deleted a hotspot on the '".$project->name."' Project.";
-        activity_add($user->id, $project->team_id, $project->id, $hotspot->id, ACTIVITY_TYPE_HOTSPOT_SCREEN_ADD, $title);
+        activity_add($user->id, $project->team_id, $project->id, $hotspot->id, ACTIVITY_TYPE_HOTSPOT_SCREEN_DELETE, $title);
     }
 }
 
@@ -259,6 +259,51 @@ function activity_add_comment_screen($comment_id) {
     if($project && $project->team_id) {
         $title = $user->fullname." added a comment to a screen on the '".$project->name."' Project.";
         activity_add($user->id, $project->team_id, $project->id, $comment->id, ACTIVITY_TYPE_COMMENT_ADD, $title);
+    }
+}
+/**********************************************
+ * Drawing
+ **********************************************/
+
+function activity_add_drawing_video($drawing_id) {
+    $CI =& get_instance();
+    $CI->load->model(array('Drawing', 'Video', 'Project'));
+
+    $drawing = $CI->Drawing->load($drawing_id);
+    $user = $CI->User->load($drawing->creator_id);
+    $video = $CI->Video->load($drawing->video_id);
+    $project = $CI->Project->load($video->project_id);
+
+    if($project && $project->team_id) {
+        $title = $user->fullname." added a drawing to a video on the '".$project->name."' Project.";
+        activity_add($user->id, $project->team_id, $project->id, $drawing->id, ACTIVITY_TYPE_DRAWING_VIDEO_ADD, $title);
+    }
+}
+
+function activity_add_drawing_screen($drawing_id) {
+    $CI =& get_instance();
+    $CI->load->model(array('Drawing', 'Screen', 'Project'));
+
+    $drawing = $CI->Drawing->load($drawing_id);
+    $user = $CI->User->load($drawing->creator_id);
+    $screen = $CI->Screen->load($drawing->screen_id);
+    $project = $CI->Project->load($screen->project_id);
+    $title = $user->fullname." added a drawing to a screen on the '".$project->name."' Project.";
+    activity_add($user->id, $project->team_id, $project->id, $drawing->id, ACTIVITY_TYPE_DRAWING_SCREEN_ADD, $title);
+}
+
+function activity_delete_drawing($drawing_id) {
+    $CI =& get_instance();
+    $CI->load->model(array('Drawing', 'Screen', 'Project'));
+
+    $drawing = $CI->Drawing->load($drawing_id);
+    $user = $CI->User->load($drawing->creator_id);
+    $screen = $CI->Screen->load($drawing->screen_id);
+    $project = $CI->Project->load($screen->project_id);
+
+    if($project && $project->team_id) {
+        $title = $user->fullname." deleted a drawing on the '".$project->name."' Project.";
+        activity_add($user->id, $project->team_id, $project->id, $drawing->id, ACTIVITY_TYPE_DRAWING_SCREEN_DELETE, $title);
     }
 }
 

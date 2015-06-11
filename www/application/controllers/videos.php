@@ -30,7 +30,6 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="is_task",type="integer",description="Whether this is a task or not")
  * @SWG\Property(name="assignee_uuid",type="integer",description="Who the task is assigned to")
  * @SWG\Property(name="time",type="string",format="time",description="The time of the video for this comment")
- * @SWG\Property(name="data",type="string",description="The json data for the html5 canvas object")
  * @SWG\Property(name="creator_uuid",type="string",description="The id of the user who created the comment")
  * @SWG\Property(name="created",type="string",format="date",description="The date/time that this comment was created")
  *
@@ -57,7 +56,7 @@ class Videos extends REST_Controller
         parent::__construct();
         $this->validate_user();
         $this->load->helper('json');
-        $this->load->model(array('Project', 'Video', 'Comment', 'Hotspot', 'Project_Statistic'));
+        $this->load->model(array('Project', 'Video', 'Comment', 'Hotspot', 'Project_Statistic', 'Drawing'));
     }
 
     /**
@@ -184,6 +183,9 @@ class Videos extends REST_Controller
         } else if ($action && $action === 'comments') {
             $comments = $this->Comment->get_for_video($video->id);
             $this->response(decorate_comments($comments));
+        } else if ($action && $action === 'drawings') {
+            $drawings = $this->Drawing->get_for_video($video->id);
+            $this->response(decorate_drawings($drawings));
         } else {
             $this->response($this->decorate_object($video));
         }
@@ -270,13 +272,6 @@ class Videos extends REST_Controller
      * @SWG\Parameter(
      *     name="link_to",
      *     description="The link to property",
-     *     paramType="form",
-     *     required=false,
-     *     type="string"
-     *     ),
-     * @SWG\Parameter(
-     *     name="data",
-     *     description="The hotspot json data in string form",
      *     paramType="form",
      *     required=false,
      *     type="string"
@@ -384,12 +379,46 @@ class Videos extends REST_Controller
      *     paramType="form",
      *     required=false,
      *     type="string"
+     *     )
+     *   )
+     * )
+     */
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/video/{video_uuid}/drawings/",
+     *   description="API for video actions",
+     * @SWG\Operation(
+     *    method="GET",
+     *    nickname="List Drawing",
+     *    type="array[Drawing]",
+     *    summary="Returns a list of comments for the specified video",
+     * @SWG\Parameter(
+     *     name="video_uuid",
+     *     description="The unique ID of the video",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     )
+     *   ),
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="Drawing",
+     *    nickname="Add Drawing",
+     *    summary="Create a new drawing for the given video",
+     * @SWG\Parameter(
+     *     name="video_uuid",
+     *     description="The unique ID of the video",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
      *     ),
      * @SWG\Parameter(
      *     name="data",
-     *     description="The hotspot json data in string form",
+     *     description="The comment content for the video",
      *     paramType="form",
-     *     required=false,
+     *     required=true,
      *     type="string"
      *     )
      *   )
@@ -435,6 +464,8 @@ class Videos extends REST_Controller
             } else {
                 $this->add_comment($video);
             }
+        } else if ($action && $action === 'drawings') {
+            $this->add_drawing($video);
         } else {
             json_error('Invalid request, action \''.$action.'\' is not supported', null, 405);
         }
@@ -466,8 +497,7 @@ class Videos extends REST_Controller
                 'begin_y' => $this->post('begin_x', TRUE),
                 'end_x' => $this->post('end_x', TRUE),
                 'end_y' => $this->post('end_y', TRUE),
-                'link_to' => $this->post('link_to', TRUE),
-                'data' => $this->post('data', TRUE)
+                'link_to' => $this->post('link_to', TRUE)
             ));
             activity_add_hotspot_video($hotspot_id);
             $hotspot = decorate_hotspot($this->Hotspot->load($hotspot_id));
@@ -501,7 +531,6 @@ class Videos extends REST_Controller
                 'project_id' => $video->project_id,
                 'is_task' => intval($this->post('is_task', TRUE)),
                 'marker' => intval($this->post('marker', TRUE)),
-                'data' => $this->post('data',TRUE),
                 'ordering' => $this->Comment->get_max_ordering_for_video($video->id) + 1,
                 'creator_id' => get_user_id(),
                 'time' => $this->post('time', TRUE),
@@ -539,8 +568,32 @@ class Videos extends REST_Controller
     }
 
     /**
-     * Provides the ability to search for a list of comments on a given screen
-     * @param $screen
+     * Creates a new drawing on the video
+     * @param $video
+     */
+    private function add_drawing($video)
+    {
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('data', 'Data', 'trim');
+
+        if ($this->form_validation->run() == FALSE) {
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
+        } else {
+            $drawing_id = $this->Drawing->add(array(
+                'video_id' => $video->id,
+                'ordering' => $this->Drawing->get_max_ordering_for_video($video->id) + 1,
+                'creator_id' => get_user_id(),
+                'data' => $this->post('data', TRUE)
+            ));
+            activity_add_drawing_video($drawing_id);
+            $drawing = decorate_drawing($this->Drawing->load($drawing_id));
+            $this->response($drawing);
+        }
+    }
+
+    /**
+     * Provides the ability to search for a list of comments on a given video
+     * @param $video
      */
     private function search_comments($video)
     {

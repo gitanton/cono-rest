@@ -10,6 +10,9 @@ class User extends MY_Model
         'phone' => 'string',
         'skype' => 'string',
         'website' => 'string',
+        'city' => 'string',
+        'state' => 'string',
+        'country' => 'string',
         'notify_general' => 'int',
         'notify_promotions' => 'int'
     );
@@ -189,7 +192,7 @@ class User extends MY_Model
         $this->load->model('Project');
         $this->update($user_id, array(
             'notify_general' => $notifications->notify_general ? 1 : 0,
-            'notify_promotions' => $notifications->notify_general ? 1 : 0
+            'notify_promotions' => $notifications->notify_promotions ? 1 : 0
         ));
 
         foreach($notifications->projects as $project) {

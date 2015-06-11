@@ -17,6 +17,7 @@ use Aws\S3\S3Client;
  * @SWG\Property(name="project_uuid",type="string",description="The uuid of the project for whom the screen is provided")
  * @SWG\Property(name="comments",type="array",@SWG\Items("Comment"),description="The comments assigned to this screen")
  * @SWG\Property(name="hotspots",type="array",@SWG\Items("Hotspot"),description="The hotspots assigned to this screen")
+ * @SWG\Property(name="drawings",type="array",@SWG\Items("Drawing"),description="The drawings assigned to this screen")
  *
  *
  * @SWG\Resource(
@@ -34,7 +35,7 @@ class Screens extends REST_Controller
         parent::__construct();
         $this->validate_user();
         $this->load->helper('json');
-        $this->load->model(array('Project', 'Screen', 'Comment', 'Hotspot', 'Project_Statistic'));
+        $this->load->model(array('Project', 'Screen', 'Comment', 'Hotspot', 'Project_Statistic', 'Drawing'));
     }
 
     /**
@@ -108,7 +109,7 @@ class Screens extends REST_Controller
             exit;
         }
 
-        if($screen) {
+        if ($screen) {
             /* Add the activity item to indicate that a screen was added */
             activity_add_screen($screen->id, get_user_id());
         }
@@ -168,6 +169,9 @@ class Screens extends REST_Controller
         } else if ($action && $action === 'comments') {
             $comments = $this->Comment->get_for_screen($screen->id);
             $this->response(decorate_comments($comments));
+        } else if ($action && $action === 'drawings') {
+            $drawings = $this->Drawing->get_for_screen($screen->id);
+            $this->response(decorate_drawings($drawings));
         } else {
             $this->response($this->decorate_object($screen));
         }
@@ -249,13 +253,6 @@ class Screens extends REST_Controller
      * @SWG\Parameter(
      *     name="link_to",
      *     description="The link to property",
-     *     paramType="form",
-     *     required=false,
-     *     type="string"
-     *     ),
-     * @SWG\Parameter(
-     *     name="data",
-     *     description="The hotspot json data in string form",
      *     paramType="form",
      *     required=false,
      *     type="string"
@@ -363,12 +360,46 @@ class Screens extends REST_Controller
      *     paramType="form",
      *     required=false,
      *     type="string"
+     *     )
+     *   )
+     * )
+     */
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/screen/{screen_uuid}/drawings/",
+     *   description="API for screen actions",
+     * @SWG\Operation(
+     *    method="GET",
+     *    nickname="List Drawing",
+     *    type="array[Drawing]",
+     *    summary="Returns a list of comments for the specified screen",
+     * @SWG\Parameter(
+     *     name="screen_uuid",
+     *     description="The unique ID of the screen",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
+     *     )
+     *   ),
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="Drawing",
+     *    nickname="Add Drawing",
+     *    summary="Create a new drawing for the given screen",
+     * @SWG\Parameter(
+     *     name="screen_uuid",
+     *     description="The unique ID of the screen",
+     *     paramType="path",
+     *     required=true,
+     *     type="string"
      *     ),
      * @SWG\Parameter(
      *     name="data",
-     *     description="The hotspot json data in string form",
+     *     description="The comment content for the screen",
      *     paramType="form",
-     *     required=false,
+     *     required=true,
      *     type="string"
      *     )
      *   )
@@ -413,6 +444,8 @@ class Screens extends REST_Controller
             } else {
                 $this->add_comment($screen);
             }
+        } else if ($action && $action === 'drawings') {
+            $this->add_drawing($screen);
         } else {
             json_error('Invalid request, action \''.$action.'\' is not supported', null, 405);
         }
@@ -444,8 +477,7 @@ class Screens extends REST_Controller
                 'begin_y' => $this->post('begin_x', TRUE),
                 'end_x' => $this->post('end_x', TRUE),
                 'end_y' => $this->post('end_y', TRUE),
-                'link_to' => $this->post('link_to', TRUE),
-                'data' => $this->post('data', TRUE)
+                'link_to' => $this->post('link_to', TRUE)
             ));
             activity_add_hotspot_screen($hotspot_id);
             $hotspot = decorate_hotspot($this->Hotspot->load($hotspot_id));
@@ -479,7 +511,6 @@ class Screens extends REST_Controller
                 'project_id' => $screen->project_id,
                 'is_task' => intval($this->post('is_task', TRUE)),
                 'marker' => intval($this->post('marker', TRUE)),
-                'data' => $this->post('data', TRUE),
                 'ordering' => $this->Comment->get_max_ordering_for_screen($screen->id) + 1,
                 'creator_id' => get_user_id(),
                 'time' => $this->post('time', TRUE),
@@ -515,6 +546,31 @@ class Screens extends REST_Controller
             $this->Project_Statistic->comment_project($screen->project_id);
             $comment = decorate_comment($this->Comment->load($comment_id));
             $this->response($comment);
+        }
+    }
+
+
+    /**
+     * Creates a new drawing on the screen
+     * @param $screen
+     */
+    private function add_drawing($screen)
+    {
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('data', 'Data', 'trim');
+
+        if ($this->form_validation->run() == FALSE) {
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
+        } else {
+            $drawing_id = $this->Drawing->add(array(
+                'screen_id' => $screen->id,
+                'ordering' => $this->Drawing->get_max_ordering_for_screen($screen->id) + 1,
+                'creator_id' => get_user_id(),
+                'data' => $this->post('data', TRUE)
+            ));
+            activity_add_drawing_screen($drawing_id);
+            $drawing = decorate_drawing($this->Drawing->load($drawing_id));
+            $this->response($drawing);
         }
     }
 
@@ -572,7 +628,7 @@ class Screens extends REST_Controller
             );
             $result = $client->putObject($object);
 
-            if($result['ObjectURL']) {
+            if ($result['ObjectURL']) {
                 $insert = array(
                     'creator_id' => get_user_id(),
                     'project_id' => $project->id,
@@ -587,7 +643,7 @@ class Screens extends REST_Controller
                 unlink($data['full_path']);
                 return $screen;
             } else {
-                log_message('info', '[File Add] putObject Result: ' . print_r($result, TRUE));
+                log_message('info', '[File Add] putObject Result: '.print_r($result, TRUE));
                 return json_error('File Upload to S3 Failed: ', $result);
             }
         } else {
@@ -635,7 +691,7 @@ class Screens extends REST_Controller
             );
             $result = $client->putObject($object);
 
-            if($result['ObjectURL']) {
+            if ($result['ObjectURL']) {
                 $insert = array(
                     'creator_id' => get_user_id(),
                     'project_id' => $project->id,
@@ -648,8 +704,8 @@ class Screens extends REST_Controller
                 unlink($full_path);
                 $screen = $this->Screen->load($this->Screen->add($insert));
                 return $screen;
-            }else {
-                log_message('info', '[File Add] putObject Result: ' . print_r($result, TRUE));
+            } else {
+                log_message('info', '[File Add] putObject Result: '.print_r($result, TRUE));
                 return json_error('File Upload to S3 Failed: ', $result);
             }
         }

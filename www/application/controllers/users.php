@@ -24,6 +24,11 @@ use Aws\S3\S3Client;
  * @SWG\Property(name="email",type="string",description="The email address of the User")
  * @SWG\Property(name="username",type="string",description="The username of the User")
  * @SWG\Property(name="avatar",type="string",description="The avatar of the User")
+ * @SWG\Property(name="city",type="string",description="The city of the User")
+ * @SWG\Property(name="state",type="string",description="The state of the User")
+ * @SWG\Property(name="country",type="string",description="The country of the User")
+ * @SWG\Property(name="phone",type="string",description="The phone number of the User")
+ * @SWG\Property(name="skype",type="string",description="The skype account name of the User")
  * @SWG\Property(name="last_login",type="string",format="date",description="The date/time of the last login of the user")
  * @SWG\Property(name="timezone",type="string",format="date",description="The timezone that the user belongs to")
  *
@@ -584,6 +589,10 @@ class Users extends REST_Controller
             exit;
         } else {
             $notifications = $this->post('notifications', true);
+            if(!is_object($notifications)) {
+                $notifications = json_decode($notifications);
+            }
+
             // Update the notifications on the user
             $this->User->set_notifications(get_user_id(), $notifications);
 

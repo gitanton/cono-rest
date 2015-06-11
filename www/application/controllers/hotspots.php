@@ -12,7 +12,6 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="end_x",type="integer",description="The end x property")
  * @SWG\Property(name="end_y",type="integer",description="The end y property")
  * @SWG\Property(name="link_to",type="string",description="The link to property")
- * @SWG\Property(name="data",type="string",description="The json data for the html5 canvas object")
  * @SWG\Property(name="time",type="string",format="time",description="The time of the video for this hotspot")
  * @SWG\Property(name="creator_uuid",type="string",description="The id of the user who created the hotspot")
  * @SWG\Property(name="created",type="string",format="date",description="The date/time that this hotspot was created")
@@ -96,19 +95,11 @@ class Hotspots extends REST_Controller
 
     public function hotspot_put($uuid = '')
     {
-        /* Validate update - have to copy the fields from put to $_POST for validation */
-        $_POST['data'] = $this->put('data');
-
-        $this->load->library('form_validation');
-        $this->form_validation->set_rules('data', 'Data', 'trim|required|xss_clean');
-
-        if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
-        } else {
-            $data = $this->get_put_fields($this->Hotspot->get_fields());
-            $this->Hotspot->update_by_uuid($uuid, $data);
-            $this->hotspot_get($uuid);
-        }
+        validate_team_read(get_team_id());
+        $hotspot = validate_hotspot_uuid($uuid);
+        $data = $this->get_put_fields($this->Hotspot->get_fields());
+        $this->Hotspot->update_by_uuid($uuid, $data);
+        $this->hotspot_get($uuid);
     }
 
     /**

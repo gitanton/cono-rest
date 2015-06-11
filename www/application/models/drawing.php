@@ -1,19 +1,14 @@
 <?php
-class Hotspot extends MY_Model
+class Drawing extends MY_Model
 {
 
     protected static $fields = array(
-        'time' => 'string',
-        'begin_x' => 'int',
-        'begin_y' => 'int',
-        'end_x' => 'int',
-        'end_y' => 'int',
-        'link_to' => 'string',
+        'data' => 'string'
     );
 
     function get_scope()
     {
-        return "hotspot";
+        return "drawing";
     }
 
     function column_map($col)
@@ -29,9 +24,9 @@ class Hotspot extends MY_Model
      */
     function get_for_screen($screen_id = 0)
     {
-        $sql = "SELECT h.* from " . $this->get_scope() . " h where h.screen_id = ? and h.deleted = 0";
+        $sql = "SELECT d.* from " . $this->get_scope() . " d where d.screen_id = ? and d.deleted = 0";
         $query_params = array(intval($screen_id));
-        $sql .= " ORDER by h.ordering ASC";
+        $sql .= " ORDER by d.ordering ASC";
 
         $query = $this->db->query($sql, $query_params);
         return $query->result();
@@ -44,9 +39,9 @@ class Hotspot extends MY_Model
      */
     function get_for_video($video_id = 0)
     {
-        $sql = "SELECT h.* from " . $this->get_scope() . " h where h.video_id = ? and h.deleted = 0";
+        $sql = "SELECT d.* from " . $this->get_scope() . " d where d.video_id = ? and d.deleted = 0";
         $query_params = array(intval($video_id));
-        $sql .= " ORDER by h.ordering ASC";
+        $sql .= " ORDER by d.ordering ASC";
 
         $query = $this->db->query($sql, $query_params);
         return $query->result();

@@ -176,7 +176,6 @@ function decorate_hotspot($object)
     $object->begin_y = isset($object->begin_y) ? intval($object->begin_y) : null;
     $object->end_x = isset($object->end_x) ? intval($object->end_x) : null;
     $object->end_y = isset($object->end_y) ? intval($object->end_y) : null;
-    $object->data = (isset($object->data) && $object->data) ? $object->data : null;
     unset($object->deleted, $object->screen_id, $object->video_id, $object->id, $object->creator_id, $object->video_i);
     return $object;
 }
@@ -197,6 +196,28 @@ function decorate_activity($object)
     unset($object->deleted, $object->id, $object->creator_id, $object->team_id, $object->project_id);
     $object->activity_type_id = intval($object->activity_type_id);
     $object->object_id = intval($object->object_id);
+    return $object;
+}
+
+function decorate_drawing($object)
+{
+    $CI =& get_instance();
+    $CI->load->model(array('Video', 'Screen'));
+    if (isset($object->video_id)) {
+        $object->video_uuid = $CI->Video->get_uuid($object->video_id);
+    }
+    if (isset($object->screen_id)) {
+        $object->screen_uuid = $CI->Screen->get_uuid($object->screen_id);
+    }
+
+    if (isset($object->creator_id)) {
+        $object->creator_uuid = $CI->User->get_uuid($object->creator_id);
+    }
+
+    // cast the numbers to integers
+    $object->ordering = intval($object->ordering);
+    $object->data = (isset($object->data) && $object->data) ? $object->data : null;
+    unset($object->deleted, $object->screen_id, $object->id, $object->creator_id, $object->video_id);
     return $object;
 }
 
@@ -229,7 +250,6 @@ function decorate_comment($object)
     $object->left_x = isset($object->left_x) ? intval($object->left_x) : null;
     $object->is_task = isset($object->is_task) ? intval($object->is_task) : null;
     $object->marker = isset($object->marker) ? intval($object->marker) : null;
-    $object->data = (isset($object->data) && $object->data) ? $object->data : null;
     unset($object->deleted, $object->screen_id, $object->id, $object->creator_id, $object->video_id, $object->assignee_id);
     return $object;
 }
@@ -252,10 +272,19 @@ function decorate_comments($objects)
     return $updated;
 }
 
+function decorate_drawings($objects)
+{
+    $updated = array();
+    foreach ($objects as $object) {
+        $updated[] = decorate_drawing($object);
+    }
+    return $updated;
+}
+
 function decorate_screen($object)
 {
     $CI =& get_instance();
-    $CI->load->model(array('Project', 'Hotspot', 'Comment'));
+    $CI->load->model(array('Project', 'Hotspot', 'Comment', 'Drawing'));
 
     if (isset($object->project_id)) {
         $object->project_uuid = $CI->Project->get_uuid($object->project_id);
@@ -269,6 +298,9 @@ function decorate_screen($object)
 
     $hospots = $CI->Hotspot->get_for_screen($object->id);
     $object->hotspots = decorate_hotspots($hospots);
+
+    $drawings = $CI->Drawing->get_for_screen($object->id);
+    $object->drawings = decorate_drawings($drawings);
 
     $comments = $CI->Comment->get_for_screen($object->id);
     $object->comments = decorate_comments($comments);
@@ -284,7 +316,7 @@ function decorate_screen($object)
 function decorate_video($object)
 {
     $CI =& get_instance();
-    $CI->load->model(array('Project', 'Hotspot', 'Comment'));
+    $CI->load->model(array('Project', 'Hotspot', 'Comment', 'Drawing'));
 
     if (isset($object->project_id)) {
         $object->project_uuid = $CI->Project->get_uuid($object->project_id);
@@ -298,6 +330,9 @@ function decorate_video($object)
 
     $hotspots = $CI->Hotspot->get_for_video($object->id);
     $object->hotspots = decorate_hotspots($hotspots);
+
+    $drawings = $CI->Drawing->get_for_video($object->id);
+    $object->drawings = decorate_drawings($drawings);
 
     $comments = $CI->Comment->get_for_video($object->id);
     $object->comments = decorate_comments($comments);
