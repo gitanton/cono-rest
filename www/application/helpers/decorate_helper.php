@@ -52,7 +52,7 @@ function decorate_project($object)
     $object->archived = ci_boolval($object->archived);
     $object->type_id = intval($object->type_id);
 
-    unset($object->deleted, $object->team_id, $object->id, $object->creator_id);
+    unset($object->deleted, $object->team_id, $object->id, $object->creator_id, $object->notify);
     return $object;
 }
 
@@ -176,6 +176,7 @@ function decorate_hotspot($object)
     $object->begin_y = isset($object->begin_y) ? intval($object->begin_y) : null;
     $object->end_x = isset($object->end_x) ? intval($object->end_x) : null;
     $object->end_y = isset($object->end_y) ? intval($object->end_y) : null;
+    $object->data = (isset($object->data) && $object->data) ? $object->data : null;
     unset($object->deleted, $object->screen_id, $object->video_id, $object->id, $object->creator_id, $object->video_i);
     return $object;
 }
@@ -228,6 +229,7 @@ function decorate_comment($object)
     $object->left_x = isset($object->left_x) ? intval($object->left_x) : null;
     $object->is_task = isset($object->is_task) ? intval($object->is_task) : null;
     $object->marker = isset($object->marker) ? intval($object->marker) : null;
+    $object->data = (isset($object->data) && $object->data) ? $object->data : null;
     unset($object->deleted, $object->screen_id, $object->id, $object->creator_id, $object->video_id, $object->assignee_id);
     return $object;
 }

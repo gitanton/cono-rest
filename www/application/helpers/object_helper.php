@@ -98,6 +98,8 @@ function clean_user($user)
     unset($user->created);
     unset($user->deleted);
     unset($user->inactive);
+    unset($user->notify_general);
+    unset($user->notify_promotions);
 
     if(isset($user->avatar)) {
         $user->avatar = file_url($user->avatar);

@@ -6,7 +6,17 @@ use Aws\S3\S3Client;
  * @SWG\Model(id="Response")
  * @SWG\Property(name="status",type="string",description="Either success or error")
  * @SWG\Property(name="message",type="string",description="The success/error message related to the response")
- * @SWG\Property(name="data",type="object",description="Miscellaneous data associated with the message or error")
+ * @SWG\Property(name="data",type="object",description="Miscellaneous data associated with the message or error")  *
+ *
+ * @SWG\Model(id="NotificationProjectSettings", required="uuid,notify")
+ * @SWG\Property(name="uuid",type="string",description="The uuid of the project")
+ * @SWG\Property(name="name",type="string",description="The name of hte project")
+ * @SWG\Property(name="notify",type="boolean",description="Whether to notify them on that project")
+ *
+ * @SWG\Model(id="NotificationSettings")
+ * @SWG\Property(name="notify_general",type="boolean",description="Either success or error")
+ * @SWG\Property(name="notify_promitions",type="boolean",description="The success/error message related to the response")
+ * @SWG\Property(name="projects",type="array",@SWG\Items("NotificationProjectSettings"),description="A list of projects the user belongs to and whether to notify them")
  *
  * @SWG\Model(id="User",required="uuid,username")
  * @SWG\Property(name="uuid",type="string",description="The unique ID of the User (for public use)")
@@ -531,7 +541,55 @@ class Users extends REST_Controller
         } else {
             $this->response(array());
         }
+    }
 
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/notifications",
+     *   description="API for user actions",
+     * @SWG\Operation(
+     *    method="GET",
+     *    type="NotificationSettings",
+     *    summary="Retrieve a user's notification settings",
+     *   ),
+     *  @SWG\Operation(
+     *    method="POST",
+     *    type="NotificationSettings",
+     *    summary="Set a user's notification settings",
+     *  @SWG\Parameter(
+     *     name="notifications",
+     *     description="The token received from stripe for this transaction",
+     *     paramType="form",
+     *     required=false,
+     *     type="NotificationSettings"
+     *     )
+     *   )
+     * )
+     */
+    public function notifications_get() {
+        $this->validate_user();
+        $notification_settings = $this->User->get_notifications(get_user_id());
+        $this->response($notification_settings);
+    }
+
+    public function notifications_post() {
+        $this->validate_user();
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('notifications', 'Notifications', 'trim|xss_clean');
+
+        if ($this->form_validation->run() == FALSE) {
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+            exit;
+        } else {
+            $notifications = $this->post('notifications', true);
+            // Update the notifications on the user
+            $this->User->set_notifications(get_user_id(), $notifications);
+
+            $notification_settings = $this->User->get_notifications(get_user_id());
+            $this->response($notification_settings);
+        }
     }
 
 

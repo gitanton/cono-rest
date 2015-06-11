@@ -1,5 +1,6 @@
 <?php
 use Mailgun\Mailgun;
+
 /**
  * Send an email to a person who is being invited to a team
  * @param $user_id

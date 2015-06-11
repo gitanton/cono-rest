@@ -26,17 +26,17 @@ class Project extends MY_Model
      * @param $user_id
      */
     function add_user($project_id = 0, $user_id = 0) {
-
         $this->db->query($this->db->insert_string('project_user', array(
             'project_id' => $project_id,
-            'user_id' => $user_id
+            'user_id' => $user_id,
+            'notify' => 1
         )));
         $id = $this->db->insert_id();
         return $id;
     }
 
     function get_for_user($user_id = 0, $archived = 0) {
-        $sql = "SELECT p.*, pu.ordering from ".$this->get_scope()." p, project_user pu where p.id = pu.project_id and "
+        $sql = "SELECT p.*, pu.ordering, pu.notify from ".$this->get_scope()." p, project_user pu where p.id = pu.project_id and "
             ." pu.user_id = ? and p.deleted = 0";
         $query_params = array(intval($user_id));
 
@@ -48,6 +48,11 @@ class Project extends MY_Model
 
         $query = $this->db->query($sql, $query_params);
         return $query->result();
+    }
+
+    function update_project_user($user_id, $project_id, $data) {
+        $this->db->where(array('user_id' => $user_id, 'project_id' => $project_id));
+        $this->db->update('project_user', $data);
     }
 
     /**

@@ -9,7 +9,9 @@ class User extends MY_Model
         'timezone' => 'string',
         'phone' => 'string',
         'skype' => 'string',
-        'website' => 'string'
+        'website' => 'string',
+        'notify_general' => 'int',
+        'notify_promotions' => 'int'
     );
 
     function get_scope()
@@ -148,6 +150,54 @@ class User extends MY_Model
         //$this->db->where('user.id <>', $owner_id);
         $query = $this->db->get($this->get_scope());
         return $query->result();
+
+    }
+
+    /**
+     * Returns the notification settings for a user.  We store notify_general and notify_promotions on the user
+     * directly.  Then we specify notify on the actual projects to indicate that the user should or should not
+     * be notified for any messages for those projects
+     * @param $user_id
+     * @return stdClass
+     */
+    function get_notifications($user_id) {
+        $this->load->model('Project');
+        $notifications = new stdClass;
+        $user = $this->load($user_id);
+        $notifications->notify_general = ci_boolval($user->notify_general);
+        $notifications->notify_promotions = ci_boolval($user->notify_promotions);
+        $projects = $this->Project->get_for_user($user_id);
+        $notifications->projects = array();
+
+        foreach($projects as $project) {
+            $proj = new stdClass;
+            $proj->uuid = $project->uuid;
+            $proj->name = $project->name;
+            $proj->notify = ci_boolval($project->notify);
+            $notifications->projects[] = $proj;
+        };
+        return $notifications;
+    }
+
+    /**
+     * Updates the notification settings on a user.  We set the notify_general and notify_promotions on the
+     * user and then iterate over the list of project_user objects
+     * @param $user_id
+     * @param $notifications
+     */
+    function set_notifications($user_id, $notifications) {
+        $this->load->model('Project');
+        $this->update($user_id, array(
+            'notify_general' => $notifications->notify_general ? 1 : 0,
+            'notify_promotions' => $notifications->notify_general ? 1 : 0
+        ));
+
+        foreach($notifications->projects as $project) {
+            $project_id = $this->Project->get_id($project->uuid);
+            if($project_id) {
+                $this->Project->update_project_user($user_id, $project_id, array('notify'=>$project->notify));
+            }
+        }
 
     }
 
