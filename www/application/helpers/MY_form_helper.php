@@ -118,6 +118,11 @@ function form_states($name, $value = '', $include_blank = FALSE, $attrs = '')
 }
 
 function form_countries($name, $value, $attrs='') {
+
+    echo form_dropdown($name, get_countries(), $value, 'id="' . $name . '" ' . $attrs);
+}
+
+function get_countries() {
     $country_list = array(
         'US'=>'United States',
         'AF'=>'Afghanistan',
@@ -359,7 +364,7 @@ function form_countries($name, $value, $attrs='') {
         'ZM'=>'Zambia',
         'ZW'=>'Zimbabwe'
     );
-    echo form_dropdown($name, $country_list, $value, 'id="' . $name . '" ' . $attrs);
+    return $country_list;
 }
 
 function get_timezones() {

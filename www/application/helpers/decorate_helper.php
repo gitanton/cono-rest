@@ -396,4 +396,32 @@ function decorate_invoice($object) {
     return $object->__toArray();
 }
 
+function decorate_plan($object) {
+    if($object) {
+        $object->id = intval($object->id);
+        $object->projects = intval($object->projects);
+        $object->team_members = intval($object->team_members);
+        $object->price = doubleval($object->price);
+        $object->additional_member = intval($object->additional_member);
+        unset($object->deleted, $object->stripe_plan_id);
+    }
+    return $object;
+
+}
+
+function decorate_subscription($object) {
+    if($object) {
+        $CI =& get_instance();
+        $CI->load->model(array('Plan'));
+
+        $object->failed = ci_boolval($object->failed);
+        $object->additional_users = intval($object->additional_users);
+        $object->plan_id = intval($object->plan_id);
+        $object->plan = decorate_plan($CI->Plan->load($object->plan_id));
+        unset($object->deleted, $object->user_id, $object->id, $object->failed_event, $object->stripe_customer_id,
+            $object->stripe_subscription_id, $object->stripe_additional_subscription_id);
+    }
+    return $object;
+}
+
 ?>

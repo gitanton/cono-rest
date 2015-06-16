@@ -39,6 +39,7 @@ class Utils extends REST_Controller
         $response->stripe_key = $this->config->item('stripe_public_key');
         $response->plans = $this->Plan->get_all();
         $response->timezones = get_timezones();
+        $response->countries = get_countries();
         $this->response($response);
     }
 

@@ -18,6 +18,23 @@ use Aws\S3\S3Client;
  * @SWG\Property(name="notify_promitions",type="boolean",description="The success/error message related to the response")
  * @SWG\Property(name="projects",type="array",@SWG\Items("NotificationProjectSettings"),description="A list of projects the user belongs to and whether to notify them")
  *
+ * @SWG\Model(id="Plan")
+ * @SWG\Property(name="id",type="integer",description="The id of the plan")
+ * @SWG\Property(name="additional_member",type="integer",description="The number of additional users allowed on this plan")
+ * @SWG\Property(name="name",type="string",description="The name of the plan")
+ * @SWG\Property(name="projects",type="integer",description="The number of projects allowed on this plan")
+ * @SWG\Property(name="team_members",type="integer",description="The number of team members allowed on this plan")
+ * @SWG\Property(name="updated",type="string",format="date",description="The date/time of the we last updated their plan and charged their card")
+ * @SWG\Property(name="plan",type="Plan",description="The plan that they are subscripted to")
+ *
+ * @SWG\Model(id="Subscription")
+ * @SWG\Property(name="plan_id",type="integer",description="The id of the plan they are subscribed to")
+ * @SWG\Property(name="additional_users",type="integer",description="The number of additional users they have added to their plan")
+ * @SWG\Property(name="failed",type="boolean",description="Whether we failed to charge their card for their recent payment")
+ * @SWG\Property(name="created",type="string",format="date",description="The date/time of when they subscribed to the plan")
+ * @SWG\Property(name="updated",type="string",format="date",description="The date/time of the we last updated their plan and charged their card")
+ * @SWG\Property(name="plan",type="Plan",description="The plan that they are subscripted to")
+ *
  * @SWG\Model(id="User",required="uuid,username")
  * @SWG\Property(name="uuid",type="string",description="The unique ID of the User (for public use)")
  * @SWG\Property(name="fullname",type="string",description="The full name of the User")
@@ -333,6 +350,11 @@ class Users extends REST_Controller
      *    method="DELETE",
      *    type="Response",
      *    summary="Deletes/Cancels the user's subscription",
+     *   ),
+     * @SWG\Operation(
+     *    method="GET",
+     *    type="Subscription",
+     *    summary="Gets the subscription for the current user",
      *   )
      * )
      */
@@ -479,6 +501,13 @@ class Users extends REST_Controller
             }
         }
         json_error('Unable to process subscription info');
+    }
+
+    public function subscription_get() {
+        $this->validate_user();
+        $this->load->model(array('Plan', 'Subscription'));
+        $subscription = $this->Subscription->load_by_user_id(get_user_id());
+        $this->response(decorate_subscription($subscription));
     }
 
     public function subscription_delete() {
