@@ -27,13 +27,22 @@ use Aws\S3\S3Client;
  * @SWG\Property(name="updated",type="string",format="date",description="The date/time of the we last updated their plan and charged their card")
  * @SWG\Property(name="plan",type="Plan",description="The plan that they are subscripted to")
  *
+ * @SWG\Model(id="Card")
+ * @SWG\Property(name="id",type="string",description="The id of the card")
+ * @SWG\Property(name="last4",type="string",description="The last4 digits of the card")
+ * @SWG\Property(name="brand",type="string",description="The card brand such as Visa or Mastercard")
+ * @SWG\Property(name="exp_month",type="integer",description="The month that the card expires")
+ * @SWG\Property(name="exp_year",type="integer",description="The year that the card expires")
+ * @SWG\Property(name="country",type="string",description="The country that the card originated from")
+ *
  * @SWG\Model(id="Subscription")
  * @SWG\Property(name="plan_id",type="integer",description="The id of the plan they are subscribed to")
  * @SWG\Property(name="additional_users",type="integer",description="The number of additional users they have added to their plan")
  * @SWG\Property(name="failed",type="boolean",description="Whether we failed to charge their card for their recent payment")
  * @SWG\Property(name="created",type="string",format="date",description="The date/time of when they subscribed to the plan")
  * @SWG\Property(name="updated",type="string",format="date",description="The date/time of the we last updated their plan and charged their card")
- * @SWG\Property(name="plan",type="Plan",description="The plan that they are subscripted to")
+ * @SWG\Property(name="card",type="Card",description="The current card assigned to their subscription to")
+ * @SWG\Property(name="plan",type="Plan",description="The plan that they are subscribed to")
  *
  * @SWG\Model(id="User",required="uuid,username")
  * @SWG\Property(name="uuid",type="string",description="The unique ID of the User (for public use)")
@@ -507,6 +516,15 @@ class Users extends REST_Controller
         $this->validate_user();
         $this->load->model(array('Plan', 'Subscription'));
         $subscription = $this->Subscription->load_by_user_id(get_user_id());
+
+        \Stripe\Stripe::setApiKey($this->config->item('stripe_private_key'));
+        $stripe_cards = \Stripe\Customer::retrieve($subscription->stripe_customer_id)->sources->all(
+            array("object" => "card", "limit" => 1)
+        );
+        if($stripe_cards && sizeof($stripe_cards->data)>0) {
+            $subscription->card = $stripe_cards->data[0];
+        }
+
         $this->response(decorate_subscription($subscription));
     }
 
@@ -541,6 +559,79 @@ class Users extends REST_Controller
             }
         }
         json_error('Unable to find subscription');
+    }
+
+    /**
+     *
+     * @SWG\Api(
+     *   path="/subscription_card",
+     *   description="API for user actions",
+     * @SWG\Operation(
+     *    method="POST",
+     *    type="Subscription",
+     *    summary="Adds/Updates the card on a subscription for the current user",
+     * @SWG\Parameter(
+     *     name="token",
+     *     description="The token received from stripe for this transaction",
+     *     paramType="form",
+     *     required=false,
+     *     type="string"
+     *     )
+     *   )
+     * )
+     */
+
+    public function subscription_card_post() {
+        $this->validate_user();
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('token', 'Token', 'trim|xss_clean');
+
+        if ($this->form_validation->run() == FALSE) {
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+            exit;
+        } else {
+
+            $user = get_user();
+
+            $this->load->model(array('Plan', 'Subscription'));
+            $this->load->helper('notification');
+            \Stripe\Stripe::setApiKey($this->config->item('stripe_private_key'));
+            $subscription = $this->Subscription->load_by_user_id(get_user_id());
+
+            if(!$subscription) {
+                log_message('error', sprintf('[subscription_card_post] User [%s] does not have a valid subscription', $user->username));
+                json_error("User does not have a valid subscription");
+            } else {
+                try {
+                    $stripe_customer = \Stripe\Customer::retrieve($subscription->stripe_customer_id);
+                    $stripe_cards = $stripe_customer->sources->all(
+                        array("object" => "card", "limit" => 1)
+                    );
+
+                    /* Create the new card */
+                    $stripe_customer->sources->create(array("source" => $this->post('token', TRUE)));
+
+                    /* Delete their current card */
+                    if(sizeof($stripe_cards->data)>0) {
+                        $stripe_card = $stripe_cards->data[0];
+                        $stripe_card->delete();
+                    }
+                    $this->subscription_get();
+                } catch (Exception $e) {
+                    $error = '[subscription_card_post] Exception when deleting and adding a new card: ' . $e->getMessage();
+                    log_message('info', $error);
+                    loggly(array(
+                        'error' => $e->getMessage(),
+                        'text' => $error,
+                        'method' => 'rest.users.subscription_card_post',
+                        'actor_id' => get_user_id()
+                    ));
+                    json_error($e->getMessage());
+                    exit;
+                }
+            }
+        }
+
     }
 
 

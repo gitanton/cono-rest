@@ -418,6 +418,13 @@ function decorate_subscription($object) {
         $object->additional_users = intval($object->additional_users);
         $object->plan_id = intval($object->plan_id);
         $object->plan = decorate_plan($CI->Plan->load($object->plan_id));
+        if(isset($object->card)) {
+            unset($object->card->fingerprint, $object->card->name, $object->card->cvc_check, $object->card->customer,
+            $object->card->address_line1, $object->card->address_line2, $object->card->address_city, $object->card->object,
+            $object->card->funding, $object->card->address_state, $object->card->address_zip, $object->card->address_country,
+            $object->card->address_line1_check, $object->card->address_zip_check, $object->card->dynamic_last4, $object->card->metadata);
+            $object->card = $object->card->__toArray();
+        }
         unset($object->deleted, $object->user_id, $object->id, $object->failed_event, $object->stripe_customer_id,
             $object->stripe_subscription_id, $object->stripe_additional_subscription_id);
     }
