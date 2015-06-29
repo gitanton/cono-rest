@@ -183,14 +183,14 @@ class Users extends REST_Controller
 
         if ($this->form_validation->run() == FALSE) {
             $data = array();
-            if(form_error('email') && form_error('username')) {
+            if (form_error('email') && form_error('username')) {
                 $data['level'] = USER_SIGNUP_ERROR_USERNAME_EMAIL_LEVEL;
-            } else if(form_error('email')) {
+            } else if (form_error('email')) {
                 $data['level'] = USER_SIGNUP_ERROR_EMAIL_LEVEL;
-            } else if(form_error('username')) {
+            } else if (form_error('username')) {
                 $data['level'] = USER_SIGNUP_ERROR_USERNAME_LEVEL;
             }
-            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '), $data);
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '), $data);
         } else {
             $data = array(
                 'fullname' => $this->post('fullname', TRUE),
@@ -226,7 +226,7 @@ class Users extends REST_Controller
 
             try {
                 notify_new_user($user->id, $this->post('password', TRUE));
-            } catch(Exception $e) {
+            } catch (Exception $e) {
                 log_message('error', "Error while notifying new user: ".$e->getMessage());
             }
             $this->response($this->decorate_object($user));
@@ -284,7 +284,7 @@ class Users extends REST_Controller
         $this->form_validation->set_rules('invite_type', 'Invite Type', 'trim|xss_clean|callback_validate_invite_type');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
             exit;
         } else {
 
@@ -308,7 +308,7 @@ class Users extends REST_Controller
                     $this->session->set_userdata(SESS_SUBSCRIPTION_ID, $subscription->id);
                 }
 
-                log_message('info', 'Login - User ID: ' . $user->id . ', Username: ' . $user->username);
+                log_message('info', 'Login - User ID: '.$user->id.', Username: '.$user->username);
 
                 $this->User->record_login($user->id);
 
@@ -378,7 +378,7 @@ class Users extends REST_Controller
         $this->form_validation->set_rules('plan_id', 'Plan ID', 'trim|numeric|required|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
             exit;
         } else {
             \Stripe\Stripe::setApiKey($this->config->item('stripe_private_key'));
@@ -416,7 +416,7 @@ class Users extends REST_Controller
                             'stripe_subscription_id' => $stripe_subscription->id
                         ));
 
-                        if($additional_users>0) {
+                        if ($additional_users > 0) {
                             $stripe_additional_subscription = $stripe_customer->subscriptions->create(array(
                                 "plan" => STRIPE_PLAN_ADDITIONAL_USER,
                                 "quantity" => $additional_users
@@ -432,7 +432,7 @@ class Users extends REST_Controller
                         json_success('Subscription successfully created!', array('subscription_id' => $subscription_id));
                         exit;
                     } catch (Exception $e) {
-                        $error = '[Create Stripe Customer] Stripe_Customer::create Exception: ' . $e->getMessage();
+                        $error = '[Create Stripe Customer] Stripe_Customer::create Exception: '.$e->getMessage();
                         log_message('info', $error);
                         loggly(array(
                             'error' => $e->getMessage(),
@@ -463,9 +463,9 @@ class Users extends REST_Controller
 
                         /* Handle additional users */
                         /* If they have an existing additional users subscription, just update it */
-                        if($subscription->stripe_additional_subscription_id) {
+                        if ($subscription->stripe_additional_subscription_id) {
                             $stripe_additional_subscription = $stripe_customer->subscriptions->retrieve($subscription->stripe_additional_subscription_id);
-                            if($additional_users>0) {
+                            if ($additional_users > 0) {
                                 $stripe_additional_subscription->quantity = $additional_users;
                                 $stripe_additional_subscription->prorate = false;
                                 $stripe_additional_subscription->save();
@@ -480,7 +480,7 @@ class Users extends REST_Controller
                                     'stripe_additional_subscription_id' => null
                                 ));
                             }
-                        } else if($additional_users) {
+                        } else if ($additional_users) {
                             /* Otherwise if they don't have one, but we are adding users, create the subscription */
                             $stripe_additional_subscription = $stripe_customer->subscriptions->create(array(
                                 "plan" => STRIPE_PLAN_ADDITIONAL_USER,
@@ -495,7 +495,7 @@ class Users extends REST_Controller
                         json_success('Subscription successfully updated!');
                         exit;
                     } catch (Exception $e) {
-                        $error = '[Update Stripe Subscription] Stripe_Customer::retrieve Exception: ' . $e->getMessage();
+                        $error = '[Update Stripe Subscription] Stripe_Customer::retrieve Exception: '.$e->getMessage();
                         log_message('info', $error);
                         loggly(array(
                             'error' => $e->getMessage(),
@@ -512,23 +512,27 @@ class Users extends REST_Controller
         json_error('Unable to process subscription info');
     }
 
-    public function subscription_get() {
+    public function subscription_get()
+    {
         $this->validate_user();
         $this->load->model(array('Plan', 'Subscription'));
         $subscription = $this->Subscription->load_by_user_id(get_user_id());
 
-        \Stripe\Stripe::setApiKey($this->config->item('stripe_private_key'));
-        $stripe_cards = \Stripe\Customer::retrieve($subscription->stripe_customer_id)->sources->all(
-            array("object" => "card", "limit" => 1)
-        );
-        if($stripe_cards && sizeof($stripe_cards->data)>0) {
-            $subscription->card = $stripe_cards->data[0];
+        if ($subscription) {
+            \Stripe\Stripe::setApiKey($this->config->item('stripe_private_key'));
+            $stripe_cards = \Stripe\Customer::retrieve($subscription->stripe_customer_id)->sources->all(
+                array("object" => "card", "limit" => 1)
+            );
+            if ($stripe_cards && sizeof($stripe_cards->data) > 0) {
+                $subscription->card = $stripe_cards->data[0];
+            }
         }
 
         $this->response(decorate_subscription($subscription));
     }
 
-    public function subscription_delete() {
+    public function subscription_delete()
+    {
         $this->validate_user();
         $this->load->model(array('Plan', 'Subscription'));
         $this->load->helper('notification');
@@ -546,7 +550,7 @@ class Users extends REST_Controller
                 json_success('Subscription successfully deleted!');
                 exit;
             } catch (Exception $e) {
-                $error = '[Delete Stripe Subscription] Stripe_Customer::retrieve Exception: ' . $e->getMessage();
+                $error = '[Delete Stripe Subscription] Stripe_Customer::retrieve Exception: '.$e->getMessage();
                 log_message('info', $error);
                 loggly(array(
                     'error' => $e->getMessage(),
@@ -581,13 +585,14 @@ class Users extends REST_Controller
      * )
      */
 
-    public function subscription_card_post() {
+    public function subscription_card_post()
+    {
         $this->validate_user();
         $this->load->library('form_validation');
         $this->form_validation->set_rules('token', 'Token', 'trim|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
             exit;
         } else {
 
@@ -598,7 +603,7 @@ class Users extends REST_Controller
             \Stripe\Stripe::setApiKey($this->config->item('stripe_private_key'));
             $subscription = $this->Subscription->load_by_user_id(get_user_id());
 
-            if(!$subscription) {
+            if (!$subscription) {
                 log_message('error', sprintf('[subscription_card_post] User [%s] does not have a valid subscription', $user->username));
                 json_error("User does not have a valid subscription");
             } else {
@@ -612,13 +617,13 @@ class Users extends REST_Controller
                     $stripe_customer->sources->create(array("source" => $this->post('token', TRUE)));
 
                     /* Delete their current card */
-                    if(sizeof($stripe_cards->data)>0) {
+                    if (sizeof($stripe_cards->data) > 0) {
                         $stripe_card = $stripe_cards->data[0];
                         $stripe_card->delete();
                     }
                     $this->subscription_get();
                 } catch (Exception $e) {
-                    $error = '[subscription_card_post] Exception when deleting and adding a new card: ' . $e->getMessage();
+                    $error = '[subscription_card_post] Exception when deleting and adding a new card: '.$e->getMessage();
                     log_message('info', $error);
                     loggly(array(
                         'error' => $e->getMessage(),
@@ -647,17 +652,18 @@ class Users extends REST_Controller
      *   )
      * )
      */
-    public function billing_history_get() {
+    public function billing_history_get()
+    {
         $this->validate_user();
         $this->load->model(array('Plan', 'Subscription'));
         $this->load->helper('notification');
         \Stripe\Stripe::setApiKey($this->config->item('stripe_private_key'));
         $subscription = $this->Subscription->load_by_user_id(get_user_id());
-        if($subscription) {
+        if ($subscription) {
             try {
                 $invoices = \Stripe\Invoice::all(array("customer" => $subscription->stripe_customer_id, "limit" => 12));
                 //array_print($invoices);
-            } catch(Exception $e) {
+            } catch (Exception $e) {
                 log_message('error', 'Exception while retrieving billing history: '.$e->getMessage());
                 json_error('We experienced an error while retrieving your billing history: '.$e->getMessage());
                 return;
@@ -679,11 +685,11 @@ class Users extends REST_Controller
      *    type="NotificationSettings",
      *    summary="Retrieve a user's notification settings",
      *   ),
-     *  @SWG\Operation(
+     * @SWG\Operation(
      *    method="POST",
      *    type="NotificationSettings",
      *    summary="Set a user's notification settings",
-     *  @SWG\Parameter(
+     * @SWG\Parameter(
      *     name="notifications",
      *     description="The token received from stripe for this transaction",
      *     paramType="form",
@@ -693,23 +699,25 @@ class Users extends REST_Controller
      *   )
      * )
      */
-    public function notifications_get() {
+    public function notifications_get()
+    {
         $this->validate_user();
         $notification_settings = $this->User->get_notifications(get_user_id());
         $this->response($notification_settings);
     }
 
-    public function notifications_post() {
+    public function notifications_post()
+    {
         $this->validate_user();
         $this->load->library('form_validation');
         $this->form_validation->set_rules('notifications', 'Notifications', 'trim|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
             exit;
         } else {
             $notifications = $this->post('notifications', true);
-            if(!is_object($notifications)) {
+            if (!is_object($notifications)) {
                 $notifications = json_decode($notifications);
             }
 
@@ -810,7 +818,7 @@ class Users extends REST_Controller
         $this->form_validation->set_rules('email', 'Email', 'trim|xss_clean|valid_email');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
         } else {
             $data = $this->get_put_fields($this->User->get_fields());
             $this->User->update_by_uuid($uuid, $data);
@@ -858,7 +866,7 @@ class Users extends REST_Controller
         $this->form_validation->set_rules('projects', 'Projects', 'trim|required|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
         } else {
             $user = $this->User->load_by_uuid($uuid);
             if ($user) {
@@ -888,7 +896,7 @@ class Users extends REST_Controller
             }
         }
 
-        json_error('Unable to update user with uuid of ' . $uuid);
+        json_error('Unable to update user with uuid of '.$uuid);
     }
 
     /**
@@ -933,7 +941,8 @@ class Users extends REST_Controller
      *
      * Reorders the list of projects for a user
      */
-    public function forgot_password_post() {
+    public function forgot_password_post()
+    {
         $this->load->library('form_validation');
         $this->form_validation->set_rules('email', 'Email', 'trim|required|xss_clean|valid_email');
         if ($this->form_validation->run() != FALSE) {
@@ -952,7 +961,7 @@ class Users extends REST_Controller
             $this->load->helper('notification');
             notify_reset_password($user, $new_password);
 
-            log_message('info', '[Forgot Password] Sending Username/Password to ' . $user->username . ' <' . $user->email . '>');
+            log_message('info', '[Forgot Password] Sending Username/Password to '.$user->username.' <'.$user->email.'>');
             json_success('Your password has been reset and emailed to your email address.  You should receive it shortly.');
             exit;
         }
@@ -1039,7 +1048,7 @@ class Users extends REST_Controller
         $user_uuid = '';
         $user_id = '';
 
-        if($user) {
+        if ($user) {
             $user_uuid = $user->uuid;
             $user_id = $user->id;
         }
@@ -1165,7 +1174,7 @@ class Users extends REST_Controller
             );
             $result = $client->putObject($object);
 
-            if($result['ObjectURL']) {
+            if ($result['ObjectURL']) {
                 $this->User->update(get_user_id(), array(
                     'avatar' => $data['file_name']
                 ));
@@ -1173,7 +1182,7 @@ class Users extends REST_Controller
                 $user = $this->decorate_object(get_user());
                 $this->response($user);
             } else {
-                log_message('info', '[File Add] putObject Result: ' . print_r($result, TRUE));
+                log_message('info', '[File Add] putObject Result: '.print_r($result, TRUE));
                 return json_error('File Upload to S3 Failed: ', $result);
             }
         } else {
