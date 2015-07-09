@@ -810,10 +810,11 @@ class Users extends REST_Controller
         $_POST['fullname'] = $this->put('fullname');
         $_POST['username'] = $this->put('username');
         $_POST['email'] = $this->put('email');
+        $_POST['password'] = $this->put('password');
 
         $this->load->library('form_validation');
         $this->form_validation->set_rules('fullname', 'Full Name', 'trim|required|xss_clean');
-        $this->form_validation->set_rules('username', 'Username', 'trim|min_length[5]|xss_clean|is_unique[user.username]');
+        $this->form_validation->set_rules('username', 'Username', 'trim|min_length[5]|xss_clean');
         $this->form_validation->set_rules('password', 'Password', 'trim|min_length[6]|xss_clean');
         $this->form_validation->set_rules('email', 'Email', 'trim|xss_clean|valid_email');
 
