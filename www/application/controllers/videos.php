@@ -604,9 +604,13 @@ class Videos extends REST_Controller
             json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
         } else {
             $filter = json_decode($this->post('filter', TRUE));
-            $filter->video_id = $video->id;
-            $comments = decorate_comments($this->Comment->search($filter));
-            $this->response($comments);
+            if($filter) {
+                $filter->screen_id = $video->id;
+                $comments = decorate_comments($this->Comment->search($filter));
+                $this->response($comments);
+            } else {
+                json_error("Could not read the filter parameter.  Please send valid json");
+            }
         }
     }
 
