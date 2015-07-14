@@ -278,7 +278,11 @@ function notify_new_message($message_id, $sender_id, $parent_id=0) {
         }
     }
 
-    $batchMsg->finalize();
+    try {
+        $batchMsg->finalize();
+    } catch(Exception $e) {
+        log_message('error', 'Error during batchMsg->finalize(): '.$e->getMessage());
+    }
 
     loggly(array(
         'text' => 'Sending notification of new message',
