@@ -474,7 +474,7 @@ class Screens extends REST_Controller
                 'creator_id' => get_user_id(),
                 'time' => $this->post('time', TRUE),
                 'begin_x' => $this->post('begin_x', TRUE),
-                'begin_y' => $this->post('begin_x', TRUE),
+                'begin_y' => $this->post('begin_y', TRUE),
                 'end_x' => $this->post('end_x', TRUE),
                 'end_y' => $this->post('end_y', TRUE),
                 'link_to' => $this->post('link_to', TRUE)
@@ -515,7 +515,7 @@ class Screens extends REST_Controller
                 'creator_id' => get_user_id(),
                 'time' => $this->post('time', TRUE),
                 'begin_x' => $this->post('begin_x', TRUE),
-                'begin_y' => $this->post('begin_x', TRUE),
+                'begin_y' => $this->post('begin_y', TRUE),
                 'end_x' => $this->post('end_x', TRUE),
                 'end_y' => $this->post('end_y', TRUE),
                 'left_x' => $this->post('left_x', TRUE),
