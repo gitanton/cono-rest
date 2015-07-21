@@ -52,12 +52,21 @@ class Meetings extends REST_Controller
      *    method="GET",
      *    type="array[Meeting]",
      *    summary="Returns a list of the meetings that the user is invited to (that are taking place in the future)",
+     *
+     * @SWG\Parameter(
+     *     name="date",
+     *     description="Date that the meeting is taking place (Format: YYYY-MM-DD)",
+     *     paramType="query",
+     *     required=false,
+     *     type="string"
+     *     )
      *   )
      * )
      */
     public function index_get()
     {
-        $meetings = $this->Meeting->get_for_user(get_user_id());
+        $date = $this->get('date', TRUE);
+        $meetings = $this->Meeting->get_for_user_date(get_user_id(), $date);
         $this->response($this->decorate_objects($meetings));
     }
 

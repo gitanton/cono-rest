@@ -193,7 +193,9 @@ function google_short_url($url) {
     $json = json_decode($response);
     curl_close($curlObj);
 
-    return $json->id;
+    if(isset($json) && isset($json->id)) {
+       return $json->id;
+    }
 }
 
 if (!function_exists('http_response_code'))

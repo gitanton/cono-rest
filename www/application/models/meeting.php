@@ -17,15 +17,38 @@ class Meeting extends MY_Model
         return $column_map[intval($col)];
     }
 
-    function get_for_user($user_id = 0, $project_id = 0, $page = 0, $limit = 20)
+    function get_for_user($user_id = 0)
     {
         $sql = "SELECT m.* from ".$this->get_scope()." m, meeting_user mu where m.id = mu.meeting_id and "
-            ." mu.user_id = ? and m.deleted = 0 and m.ended = 0";
+            ." mu.user_id = ? and m.deleted = 0 and m.ended IS NULL";
         $query_params = array(intval($user_id));
 
         $sql .= " ORDER by m.date ASC, m.time ASC";
 
         $query = $this->db->query($sql, $query_params);
+
+        return $query->result();
+    }
+
+    function get_for_user_date($user_id = 0, $date = '')
+    {
+        $sql = "SELECT m.* from ".$this->get_scope()." m, meeting_user mu where m.id = mu.meeting_id and "
+            ." mu.user_id = ? and m.deleted = 0 and m.ended IS NULL";
+        $query_params = array(intval($user_id));
+
+        if($date) {
+            $sql.=" AND m.date >= ? AND m.date <= ?";
+            $query_params[] = $date;
+            $query_params[] = timestamp_to_mysqldatetime(add_day(1, $date));
+        } else {
+            $sql.=" AND m.date >= ?";
+            $query_params[] = timestamp_to_mysqldatetime(now());
+        }
+
+        $sql .= " ORDER by m.date ASC, m.time ASC";
+
+        $query = $this->db->query($sql, $query_params);
+        //echo $this->db->last_query();
         return $query->result();
     }
 
