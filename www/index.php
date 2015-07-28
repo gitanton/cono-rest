@@ -3,6 +3,7 @@
 date_default_timezone_set("America/Chicago");
 putenv("TZ=America/Chicago");
 define("IS_TEST", strpos($_SERVER['SERVER_NAME'], 'scmreview') > 0);
+define("AUTOLOAD_PATH", $_SERVER['DOCUMENT_ROOT'] . '/rest/vendor/');
 /*
  *---------------------------------------------------------------
  * APPLICATION ENVIRONMENT
@@ -23,11 +24,9 @@ define("IS_TEST", strpos($_SERVER['SERVER_NAME'], 'scmreview') > 0);
  */
 if(IS_TEST) {
     define('ENVIRONMENT', 'development');
-    define("AUTOLOAD_PATH", $_SERVER['DOCUMENT_ROOT'] . '/rest/vendor/');
 } else {
-    //define('ENVIRONMENT', 'production');
-    define('ENVIRONMENT', 'development');
-    define("AUTOLOAD_PATH", $_SERVER['DOCUMENT_ROOT'] . 'vendor/');
+    define('ENVIRONMENT', 'production');
+    //define('ENVIRONMENT', 'development');
 }
 require_once(AUTOLOAD_PATH.'autoload.php');
 /*
