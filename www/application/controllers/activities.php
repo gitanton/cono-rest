@@ -114,6 +114,38 @@ class Activities extends REST_Controller
         $this->response($this->decorate_objects($activities));
     }
 
+    /**
+     *
+     * @SWG\Api(
+     *   path="/user",
+     *   description="API for activity actions",
+     * @SWG\Operation(
+     *    method="GET",
+     *    type="array[Activity]",
+     *    summary="Returns a list of the current activities that belong to the current user in descending chronological order",
+     *    @SWG\Parameter(
+     *       name="page",
+     *       description="The starting page # of the activities (defaults to 0)",
+     *       paramType="query",
+     *       required=false,
+     *       type="integer"
+     *     ),
+     *    @SWG\Parameter(
+     *       name="limit",
+     *       description="The number of results to return per page (defaults to 20)",
+     *       paramType="query",
+     *       required=false,
+     *       type="integer"
+     *     ),
+     *   )
+     * )
+     */
+    public function user_get()
+    {
+        $activities = $this->Activity->get_for_user(get_user_id(), $this->get('page', TRUE), $this->get('limit', TRUE));
+        $this->response($this->decorate_objects($activities));
+    }
+
     protected function decorate_object($object)
     {
         return decorate_activity($object);

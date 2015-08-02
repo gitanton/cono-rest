@@ -323,6 +323,27 @@ class Users extends REST_Controller
         json_error('The username/password you have entered are invalid.');
     }
 
+    /**
+     *
+     * @SWG\Api(
+     *   path="/tasks",
+     *   description="API for user actions",
+     * @SWG\Operation(
+     *    method="GET",
+     *    type="Array[Comment]",
+     *    summary="Gets the tasks for the current user",
+     *   )
+     * )
+     */
+
+    function tasks_get() {
+        $this->validate_user();
+        $this->load->model(array('Comment'));
+
+        $comments = $this->Comment->get_tasks_for_user(get_user_id());
+        $this->response(decorate_comments($comments));
+    }
+
 
     /**
      *

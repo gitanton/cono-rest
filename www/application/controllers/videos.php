@@ -1,5 +1,6 @@
 <?php
 use Swagger\Annotations as SWG;
+use Aws\S3\S3Client;
 
 /**
  *

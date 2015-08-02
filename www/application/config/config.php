@@ -20,7 +20,7 @@ $config['signin_url'] = 'http://app.conojo.com/';
 
 $config['site_title'] = 'Conojo';
 
-/* 20MB max screen upload size */
+/* 50MB max screen upload size */
 $config['max_screen_upload_size'] = 50000;
 $config['screen_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/screens/';
 $config['template_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/templates/';

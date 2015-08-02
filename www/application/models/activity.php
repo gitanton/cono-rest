@@ -51,6 +51,23 @@ class Activity extends MY_Model
         return $query->result();
     }
 
+    function get_for_user($user_id = 0, $page = 0, $limit = 20)
+    {
+        $sql = "SELECT a.* from ".$this->get_scope()." a where a.creator_id = ? and a.deleted = 0";
+        $query_params = array(intval($user_id));
+
+        if (!$limit) {
+            $limit = DEFAULT_LIMIT;
+        }
+
+        $offset = intval($page) * $limit;
+        $sql .= " ORDER by a.created DESC";
+        $sql .= " LIMIT ".$offset.", ".$limit;
+
+        $query = $this->db->query($sql, $query_params);
+        return $query->result();
+    }
+
     function add_data()
     {
         $this->load->library('uuid');

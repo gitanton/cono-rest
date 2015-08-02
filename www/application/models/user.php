@@ -90,7 +90,7 @@ class User extends MY_Model
      */
     function get_for_project($project_id = 0)
     {
-        $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
+        $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.avatar,user.last_login');
         $this->db->join('project_user', 'project_user.user_id = user.id');
         $this->db->where('project_user.project_id', $project_id);
         $query = $this->db->get($this->get_scope());
@@ -104,7 +104,7 @@ class User extends MY_Model
      */
     function get_for_message($message_id = 0)
     {
-        $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
+        $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.avatar,user.last_login');
         $this->db->join('message_user', 'message_user.user_id = user.id');
         $this->db->where('message_user.message_id', $message_id);
         $query = $this->db->get($this->get_scope());
@@ -118,7 +118,7 @@ class User extends MY_Model
      */
     function get_for_meeting($meeting_id = 0, $is_connected = false)
     {
-        $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
+        $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.avatar,user.last_login');
         $this->db->join('meeting_user', 'meeting_user.user_id = user.id');
         $this->db->where('meeting_user.meeting_id', $meeting_id);
         if ($is_connected) {
@@ -135,7 +135,7 @@ class User extends MY_Model
      */
     function get_for_team($team_id = 0)
     {
-        $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
+        $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.avatar,user.last_login');
         $this->db->join('team_user', 'team_user.user_id = user.id');
         $this->db->where('team_user.team_id', $team_id);
         $query = $this->db->get($this->get_scope());
@@ -145,7 +145,7 @@ class User extends MY_Model
     function get_for_teams_owner($owner_id = 0)
     {
         $this->db->distinct();
-        $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.last_login');
+        $this->db->select('user.id,user.uuid,user.fullname,user.email,user.username,user.avatar,user.last_login');
         $this->db->join('team_user', 'team_user.user_id = user.id');
         $this->db->join('team', 'team.id = team_user.team_id');
         $this->db->where('team.owner_id', $owner_id);

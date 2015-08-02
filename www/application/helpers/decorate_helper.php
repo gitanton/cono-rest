@@ -6,6 +6,13 @@
  *
  * Also useful for loading lists of related objects such as the users on a project or the replies to a message
  */
+
+
+/**
+ * USERS
+ * @param $object
+ * @return mixed
+ */
 function decorate_user($object)
 {
     return clean_user($object);
@@ -20,6 +27,11 @@ function decorate_users($objects)
     return $updated;
 }
 
+/**
+ * TEAMS
+ * @param $object
+ * @return mixed
+ */
 function decorate_team($object)
 {
     $CI =& get_instance();
@@ -33,13 +45,29 @@ function decorate_team($object)
     return $object;
 }
 
+
+/**
+ * PROJECTS
+ * @param $object
+ * @return mixed
+ */
 function decorate_project($object)
 {
     $CI =& get_instance();
-    $CI->load->model(array('Team'));
+    $CI->load->model(array('Team', 'Screen', 'Video'));
 
     $users = $CI->User->get_for_project($object->id);
     $object->users = decorate_users($users);
+
+    $screens = $CI->Screen->get_for_project($object->id);
+    $object->screens = decorate_screens($screens, true);
+    $object->thumbnail = null;
+    if (sizeof($object->screens) > 0) {
+        $object->thumbnail = $object->screens[0]->url;
+    }
+
+    $videos = $CI->Video->get_for_project($object->id);
+    $object->videos = decorate_videos($videos, true);
 
     if (isset($object->creator_id)) {
         $object->creator_uuid = $CI->User->get_uuid($object->creator_id);
@@ -56,6 +84,22 @@ function decorate_project($object)
     return $object;
 }
 
+function decorate_projects($objects)
+{
+    $updated = array();
+    foreach ($objects as $object) {
+        $updated[] = decorate_project($object);
+    }
+    return $updated;
+}
+
+
+/**
+ * MESSAGES
+ * @param $object
+ * @param bool $ignore_replies
+ * @return mixed
+ */
 function decorate_message($object, $ignore_replies = false)
 {
     $CI =& get_instance();
@@ -81,6 +125,21 @@ function decorate_message($object, $ignore_replies = false)
     return $object;
 }
 
+function decorate_messages($objects, $ignore_replies = false)
+{
+    $updated = array();
+    foreach ($objects as $object) {
+        $updated[] = decorate_message($object, $ignore_replies);
+    }
+    return $updated;
+}
+
+
+/**
+ * MEETINGS
+ * @param $object
+ * @return mixed
+ */
 function decorate_meeting($object)
 {
     $CI =& get_instance();
@@ -109,7 +168,14 @@ function decorate_meeting($object)
     return $object;
 }
 
-function decorate_meeting_comment($object) {
+
+/**
+ * MEETING COMMENT
+ * @param $object
+ * @return mixed
+ */
+function decorate_meeting_comment($object)
+{
     $CI =& get_instance();
     $CI->load->model(array('Meeting_Comment'));
 
@@ -131,7 +197,14 @@ function decorate_meeting_comments($objects)
     return $updated;
 }
 
-function decorate_meeting_delta($object) {
+
+/**
+ * MEETING DELTAS
+ * @param $object
+ * @return mixed
+ */
+function decorate_meeting_delta($object)
+{
     $CI =& get_instance();
     $CI->load->model(array('Meeting_Delta'));
 
@@ -148,15 +221,12 @@ function decorate_meeting_deltas($objects)
     return $updated;
 }
 
-function decorate_messages($objects, $ignore_replies = false)
-{
-    $updated = array();
-    foreach ($objects as $object) {
-        $updated[] = decorate_message($object, $ignore_replies);
-    }
-    return $updated;
-}
 
+/**
+ * HOTSPOTS
+ * @param $object
+ * @return mixed
+ */
 function decorate_hotspot($object)
 {
     $CI =& get_instance();
@@ -180,12 +250,28 @@ function decorate_hotspot($object)
     return $object;
 }
 
+function decorate_hotspots($objects)
+{
+    $updated = array();
+    foreach ($objects as $object) {
+        $updated[] = decorate_hotspot($object);
+    }
+    return $updated;
+}
+
+/**
+ * ACTIVITIES
+ * @param $object
+ * @return mixed
+ */
 function decorate_activity($object)
 {
     $CI =& get_instance();
 
     if (isset($object->creator_id)) {
-        $object->creator_uuid = $CI->User->get_uuid($object->creator_id);
+        $creator = $CI->User->load($object->creator_id);
+        $object->creator_uuid = $creator->uuid;
+        $object->creator = decorate_user($creator);
     }
     if (isset($object->team_id)) {
         $object->team_uuid = $CI->Team->get_uuid($object->team_id);
@@ -199,6 +285,12 @@ function decorate_activity($object)
     return $object;
 }
 
+
+/**
+ * DRAWINGS
+ * @param $object
+ * @return mixed
+ */
 function decorate_drawing($object)
 {
     $CI =& get_instance();
@@ -221,10 +313,25 @@ function decorate_drawing($object)
     return $object;
 }
 
+function decorate_drawings($objects)
+{
+    $updated = array();
+    foreach ($objects as $object) {
+        $updated[] = decorate_drawing($object);
+    }
+    return $updated;
+}
+
+
+/**
+ * COMMENTS
+ * @param $object
+ * @return mixed
+ */
 function decorate_comment($object)
 {
     $CI =& get_instance();
-    $CI->load->model(array('Video', 'Screen'));
+    $CI->load->model(array('Video', 'Screen', 'Project'));
     if (isset($object->video_id)) {
         $object->video_uuid = $CI->Video->get_uuid($object->video_id);
     }
@@ -240,6 +347,10 @@ function decorate_comment($object)
         $object->assignee_uuid = $CI->User->get_uuid($object->assignee_id);
     }
 
+    if (isset($object->project_id)) {
+        $object->project_uuid = $CI->Project->get_uuid($object->project_id);
+    }
+
     // cast the numbers to integers
     $object->ordering = intval($object->ordering);
     $object->project_id = intval($object->project_id);
@@ -250,17 +361,8 @@ function decorate_comment($object)
     $object->left_x = isset($object->left_x) ? intval($object->left_x) : null;
     $object->is_task = isset($object->is_task) ? intval($object->is_task) : null;
     $object->marker = isset($object->marker) ? intval($object->marker) : null;
-    unset($object->deleted, $object->screen_id, $object->id, $object->creator_id, $object->video_id, $object->assignee_id);
+    unset($object->deleted, $object->screen_id, $object->id, $object->creator_id, $object->video_id, $object->assignee_id, $object->project_id);
     return $object;
-}
-
-function decorate_hotspots($objects)
-{
-    $updated = array();
-    foreach ($objects as $object) {
-        $updated[] = decorate_hotspot($object);
-    }
-    return $updated;
 }
 
 function decorate_comments($objects)
@@ -272,16 +374,12 @@ function decorate_comments($objects)
     return $updated;
 }
 
-function decorate_drawings($objects)
-{
-    $updated = array();
-    foreach ($objects as $object) {
-        $updated[] = decorate_drawing($object);
-    }
-    return $updated;
-}
-
-function decorate_screen($object)
+/**
+ * SCREENS
+ * @param $object
+ * @return mixed
+ */
+function decorate_screen($object, $shallow)
 {
     $CI =& get_instance();
     $CI->load->model(array('Project', 'Hotspot', 'Comment', 'Drawing'));
@@ -296,14 +394,16 @@ function decorate_screen($object)
 
     $object->url = file_url($object->url);
 
-    $hospots = $CI->Hotspot->get_for_screen($object->id);
-    $object->hotspots = decorate_hotspots($hospots);
+    if (!$shallow) {
+        $hospots = $CI->Hotspot->get_for_screen($object->id);
+        $object->hotspots = decorate_hotspots($hospots);
 
-    $drawings = $CI->Drawing->get_for_screen($object->id);
-    $object->drawings = decorate_drawings($drawings);
+        $drawings = $CI->Drawing->get_for_screen($object->id);
+        $object->drawings = decorate_drawings($drawings);
 
-    $comments = $CI->Comment->get_for_screen($object->id);
-    $object->comments = decorate_comments($comments);
+        $comments = $CI->Comment->get_for_screen($object->id);
+        $object->comments = decorate_comments($comments);
+    }
 
     $object->ordering = intval($object->ordering);
     $object->image_width = floatval($object->image_width);
@@ -313,7 +413,22 @@ function decorate_screen($object)
     return $object;
 }
 
-function decorate_video($object)
+function decorate_screens($objects, $shallow = false)
+{
+    $updated = array();
+    foreach ($objects as $object) {
+        $updated[] = decorate_screen($object, $shallow);
+    }
+    return $updated;
+}
+
+
+/**
+ * VIDEOS
+ * @param $object
+ * @return mixed
+ */
+function decorate_video($object, $shallow = false)
 {
     $CI =& get_instance();
     $CI->load->model(array('Project', 'Hotspot', 'Comment', 'Drawing'));
@@ -328,14 +443,16 @@ function decorate_video($object)
 
     $object->url = file_url($object->url, FILE_TYPE_VIDEO);
 
-    $hotspots = $CI->Hotspot->get_for_video($object->id);
-    $object->hotspots = decorate_hotspots($hotspots);
+    if (!$shallow) {
+        $hotspots = $CI->Hotspot->get_for_video($object->id);
+        $object->hotspots = decorate_hotspots($hotspots);
 
-    $drawings = $CI->Drawing->get_for_video($object->id);
-    $object->drawings = decorate_drawings($drawings);
+        $drawings = $CI->Drawing->get_for_video($object->id);
+        $object->drawings = decorate_drawings($drawings);
 
-    $comments = $CI->Comment->get_for_video($object->id);
-    $object->comments = decorate_comments($comments);
+        $comments = $CI->Comment->get_for_video($object->id);
+        $object->comments = decorate_comments($comments);
+    }
 
     $object->ordering = intval($object->ordering);
     $object->file_size = floatval($object->file_size);
@@ -343,6 +460,21 @@ function decorate_video($object)
     return $object;
 }
 
+function decorate_videos($objects, $shallow = false)
+{
+    $updated = array();
+    foreach ($objects as $object) {
+        $updated[] = decorate_video($object, $shallow);
+    }
+    return $updated;
+}
+
+
+/**
+ * DECORATE TEMPLATES
+ * @param $object
+ * @return mixed
+ */
 function decorate_template($object)
 {
     $CI =& get_instance();
@@ -367,7 +499,8 @@ function decorate_template($object)
  * @param $objects
  * @return array
  */
-function decorate_invoices($objects) {
+function decorate_invoices($objects)
+{
     $updated = array();
     foreach ($objects as $object) {
         $updated[] = decorate_invoice($object);
@@ -379,11 +512,12 @@ function decorate_invoices($objects) {
  * Converts a stripe invoice into a friendlier json object
  * @param $object
  */
-function decorate_invoice($object) {
+function decorate_invoice($object)
+{
     unset($object->id, $object->customer, $object->livemode, $object->webhooks_delivered_at, $object->charge,
-        $object->application_fee, $object->subscription, $object->attempted, $object->closed, $object->forgiven,
-        $object->lines, $object->object, $object->starting_balance, $object->ending_balance, $object->next_payment_attempt,
-        $object->metadata, $object->statement_descriptor, $object->description, $object->receipt_number);
+    $object->application_fee, $object->subscription, $object->attempted, $object->closed, $object->forgiven,
+    $object->lines, $object->object, $object->starting_balance, $object->ending_balance, $object->next_payment_attempt,
+    $object->metadata, $object->statement_descriptor, $object->description, $object->receipt_number);
 
     $object->subtotal = $object->subtotal / 100;
     $object->total = $object->total / 100;
@@ -396,8 +530,15 @@ function decorate_invoice($object) {
     return $object->__toArray();
 }
 
-function decorate_plan($object) {
-    if($object) {
+
+/**
+ * PLANS
+ * @param $object
+ * @return mixed
+ */
+function decorate_plan($object)
+{
+    if ($object) {
         $object->id = intval($object->id);
         $object->projects = intval($object->projects);
         $object->team_members = intval($object->team_members);
@@ -409,8 +550,14 @@ function decorate_plan($object) {
 
 }
 
-function decorate_subscription($object) {
-    if($object) {
+/**
+ * SUBSCRIPTIONS
+ * @param $object
+ * @return mixed
+ */
+function decorate_subscription($object)
+{
+    if ($object) {
         $CI =& get_instance();
         $CI->load->model(array('Plan'));
 
@@ -418,7 +565,7 @@ function decorate_subscription($object) {
         $object->additional_users = intval($object->additional_users);
         $object->plan_id = intval($object->plan_id);
         $object->plan = decorate_plan($CI->Plan->load($object->plan_id));
-        if(isset($object->card)) {
+        if (isset($object->card)) {
             unset($object->card->fingerprint, $object->card->name, $object->card->cvc_check, $object->card->customer,
             $object->card->address_line1, $object->card->address_line2, $object->card->address_city, $object->card->object,
             $object->card->funding, $object->card->address_state, $object->card->address_zip, $object->card->address_country,
@@ -426,7 +573,7 @@ function decorate_subscription($object) {
             $object->card = $object->card->__toArray();
         }
         unset($object->deleted, $object->user_id, $object->id, $object->failed_event, $object->stripe_customer_id,
-            $object->stripe_subscription_id, $object->stripe_additional_subscription_id);
+        $object->stripe_subscription_id, $object->stripe_additional_subscription_id);
     }
     return $object;
 }

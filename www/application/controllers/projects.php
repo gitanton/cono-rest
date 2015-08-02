@@ -7,6 +7,7 @@ use Swagger\Annotations as SWG;
  * @SWG\Property(name="uuid",type="string",description="The unique ID of the Project (for public consumption)")
  * @SWG\Property(name="name",type="string",description="The name of the Project")
  * @SWG\Property(name="creator_uuid",type="string",description="The id of the user who created the project")
+ * @SWG\Property(name="thumbnail",type="string",description="The thumbnail of the project -- usually the first screen of the project")
  * @SWG\Property(name="type_id",type="integer",description="The project type id")
  * @SWG\Property(name="archived",type="integer",description="Whether this project is archived or not")
  * @SWG\Property(name="ordering",type="integer",description="The ordering of how the project should be displayed in the list of projects")
@@ -126,7 +127,7 @@ class Projects extends REST_Controller
         $this->form_validation->set_rules('templates', 'Templates', 'trim|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
         } else {
             $data = array(
                 'name' => $this->post('name', TRUE),
@@ -150,8 +151,8 @@ class Projects extends REST_Controller
                         $file = file_get_contents(file_url($template->url, FILE_TYPE_TEMPLATE));
                         $file_ext = $this->upload->get_extension($template->url);
                         if ($file) {
-                            $file_name = md5(uniqid(mt_rand())).$file_ext;
-                            $full_path = $this->config->item('screen_upload_dir').$file_name;
+                            $file_name = md5(uniqid(mt_rand())) . $file_ext;
+                            $full_path = $this->config->item('screen_upload_dir') . $file_name;
                             file_put_contents($full_path, $file);
 
 
@@ -242,7 +243,7 @@ class Projects extends REST_Controller
         $this->form_validation->set_rules('type_id', 'Type ID', 'trim|integer|xss_clean|callback_validate_project_type');
 
         if ($this->form_validation->run() == FALSE) {
-            json_error('There was a problem with your submission: '.validation_errors(' ', ' '));
+            json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
         } else {
             $project = validate_project_uuid($uuid);
             /* Validate that they are the team owner */
@@ -309,7 +310,7 @@ class Projects extends REST_Controller
             } else if ($action == 'invite') {
                 return $this->project_invite($uuid);
             } else {
-                json_error('Invalid request, action \''.$action.'\' is not supported', null, 405);
+                json_error('Invalid request, action \'' . $action . '\' is not supported', null, 405);
             }
         } else {
             json_error('Invalid request, action must be supplied', null, 405);
@@ -382,20 +383,26 @@ class Projects extends REST_Controller
      */
     public function ordering_post()
     {
-        $this->load->library('form_validation');
-        $this->form_validation->set_rules('uuids', 'Project Ids', 'trim|required|xss_clean');
 
-        $uuids = json_decode($this->post('uuid', TRUE));
+        $uuids = json_decode($this->post('uuids', TRUE));
         if ($uuids) {
             $i = 0;
             foreach ($uuids as $uuid) {
                 $project_id = $this->Project->get_id($uuid);
-                if ($project_id) {
-                    $this->Project->update_ordering(get_user_id(), $project_id, $i++);
+                if (!$project_id) {
+                    json_error('Unable to find project with id of ' . $uuid . '. Ordering failed');
+                    exit;
+                } else {
+                    $this->Project->update_ordering(get_user_id(), $project_id, $i);
                 }
+                $i++;
             }
+
+            $projects = $this->Project->get_for_user_team(get_user_id(), get_team_id());
+            json_success('Projects ordered successfully', array('projects' => decorate_projects($projects)));
+        } else {
+            json_error('Unable to decode the project ids.  Please specify a list of ids in the `uuids` field.');
         }
-        json_success('Projects ordered successfully');
     }
 
 
@@ -545,7 +552,8 @@ class Projects extends REST_Controller
      *   )
      * )
      */
-    private function get_project_history($uuid) {
+    private function get_project_history($uuid)
+    {
         validate_team_read(get_team_id());
         $project = validate_project_uuid($uuid);
         $project_history = $this->Project_Statistic->get_project_history($project->id);

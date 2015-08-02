@@ -32,6 +32,21 @@ class Comment extends MY_Model
      * @param int $screen_id
      * @return mixed
      */
+    function get_tasks_for_user($user_id = 0)
+    {
+        $sql = "SELECT c.* from " . $this->get_scope() . " c where c.assignee_id = ? and c.is_task = 1 and c.deleted = 0";
+        $query_params = array(intval($user_id));
+        $sql .= " ORDER by c.created ASC";
+
+        $query = $this->db->query($sql, $query_params);
+        return $query->result();
+    }
+
+    /**
+     * Returns the list of comments for the current project
+     * @param int $screen_id
+     * @return mixed
+     */
     function get_for_project($project_id = 0)
     {
         $sql = "SELECT c.* from " . $this->get_scope() . " c where c.project_id = ? and c.deleted = 0";

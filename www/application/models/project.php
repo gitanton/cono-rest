@@ -129,6 +129,7 @@ class Project extends MY_Model
      * @return mixed
      */
     function duplicate($project, $creator_id = 0, $project_name = '') {
+        $this->load->model(array('Video', 'Screen'));
         if(!$creator_id) {
             $creator_id = get_user_id();
         }
@@ -145,6 +146,10 @@ class Project extends MY_Model
 
         /* Copy the users on the project */
         $this->copy_users($project->id, $duplicate_id);
+        /* Copy the videos on the project */
+        $this->Video->copy_to_project($project->id, $duplicate_id);
+        /* Copy the screens on the project */
+        $this->Screen->copy_to_project($project->id, $duplicate_id);
         return $duplicate_id;
     }
 
