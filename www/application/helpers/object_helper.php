@@ -103,6 +103,8 @@ function clean_user($user)
 
     if(isset($user->avatar)) {
         $user->avatar = file_url($user->avatar);
+    } else {
+        $user->avatar = get_gravatar($user->email, IMG_SIZE_LG);
     }
 
     return $user;

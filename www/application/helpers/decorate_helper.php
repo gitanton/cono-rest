@@ -37,6 +37,7 @@ function decorate_team($object)
     $CI =& get_instance();
 
     if (isset($object->owner_id)) {
+        $object->owner = decorate_user($CI->User->load($object->owner_id));
         $object->owner_uuid = $CI->User->get_uuid($object->owner_id);
     }
     $users = $CI->User->get_for_team($object->id);
@@ -114,6 +115,7 @@ function decorate_message($object, $ignore_replies = false)
 
     if (isset($object->sender_id)) {
         $object->sender_uuid = $CI->User->get_uuid($object->sender_id);
+        $object->sender = decorate_user($CI->User->load($object->sender_id));
     }
     if (!$ignore_replies) {
         $users = $CI->User->get_for_message($object->id);

@@ -31,31 +31,6 @@ function site_detect_url($uri = '')
     return $url;
 }
 
-function get_avatar($size=IMG_SIZE_SM, $user = NULL) {
-    $CI =& get_instance();
-    $prefix = '';
-    switch($size) {
-        case IMG_SIZE_SM:
-            $prefix = 'sm_';
-            break;
-        case IMG_SIZE_MD:
-            $prefix = 'md_';
-            break;
-        case IMG_SIZE_LG:
-            $prefix = 'lg_';
-            break;
-    }
-
-    if(!$user) {
-        $user = get_user();
-    }
-    if($user && isset($user->picture)) {
-        return $CI->config->item('s3_url').$prefix.$user->picture;
-    } else {
-        return get_gravatar('abc123@email.com', $size);
-    }
-}
-
 /**
  * Get either a Gravatar URL or complete image tag for a specified email address.
  *
