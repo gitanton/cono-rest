@@ -379,7 +379,7 @@ function decorate_comments($objects)
  * @param $object
  * @return mixed
  */
-function decorate_screen($object, $shallow)
+function decorate_screen($object, $shallow = true)
 {
     $CI =& get_instance();
     $CI->load->model(array('Project', 'Hotspot', 'Comment', 'Drawing'));

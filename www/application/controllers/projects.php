@@ -384,7 +384,7 @@ class Projects extends REST_Controller
     public function ordering_post()
     {
 
-        $uuids = json_decode($this->post('uuids', TRUE));
+        $uuids = $this->post('uuids', TRUE);
         if ($uuids) {
             $i = 0;
             foreach ($uuids as $uuid) {
