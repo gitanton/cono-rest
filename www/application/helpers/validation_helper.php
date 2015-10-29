@@ -260,7 +260,7 @@ function validate_team_read($team_id = 0)
     }
 
     if (get_user_id() == $team->owner_id) {
-        json_error('Free trial has expired.', null, 403);
+        json_error('Free trial has expired.', null, 402);
         exit;
     } else {
         json_error('The owner of this team does not have a valid subscription', null, 403);
@@ -294,12 +294,12 @@ function validate_project_add($user_id)
     else {
         $expiration = add_day(FREE_TRIAL_LENGTH, $user->created);
         if ($expiration < now()) {
-            json_error('Free Trial Expired', null, 403);
+            json_error('Free Trial Expired', null, 402);
             exit;
         } else {
             $projects = $CI->Project->get_owned_by_user($user_id);
             if(sizeof($projects)>=FREE_TRIAL_PROJECTS) {
-                json_error('You cannot create anymore projects during your free trial.', null, 403);
+                json_error('You cannot create anymore projects during your free trial.', null, 402);
                 exit;
             }
         }
@@ -345,7 +345,7 @@ function validate_user_add($user_id, $invitee_uuid='') {
     else {
         $expiration = add_day(FREE_TRIAL_LENGTH, $user->created);
         if ($expiration < now()) {
-            json_error('Free Trial Expired', null, 403);
+            json_error('Free Trial Expired', null, 402);
             exit;
         } else {
             $users = $CI->User->get_for_teams_owner($user_id);
@@ -353,7 +353,7 @@ function validate_user_add($user_id, $invitee_uuid='') {
             if(sizeof($users)>=FREE_TRIAL_USERS) {
 
                 if($user_id == get_user_id()) {
-                    json_error('You cannot invite any more users during your free trial.', null, 403);
+                    json_error('You cannot invite any more users during your free trial.', null, 402);
                 } else {
                     json_error('You cannot accept this invite since the team owner does not have room for any more users on their plan.',
                         null, 403);
@@ -461,7 +461,7 @@ function validate_meeting_uuid($uuid = '', $validate_started = false, $validate_
     }
     /* Validate that the meeting has started */
     if ($validate_started && !$meeting->started) {
-        json_error('This meeting has not started yet.');
+        json_error('This meeting has not started yet.', null, 403);
         exit;
     }
     /* Validate that the user is the moderator */

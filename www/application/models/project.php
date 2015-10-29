@@ -65,14 +65,15 @@ class Project extends MY_Model
         return $query->result();
     }
 
-    function get_for_user_team($user_id = 0, $team_id = 0, $archived = 0) {
+    function get_for_user_team($user_id = 0, $team_id = 0, $archived = false) {
         $sql = "SELECT p.*, pu.ordering from ".$this->get_scope()." p, project_user pu where p.id = pu.project_id and "
             ." pu.user_id = ? and p.deleted = 0 and p.team_id = ?";
         $query_params = array(intval($user_id), intval($team_id));
 
         if($archived>1) {
-            $sql.=" AND p.archived = ?";
-            $query_params[] = $archived;
+            $sql.=" AND p.archived = 1";
+        } else if($archived===0) {
+            $sql.=" AND p.archived = 0";
         }
         $sql.=" ORDER by pu.ordering";
 

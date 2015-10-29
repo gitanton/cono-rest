@@ -76,7 +76,7 @@ class Projects extends REST_Controller
     public function index_get()
     {
         validate_team_read(get_team_id());
-        $projects = $this->Project->get_for_user_team(get_user_id(), get_team_id());
+        $projects = $this->Project->get_for_user_team(get_user_id(), get_team_id(), 0);
         $this->response($this->decorate_objects($projects));
     }
 

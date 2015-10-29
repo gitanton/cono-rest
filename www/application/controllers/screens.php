@@ -717,7 +717,7 @@ class Screens extends REST_Controller
 
     protected function decorate_object($object)
     {
-        return decorate_screen($object);
+        return decorate_screen($object, false);
     }
 }
 
