@@ -831,12 +831,10 @@ class Users extends REST_Controller
         $_POST['fullname'] = $this->put('fullname');
         $_POST['username'] = $this->put('username');
         $_POST['email'] = $this->put('email');
-        $_POST['password'] = $this->put('password');
 
         $this->load->library('form_validation');
         $this->form_validation->set_rules('fullname', 'Full Name', 'trim|required|xss_clean');
         $this->form_validation->set_rules('username', 'Username', 'trim|min_length[5]|xss_clean');
-        $this->form_validation->set_rules('password', 'Password', 'trim|min_length[6]|xss_clean');
         $this->form_validation->set_rules('email', 'Email', 'trim|xss_clean|valid_email');
 
         if ($this->form_validation->run() == FALSE) {
@@ -848,6 +846,26 @@ class Users extends REST_Controller
             $this->response($user);
             exit;
         }
+    }
+
+
+
+    /**
+     * The user has accepted the terms
+     * @param $uuid
+     */
+    public function password_put()
+    {
+        $this->validate_user();
+
+        if(!$this->User->validate_password(get_user(), $this->put('current', true))) {
+            json_error('<p>The password you entered for your current password is incorrect.</p>');
+            exit;
+        }
+
+        $this->User->change_password(get_user_id(), $this->put('password'));
+        $user = decorate_user(get_user());
+        $this->response($user);
     }
 
 

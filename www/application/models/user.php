@@ -322,6 +322,11 @@ class User extends MY_Model
         return $data;
     }
 
+    function validate_password($user, $password) {
+        $current = sha1($password . $user->salt);
+        return $current === $user->password;
+    }
+
     function change_password($id = 0, $password)
     {
         if (intval($id)) {
