@@ -668,7 +668,7 @@ class Videos extends REST_Controller
                 return json_error('File Upload to S3 Failed: ', $result);
             }
         } else {
-            json_error($this->upload->display_errors());
+            response_error($this->upload->display_errors());
             exit;
         }
     }

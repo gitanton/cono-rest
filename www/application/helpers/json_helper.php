@@ -1,4 +1,10 @@
 <?php
+function response_error($message, $data = array(), $response_code = 400)
+{
+    header('Content-Type: text/html');
+    http_response_code($response_code);
+    exit($message);
+}
 function json_error($message, $data = array(), $response_code = 400)
 {
     header('Content-Type: application/json');
