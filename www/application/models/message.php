@@ -19,11 +19,11 @@ class Message extends MY_Model
 
     function get_for_user($user_id = 0, $project_id = 0, $page = 0, $limit = 20)
     {
-        $sql = "SELECT m.* from ".$this->get_scope()." m, message_user mu where m.id = mu.message_id and "
-            ." mu.user_id = ? and m.deleted = 0";
+        $sql = "SELECT m.* from " . $this->get_scope() . " m, message_user mu where m.id = mu.message_id and "
+            . " mu.user_id = ? and m.deleted = 0";
         $query_params = array(intval($user_id));
-        if($project_id>0) {
-            $sql." and m.project_id = ? ";
+        if ($project_id > 0) {
+            $sql .= " and m.project_id = ? ";
             $query_params[] = $project_id;
         }
 
@@ -33,7 +33,7 @@ class Message extends MY_Model
 
         $offset = intval($page) * $limit;
         $sql .= " ORDER by m.updated DESC";
-        $sql .= " LIMIT ".$offset.", ".$limit;
+        $sql .= " LIMIT " . $offset . ", " . $limit;
 
         $query = $this->db->query($sql, $query_params);
         return $query->result();
