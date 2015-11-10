@@ -27,7 +27,7 @@ class Messages extends REST_Controller
     {
         parent::__construct();
         $this->load->helper('json');
-        $this->load->model(array('Message'));
+        $this->load->model(array('Message', 'Project'));
     }
 
     /**
@@ -38,21 +38,21 @@ class Messages extends REST_Controller
      *    method="GET",
      *    type="array[Message]",
      *    summary="Returns a list of the current messages that the user is a recipient of",
-     *    @SWG\Parameter(
+     * @SWG\Parameter(
      *       name="page",
      *       description="The starting page # of the messages (defaults to 0)",
      *       paramType="query",
      *       required=false,
      *       type="integer"
      *     ),
-     *    @SWG\Parameter(
+     * @SWG\Parameter(
      *       name="limit",
      *       description="The number of results to return per page (defaults to 20)",
      *       paramType="query",
      *       required=false,
      *       type="integer"
      *     ),
-     *    @SWG\Parameter(
+     * @SWG\Parameter(
      *       name="project_uuid",
      *       description="The UUID of the project that this message is attached to",
      *       paramType="query",
@@ -67,9 +67,9 @@ class Messages extends REST_Controller
         validate_team_read(get_team_id());
         $project_uuid = $this->get('project_uuid');
         $project_id = 0;
-        if($project_uuid) {
+        if ($project_uuid) {
             $project = validate_project_uuid($project_uuid);
-            if($project) {
+            if ($project) {
                 $project_id = $project->id;
             }
         }
@@ -125,28 +125,38 @@ class Messages extends REST_Controller
         $this->load->library('form_validation');
         $this->load->helper('notification');
         $this->form_validation->set_rules('content', 'Content', 'trim|required|xss_clean');
-        $this->form_validation->set_rules('project_uuid', 'Project UUID', 'trim|required|xss_clean');
+        $this->form_validation->set_rules('project_uuid', 'Project UUID', 'trim|xss_clean');
+        $this->form_validation->set_rules('parent_uuid', 'Parent UUID', 'trim|xss_clean');
 
         if ($this->form_validation->run() == FALSE) {
             json_error('There was a problem with your submission: ' . validation_errors(' ', ' '));
         } else {
-            $project = validate_project_uuid($this->post('project_uuid', TRUE));
+
+            $project_uuid = $this->post('project_uuid', TRUE);
             $parent_uuid = $this->post('parent_uuid', TRUE);
+
+            if ($project_uuid) {
+                $project = validate_project_uuid($this->post('project_uuid', TRUE));
+            } else if ($parent_uuid) {
+                $parent_message = $this->Message->load_by_uuid($parent_uuid);
+                $project = validate_project_uuid($this->Project->get_uuid($parent_message->project_id));
+            } else {
+                json_error('There as was a problem with your submission.  Either project_uuid or parent_uuid are required');
+                exit;
+            }
+
             $data = array(
                 'content' => $this->post('content', TRUE),
                 'project_id' => $project->id,
                 'sender_id' => get_user_id()
             );
 
-            if($parent_uuid) {
-                $parent_message = $this->Message->load_by_uuid($parent_uuid);
-                if($parent_message) {
-                    /* Prevent messages that are replies to replies so we don't have to deal with a multi-level hierarchy */
-                    if($parent_message->parent_id) {
-                        json_error('The parent uuid provided belongs to a reply.  You cannot reply to a reply but only to the parent messgae.');
-                    } else {
-                        $data['parent_id'] = $parent_message->id;
-                    }
+            if ($parent_message) {
+                /* Prevent messages that are replies to replies so we don't have to deal with a multi-level hierarchy */
+                if ($parent_message->parent_id) {
+                    json_error('The parent uuid provided belongs to a reply.  You cannot reply to a reply but only to the parent message.');
+                } else {
+                    $data['parent_id'] = $parent_message->id;
                 }
             }
 
@@ -154,22 +164,22 @@ class Messages extends REST_Controller
 
             /* Set the recipients on the message if it doesn't have a parent */
             /* Allow the recipients to be optional, if it isn't specified, all people on the project are marked as recipients */
-            if(!$message->parent_id) {
+            if (!$message->parent_id) {
                 $recipients = $this->post('recipients', TRUE);
-                if(!$recipients) {
+                if (!$recipients) {
                     $users = $this->User->get_for_project($project->id);
-                    foreach($users as $user) {
+                    foreach ($users as $user) {
                         $existing = $this->Message->get_message_user($message->id, $user->id);
-                        if(!$existing) {
+                        if (!$existing) {
                             $this->Message->add_message_user($message->id, $user->id);
                         }
                     }
                 } else {
                     $recipients = explode(",", $recipients);
-                    foreach($recipients as $recipient) {
+                    foreach ($recipients as $recipient) {
                         $user = $this->User->load_by_uuid($recipient);
                         $existing = $this->Message->get_message_user($message->id, $user->id);
-                        if(!$existing) {
+                        if (!$existing) {
                             $this->Message->add_message_user($message->id, $user->id);
                         }
                     }
