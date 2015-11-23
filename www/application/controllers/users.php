@@ -1193,9 +1193,15 @@ class Users extends REST_Controller
         );
 
         /* Handle the file upload */
+        $this->load->library(array('image_moo'));
         $this->load->library('upload', $config);
         if ($this->upload->do_upload('file')) {
             $data = $this->upload->data();
+            //array_print($data);
+            //exit;
+
+            /** Resize it */
+            $this->image_moo->load($data['full_path'])->resize_crop(300, 300)->save($data['full_path'], TRUE);
 
             /* Upload to s3 */
             $client = S3Client::factory(array(
