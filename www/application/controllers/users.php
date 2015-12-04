@@ -945,11 +945,13 @@ class Users extends REST_Controller
      */
     public function user_get($uuid = '')
     {
+        $this->load->model('Project');
         $this->validate_user();
         if (!$uuid) {
             $user = get_user();
         } else {
             $user = $this->User->load_by_uuid($uuid);
+            $user->projects = $this->Project->get_for_user_team($user->id, get_team_id());
         }
         if (!$user) {
             json_error('There is no user with that id');

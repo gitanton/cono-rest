@@ -22,13 +22,13 @@ $config['site_title'] = 'Conojo';
 
 /* 50MB max screen upload size */
 $config['max_screen_upload_size'] = 50000;
-$config['screen_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/screens/';
-$config['template_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/templates/';
+$config['screen_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/assets/uploads/screens/';
+$config['template_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/assets/uploads/templates/';
 $config['screen_upload_types'] = 'jpg|png|gif|jpeg';
 
 /* 2G max video upload size */
 $config['max_video_upload_size'] = 2000000;
-$config['video_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/videos/';
+$config['video_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/assets/uploads/videos/';
 $config['video_upload_types'] = 'mp4|mov|avi';
 
 $config['notifications_email_from'] = 'Conojo';
@@ -61,6 +61,9 @@ $config['s3_region'] = 'us-east-1';
 if (IS_TEST) {
     $config['domain_url'] = 'http://conojoapp.scmreview.com/rest';
     $config['base_url'] = 'http://conojoapp.scmreview.com/rest';
+    $config['screen_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/screens/';
+    $config['template_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/templates/';
+    $config['video_upload_dir'] = $_SERVER['DOCUMENT_ROOT'].'/rest/assets/uploads/videos/';
 
     $config['stripe_private_key'] = 'sk_test_E6PXD0mPm8D0ugGrF5Z6ZYC3';
     $config['stripe_public_key'] = 'pk_test_qfSibHadzKvpVKdrPoBwHbGN';

@@ -107,6 +107,8 @@ function clean_user($user)
         $user->avatar = get_gravatar($user->email, IMG_SIZE_LG);
     }
 
+    $user->last_login_pretty = pretty_twitter_date(strtotime($user->last_login))." ago";
+
     return $user;
 }
 
