@@ -65,10 +65,10 @@ $db['default']['autoinit'] = TRUE;
 $db['default']['stricton'] = FALSE;
 
 if (IS_TEST) {
-    $db['default']['hostname'] = 'schimpstaging.ctge10i8cpn4.us-east-1.rds.amazonaws.com';
-    $db['default']['username'] = 'schimpstaging';
-    $db['default']['password'] = 'JcqT6k&luE^L9p%';
-    $db['default']['database'] = 'staging_conojoapp';
+    $db['default']['hostname'] = 'halfslidevpc.czvoexoklzdt.us-west-2.rds.amazonaws.com';
+    $db['default']['username'] = 'k6k2qhy#OY$#x0Mi';
+    $db['default']['password'] = 'b8mtsIVXYAfRWH#q';
+    $db['default']['database'] = 'conojo';
     $db['default']['db_debug'] = TRUE;
 }
 

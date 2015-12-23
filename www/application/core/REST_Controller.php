@@ -384,7 +384,7 @@ abstract class REST_Controller extends CI_Controller
 
         if (isset($_SERVER['HTTP_ORIGIN'])) {
             $http_origin = $_SERVER['HTTP_ORIGIN'];
-            if ($http_origin == "http://localhost:9000" || $http_origin == "http://app.conojo.com" || $http_origin == "http://conojoapp.scmreview.com") {
+            if (true || $http_origin == "http://localhost:9000" || $http_origin == "http://app.conojo.com" || $http_origin == "http://conojorest.scmreview.com") {
                 header("Access-Control-Allow-Origin: $http_origin");
             }
         }
