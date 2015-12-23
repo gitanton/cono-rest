@@ -1,12 +1,16 @@
 <?php
 function response_error($message, $data = array(), $response_code = 400)
 {
+    $http_origin = $_SERVER['HTTP_ORIGIN'];
+    header("Access-Control-Allow-Origin: $http_origin");
     header('Content-Type: text/html');
     http_response_code($response_code);
     exit($message);
 }
 function json_error($message, $data = array(), $response_code = 400)
 {
+    $http_origin = $_SERVER['HTTP_ORIGIN'];
+    header("Access-Control-Allow-Origin: $http_origin");
     header('Content-Type: application/json');
     http_response_code($response_code);
     exit(json_encode(array('status'=> 'error', 'message'=> $message, 'data'=> $data)));
@@ -14,6 +18,8 @@ function json_error($message, $data = array(), $response_code = 400)
 
 function json_success($message = '', $data = array())
 {
+    $http_origin = $_SERVER['HTTP_ORIGIN'];
+    header("Access-Control-Allow-Origin: $http_origin");
     header('Content-Type: application/json');
     exit(json_encode(array('status'=> 'success', 'message'=> $message, 'data'=> $data)));
 }

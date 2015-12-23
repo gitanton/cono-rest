@@ -1225,6 +1225,8 @@ abstract class REST_Controller extends CI_Controller
     {
         $user_id = $this->session->userdata(SESS_ADMIN_USER_ID);
         if (!intval($user_id)) {
+            $http_origin = $_SERVER['HTTP_ORIGIN'];
+            header("Access-Control-Allow-Origin: $http_origin");
             http_response_code(401);
             exit;
         }
@@ -1234,30 +1236,18 @@ abstract class REST_Controller extends CI_Controller
     {
         $user_id = $this->session->userdata(SESS_USER_ID);
         if (!intval($user_id)) {
+            $http_origin = $_SERVER['HTTP_ORIGIN'];
+            header("Access-Control-Allow-Origin: $http_origin");
             http_response_code(401);
             exit;
         }
     }
 
-    protected function validate_customer_counselor($uuid = '', $customer_id = 0)
-    {
-
-        if (!$customer_id && $uuid) {
-            $customer_id = $this->User->get_id($uuid);
-        }
-        $counselor_id = get_user_id();
-
-        $user_counselor = $this->User->load_user_counselor($customer_id, $counselor_id);
-        if ($user_counselor) {
-            return true;
-        }
-        http_response_code(403);
-        exit;
-    }
-
     protected function validate_user_owner($object, $user_id)
     {
         if ($object->id && $object->user_id != $user_id) {
+            $http_origin = $_SERVER['HTTP_ORIGIN'];
+            header("Access-Control-Allow-Origin: $http_origin");
             http_response_code(403);
             exit;
         }
